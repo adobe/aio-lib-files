@@ -1,0 +1,7 @@
+{
+  "globals": {
+    "NodeJS": true
+  },
+  "plugins": ["jest"],
+  "extends": ["standard", "plugin:jest/recommended", "plugin:jsdoc/recommended"]
+}

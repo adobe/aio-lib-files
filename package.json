@@ -1,0 +1,46 @@
+{
+  "name": "@adobe/io-cna-storage",
+  "version": "0.0.1",
+  "description": "An abstraction on top of blob cloud storage exposing a file like API",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "beautify": "npm run lint -- --fix",
+    "test": "jest -c ./jest.config.js && npm run lint"
+  },
+  "author": "Adobe Inc.",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=10.0.0"
+  },
+  "repository": "adobe/io-cna-storage",
+  "keywords": [
+    "sdk",
+    "openwhisk",
+    "storage",
+    "cloud-native",
+    "adobe-io"
+  ],
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-import": "^2.17.3",
+    "eslint-plugin-jest": "^22.6.4",
+    "eslint-plugin-jsdoc": "^15.3.2",
+    "eslint-plugin-node": "^9.1.0",
+    "eslint-plugin-promise": "^4.1.1",
+    "eslint-plugin-standard": "^4.0.0",
+    "jest": "^24.8.0"
+  },
+  "dependencies": {
+    "@azure/storage-blob": "^10.3.0",
+    "@hapi/joi": "^15.1.0",
+    "fs-extra": "^8.0.1",
+    "mime-types": "^2.1.24",
+    "request-promise": "^4.2.4",
+    "upath": "^1.1.2"
+  }
+}
