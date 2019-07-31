@@ -22,49 +22,69 @@ const { TvmClient } = require('./lib/TvmClient')
 const DEFAULT_TVM_API_URL = 'https://adobeioruntime.net/api/v1/web/mraho/adobeio-cna-token-vending-machine-0.1.0'
 
 /**
- * Initilizes and returns the storage SDK.
+ * Initializes and returns the storage SDK.
  *
- * To use the SDK you must either provide your own credentials in `config.credentials`
- * or provide your OpenWhisk credentials in `config.ow`.
+ * To use the SDK you must either provide provide your OpenWhisk credentials in
+ * `config.ow` or your own cloud storage credentials in `credentials.azure`.
  *
- * @param {object} config configuration to init the sdk
+ * OpenWhisk credentials can also be read from environment variables
  *
- * @param {object} [config.credentials] bring your own storage credentials
+ * @param {object} credentials used to init the sdk
  *
- * @param {object} [config.ow] OpenWhisk credentials
- * @param {string} [config.ow.namespace] OpenWhisk namespace, can also be passed
+ * @param {object} [credentials.ow] OpenWhisk credentials, set those if you want
+ * to use our storage auto-generated temporary cloud storage credentials from the token
+ * vending machine (tvm) for our storage infrastructure
+ * @param {string} [credentials.ow.namespace] OpenWhisk namespace, can also be passed
  *   in an environment variable `OW_NAMESPACE` or `__OW_NAMESPACE`
- * @param {string} [config.ow.auth] OpenWhisk auth, can also be passed
+ * @param {string} [credentials.ow.auth] OpenWhisk auth, can also be passed
  *   in an environment variable `OW_AUTH` or `__OW_AUTH`
  *
+ * @param {object} [credentials.azure] use this if you want to bring your own
+ * azure cloud storage credentials. credentials.azure must either be set to `{ sasURLPrivate, sasURLPublic }` or
+ * `{ storageAccessKey, storage Account, containerName }`
+ * @property {string} [credentials.sasURLPrivate] sas url to existing private azure blob container
+ * @property {string} [credentials.sasURLPublic] sas url to existing public azure blob container
+ * @property {string} [credentials.storageAccount] name of azure storage account
+ * @property {string} [credentials.storageAccessKey] access key for azure storage account
+ * @property {string} [credentials.containerName] name of container to be used.
+ *
  * @param {object} [options={}] options
- * @param {string} [options.tvmApiUrl] if different than default
- * @param {string} [options.tvmCacheFile] cache the tvm credentials to a file
- * @param {string} [options.provider='azure'] for now only 'azure' is supported
+ * @param {string} [options.tvmApiUrl] alternative tvm api url, works only
+ * together with credentials.ow
+ * @param {string} [options.tvmCacheFile] alternative tvm cache file, works only
+ * together with credentials.ow
  * @returns {Promise<Storage>} A storage instance
  */
-async function init (config, options = {}) {
-  // include ow environment vars to config
+async function init (credentials, options = {}) {
+  // include ow environment vars to credentials
   const namespace = process.env['__OW_NAMESPACE'] || process.env['OW_NAMESPACE']
   const auth = process.env['__OW_AUTH'] || process.env['OW_AUTH']
   if (namespace || auth) {
-    if (typeof config !== 'object') {
-      config = {}
+    if (typeof credentials !== 'object') {
+      credentials = {}
     }
-    if (typeof config.ow !== 'object') {
-      config.ow = {}
+    if (typeof credentials.ow !== 'object') {
+      credentials.ow = {}
     }
-    config.ow.namespace = config.ow.namespace || namespace
-    config.ow.auth = config.ow.auth || auth
+    credentials.ow.namespace = credentials.ow.namespace || namespace
+    credentials.ow.auth = credentials.ow.auth || auth
   }
 
-  return _init(config, options)
+  return _init(credentials, options)
 }
 
 // eslint-disable-next-line jsdoc/require-jsdoc
-async function _init (config, options = {}) {
-  const validation = joi.validate(config, joi.object().label('config').keys({
-    credentials: joi.object(),
+async function _init (credentials, options = {}) {
+  const validation = joi.validate(credentials, joi.object().label('credentials').keys({
+    azure: joi.object().keys({
+      // either
+      sasURLPrivate: joi.string().uri(),
+      sasURLPublic: joi.string().uri(),
+      // or
+      storageAccessKey: joi.string(),
+      storageAccount: joi.string(),
+      containerName: joi.string()
+    }).unknown().and('storageAccount', 'storageAccessKey', 'containerName').and('sasURLPrivate', 'sasURLPublic').xor('sasURLPrivate', 'storageAccount'),
     ow: joi.object().keys({
       namespace: joi.string().required(),
       auth: joi.string().required()
@@ -73,24 +93,23 @@ async function _init (config, options = {}) {
   if (validation.error) throw new StorageError(validation.error.message, StorageError.codes.BadArgument)
 
   // 1. set provider
-  const provider = options.provider || 'azure'
-  if (provider !== 'azure') throw new StorageError(`provider '${provider}' is not supported.`, StorageError.codes.BadArgument)
+  const provider = 'azure' // only azure is supported for now
 
   // 2. get tvm if no credentials
   let tvm
-  if (!config.credentials) {
+  if (credentials.ow) {
     // default tvm url
     if (!options.tvmApiUrl) options.tvmApiUrl = DEFAULT_TVM_API_URL
-    tvm = new TvmClient({ ow: config.ow, apiUrl: options.tvmApiUrl, cacheFile: options.tvmCacheFile })
+    tvm = new TvmClient({ ow: credentials.ow, apiUrl: options.tvmApiUrl, cacheFile: options.tvmCacheFile })
   }
 
   // 3. return storage based on provider
   switch (provider) {
     case 'azure':
-      const credentials = config.credentials ? config.credentials : (await tvm.getAzureBlobCredentials())
-      return AzureStorage.init(credentials)
+      const azureCreds = credentials.ow ? (await tvm.getAzureBlobCredentials()) : credentials.azure
+      return AzureStorage.init(azureCreds)
     default:
-      throw new StorageError(`provider '${config.provider}' is not supported.`, StorageError.codes.BadArgument)
+      throw new StorageError(`provider '${provider}' is not supported.`, StorageError.codes.BadArgument)
   }
 }
 
