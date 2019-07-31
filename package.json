@@ -1,5 +1,5 @@
 {
-  "name": "@adobe/io-cna-cloud-storage",
+  "name": "@adobe/adobeio-cna-cloud-storage",
   "version": "0.0.1",
   "description": "An abstraction on top of blob cloud storage exposing a file like API",
   "main": "index.js",
@@ -16,7 +16,7 @@
   "engines": {
     "node": ">=10.0.0"
   },
-  "repository": "adobe/io-cna-cloud-storage",
+  "repository": "adobe/adobeio-cna-cloud-storage",
   "keywords": [
     "sdk",
     "openwhisk",
