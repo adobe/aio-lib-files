@@ -18,14 +18,18 @@ const { Storage } = require('./lib/Storage')
 const { TvmClient } = require('./lib/TvmClient')
 
 // hardcoded default tvm
-// TODO those are temporary, change to adobeio + expose proper api
+// TODO this is a temporary url
 const DEFAULT_TVM_API_URL = 'https://adobeioruntime.net/api/v1/web/mraho/adobeio-cna-token-vending-machine-0.1.0'
+
+/**
+ * @typedef {import('./lib/azure/AzureStorage').AzureCredentials} AzureCredentials
+ */
 
 /**
  * Initializes and returns the storage SDK.
  *
  * To use the SDK you must either provide provide your OpenWhisk credentials in
- * `config.ow` or your own cloud storage credentials in `credentials.azure`.
+ * `credentials.ow` or your own cloud storage credentials in `credentials.azure`.
  *
  * OpenWhisk credentials can also be read from environment variables
  *
@@ -39,14 +43,7 @@ const DEFAULT_TVM_API_URL = 'https://adobeioruntime.net/api/v1/web/mraho/adobeio
  * @param {string} [credentials.ow.auth] OpenWhisk auth, can also be passed
  *   in an environment variable `OW_AUTH` or `__OW_AUTH`
  *
- * @param {object} [credentials.azure] use this if you want to bring your own
- * azure cloud storage credentials. credentials.azure must either be set to `{ sasURLPrivate, sasURLPublic }` or
- * `{ storageAccessKey, storage Account, containerName }`
- * @property {string} [credentials.sasURLPrivate] sas url to existing private azure blob container
- * @property {string} [credentials.sasURLPublic] sas url to existing public azure blob container
- * @property {string} [credentials.storageAccount] name of azure storage account
- * @property {string} [credentials.storageAccessKey] access key for azure storage account
- * @property {string} [credentials.containerName] name of container to be used.
+ * @param {AzureCredentials} [credentials.azure] {@link AzureCredentials}
  *
  * @param {object} [options={}] options
  * @param {string} [options.tvmApiUrl] alternative tvm api url, works only
@@ -54,6 +51,7 @@ const DEFAULT_TVM_API_URL = 'https://adobeioruntime.net/api/v1/web/mraho/adobeio
  * @param {string} [options.tvmCacheFile] alternative tvm cache file, works only
  * together with credentials.ow
  * @returns {Promise<Storage>} A storage instance
+ * @throws {StorageError}
  */
 async function init (credentials, options = {}) {
   // include ow environment vars to credentials
@@ -89,7 +87,7 @@ async function _init (credentials, options = {}) {
       namespace: joi.string().required(),
       auth: joi.string().required()
     })
-  }).unknown().xor('ow', 'credentials').required())
+  }).unknown().xor('ow', 'azure').required())
   if (validation.error) throw new StorageError(validation.error.message, StorageError.codes.BadArgument)
 
   // 1. set provider
