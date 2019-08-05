@@ -48,7 +48,8 @@ const DEFAULT_TVM_API_URL = 'https://adobeioruntime.net/api/v1/web/mraho/adobeio
  * @param {object} [options={}] options
  * @param {string} [options.tvmApiUrl] alternative tvm api url, works only
  * together with credentials.ow
- * @param {string} [options.tvmCacheFile] alternative tvm cache file, works only
+ * @param {string} [options.tvmCacheFile] alternative tvm cache file, defaults
+ * to tmp `<tmpfolder>/.tvmCache`. Set to `false` to disable caching. Works only
  * together with credentials.ow
  * @returns {Promise<Storage>} A storage instance
  * @throws {StorageError}
