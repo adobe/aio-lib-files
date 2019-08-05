@@ -19,7 +19,7 @@ const { TvmClient } = require('./lib/TvmClient')
 
 // hardcoded default tvm
 // TODO this is a temporary url
-const DEFAULT_TVM_API_URL = 'https://adobeioruntime.net/api/v1/web/mraho/adobeio-cna-token-vending-machine-0.1.0'
+const _defaultTvmApiUrl = 'https://adobeioruntime.net/api/v1/web/mraho/adobeio-cna-token-vending-machine-0.1.0'
 
 // eslint-disable-next-line jsdoc/require-jsdoc
 async function wrapTVMRequest (tvm) {
@@ -75,6 +75,7 @@ async function wrapTVMRequest (tvm) {
  * @throws {StorageError}
  */
 async function init (credentials, options = {}) {
+  // todo in tvm client?
   // include ow environment vars to credentials
   const namespace = process.env['__OW_NAMESPACE'] || process.env['OW_NAMESPACE']
   const auth = process.env['__OW_AUTH'] || process.env['OW_AUTH']
@@ -93,7 +94,7 @@ async function init (credentials, options = {}) {
 }
 
 // eslint-disable-next-line jsdoc/require-jsdoc
-async function _init (credentials, options = {}) {
+async function _init (credentials, options) {
   const validation = joi.validate(credentials, joi.object().label('credentials').keys({
     azure: joi.object().keys({
       // either
@@ -118,17 +119,18 @@ async function _init (credentials, options = {}) {
   let tvm
   if (credentials.ow) {
     // default tvm url
-    if (!options.tvmApiUrl) options.tvmApiUrl = DEFAULT_TVM_API_URL
-    tvm = new TvmClient({ ow: credentials.ow, apiUrl: options.tvmApiUrl, cacheFile: options.tvmCacheFile })
+    const tvmArgs = { ow: credentials.ow, apiUrl: options.tvmApiUrl || _defaultTvmApiUrl }
+    if (options.tvmCacheFile) tvmArgs.cacheFile = options.tvmCacheFile
+    tvm = new TvmClient(tvmArgs)
   }
 
   // 3. return storage based on provider
   switch (provider) {
     case 'azure':
       return AzureStorage.init(credentials.azure || (await wrapTVMRequest(tvm)))
-    default:
-      throw new StorageError(`provider '${provider}' is not supported.`, StorageError.codes.BadArgument)
+    // default:
+    //   throw new StorageError(`provider '${provider}' is not supported.`, StorageError.codes.BadArgument)
   }
 }
 
-module.exports = { init }
+module.exports = { init, _defaultTvmApiUrl }
