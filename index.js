@@ -21,6 +21,26 @@ const { TvmClient } = require('./lib/TvmClient')
 // TODO this is a temporary url
 const DEFAULT_TVM_API_URL = 'https://adobeioruntime.net/api/v1/web/mraho/adobeio-cna-token-vending-machine-0.1.0'
 
+// eslint-disable-next-line jsdoc/require-jsdoc
+async function wrapTVMRequest (tvm) {
+  // TODO wrap tvm errors in TvmClient with specific error codes
+  // do this when tvm client has its own module
+  try {
+    const res = await tvm.getAzureBlobCredentials()
+    return res
+  } catch (e) {
+    if (e.statusCode) {
+      if (e.statusCode === 401 || e.statusCode === 403) {
+        throw new StorageError('request to token vending machine (TVM) is forbidden, please check your OpenWhisk credentials', StorageError.codes.Forbidden)
+      } else {
+        throw new StorageError(`request to token vending machine (TVM) returned with an unknown error and status code ${e.statusCode}`, StorageError.codes.Internal, e)
+      }
+    } else {
+      throw new StorageError(`request to token vending machine (TVM) returned with an unknown error`, StorageError.codes.Internal, e)
+    }
+  }
+}
+
 /**
  * @typedef {import('./lib/azure/AzureStorage').AzureCredentials} AzureCredentials
  */
@@ -94,7 +114,7 @@ async function _init (credentials, options = {}) {
   // 1. set provider
   const provider = 'azure' // only azure is supported for now
 
-  // 2. get tvm if no credentials
+  // 2. instantiate tvm if ow credentials
   let tvm
   if (credentials.ow) {
     // default tvm url
@@ -105,8 +125,7 @@ async function _init (credentials, options = {}) {
   // 3. return storage based on provider
   switch (provider) {
     case 'azure':
-      const azureCreds = credentials.ow ? (await tvm.getAzureBlobCredentials()) : credentials.azure
-      return AzureStorage.init(azureCreds)
+      return AzureStorage.init(credentials.azure || (await wrapTVMRequest(tvm)))
     default:
       throw new StorageError(`provider '${provider}' is not supported.`, StorageError.codes.BadArgument)
   }
