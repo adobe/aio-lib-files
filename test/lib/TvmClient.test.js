@@ -43,65 +43,73 @@ beforeEach(async () => {
   cacheContent = JSON.stringify({ [cacheKey]: fakeAzureTVMResponse })
 })
 
-test('constructor should throw an error on empty input', async () => {
-  const instantiate = () => new TvmClient({})
-  expect(instantiate.bind(this)).toThrowWithMessageContaining(['required'])
+describe('constructor', () => {
+  describe('with bad arguments', () => {
+    test('empty object', async () => {
+      const instantiate = () => new TvmClient({})
+      expect(instantiate.bind(this)).toThrowWithMessageContaining(['required'])
+    })
+  })
 })
 
-test('getCredentials w/o caching should return the tvm response', async () => {
-  // fake the request to the TVM
-  request.mockReturnValue(fakeAzureTVMResponse)
-  fakeTVMInput.cacheFile = false
+describe('getAzureBlobCredentials', () => {
+  describe('without caching', () => {
+    test('when tvm response is valid', async () => {
+      // fake the request to the TVM
+      request.mockReturnValue(fakeAzureTVMResponse)
+      fakeTVMInput.cacheFile = false
+      const tvmClient = new TvmClient(fakeTVMInput)
+      const creds = await tvmClient.getAzureBlobCredentials()
+      expect(creds).toEqual(fakeAzureTVMResponse)
+    })
+  })
+  describe('with caching to file', () => {
+    test('when cache exists', async () => {
+      request.mockReturnValue('bad response')
+      fs.readFile.mockReturnValue(Promise.resolve(Buffer.from(cacheContent)))
 
-  const tvmClient = new TvmClient(fakeTVMInput)
-  const creds = await tvmClient.getAzureBlobCredentials()
-  expect(creds).toEqual(fakeAzureTVMResponse)
-})
+      fakeTVMInput.cacheFile = '/cache'
+      const tvmClient = new TvmClient(fakeTVMInput)
+      const creds = await tvmClient.getAzureBlobCredentials()
 
-test('getCredentials should read credentials from the cache file', async () => {
-  request.mockReturnValue('bad response')
-  fs.readFile.mockReturnValue(Promise.resolve(Buffer.from(cacheContent)))
+      expect(creds).toEqual(fakeAzureTVMResponse)
+      expect(fs.readFile).toHaveBeenCalledWith(fakeTVMInput.cacheFile)
+    })
 
-  fakeTVMInput.cacheFile = '/cache'
-  const tvmClient = new TvmClient(fakeTVMInput)
-  const creds = await tvmClient.getAzureBlobCredentials()
+    test('when cache is empty', async () => {
+      request.mockReturnValue(fakeAzureTVMResponse)
+      fs.readFile.mockReturnValue(Promise.reject(new Error('whatever')))
 
-  expect(creds).toEqual(fakeAzureTVMResponse)
-  expect(fs.readFile).toHaveBeenCalledWith(fakeTVMInput.cacheFile)
-})
+      fakeTVMInput.cacheFile = '/cache'
+      const tvmClient = new TvmClient(fakeTVMInput)
+      const creds = await tvmClient.getAzureBlobCredentials()
 
-test('getCredentials should write credentials to an empty cache file', async () => {
-  request.mockReturnValue(fakeAzureTVMResponse)
-  fs.readFile.mockReturnValue(Promise.reject(new Error('whatever')))
+      expect(creds).toEqual(fakeAzureTVMResponse)
+      expect(fs.writeFile).toHaveBeenCalledWith(fakeTVMInput.cacheFile, cacheContent)
+    })
 
-  fakeTVMInput.cacheFile = '/cache'
-  const tvmClient = new TvmClient(fakeTVMInput)
-  const creds = await tvmClient.getAzureBlobCredentials()
+    test('when cache for other key exists', async () => {
+      const prevObject = { prevKey: { fake: 'creds' } }
+      request.mockReturnValue(fakeAzureTVMResponse)
+      fs.readFile.mockReturnValue(Promise.resolve(Buffer.from(JSON.stringify(prevObject))))
 
-  expect(creds).toEqual(fakeAzureTVMResponse)
-  expect(fs.writeFile).toHaveBeenCalledWith(fakeTVMInput.cacheFile, cacheContent)
-})
+      const tvmClient = new TvmClient(fakeTVMInput)
+      const creds = await tvmClient.getAzureBlobCredentials()
 
-test('getCredentials should read and add credentials to cache with different key', async () => {
-  const prevObject = { prevKey: { fake: 'creds' } }
-  request.mockReturnValue(fakeAzureTVMResponse)
-  fs.readFile.mockReturnValue(Promise.resolve(Buffer.from(JSON.stringify(prevObject))))
+      expect(creds).toEqual(fakeAzureTVMResponse)
+      expect(fs.writeFile).toHaveBeenCalledWith(TvmClient.DefaultTVMCacheFile, JSON.stringify({ ...prevObject, [cacheKey]: fakeAzureTVMResponse }))
+    })
 
-  const tvmClient = new TvmClient(fakeTVMInput)
-  const creds = await tvmClient.getAzureBlobCredentials()
+    test('when cache for same key exists but is expired', async () => {
+      const prevObject = { [cacheKey]: { fake: 'creds', expiration: minDate } }
+      request.mockReturnValue(fakeAzureTVMResponse)
+      fs.readFile.mockReturnValue(Promise.resolve(Buffer.from(JSON.stringify(prevObject))))
 
-  expect(creds).toEqual(fakeAzureTVMResponse)
-  expect(fs.writeFile).toHaveBeenCalledWith(TvmClient.DefaultTVMCacheFile, JSON.stringify({ ...prevObject, [cacheKey]: fakeAzureTVMResponse }))
-})
+      const tvmClient = new TvmClient(fakeTVMInput)
+      const creds = await tvmClient.getAzureBlobCredentials()
 
-test('getCredentials should read and overwrite credentials in cache with same key if expired', async () => {
-  const prevObject = { [cacheKey]: { fake: 'creds', expiration: minDate } }
-  request.mockReturnValue(fakeAzureTVMResponse)
-  fs.readFile.mockReturnValue(Promise.resolve(Buffer.from(JSON.stringify(prevObject))))
-
-  const tvmClient = new TvmClient(fakeTVMInput)
-  const creds = await tvmClient.getAzureBlobCredentials()
-
-  expect(creds).toEqual(fakeAzureTVMResponse)
-  expect(fs.writeFile).toHaveBeenCalledWith(TvmClient.DefaultTVMCacheFile, JSON.stringify({ [cacheKey]: fakeAzureTVMResponse }))
+      expect(creds).toEqual(fakeAzureTVMResponse)
+      expect(fs.writeFile).toHaveBeenCalledWith(TvmClient.DefaultTVMCacheFile, JSON.stringify({ [cacheKey]: fakeAzureTVMResponse }))
+    })
+  })
 })
