@@ -117,7 +117,7 @@ async function _init (credentials, options) {
 
   // 2. instantiate tvm if ow credentials
   let tvm
-  if (credentials.ow) {
+  if (credentials.ow && !credentials.azure) {
     // default tvm url
     const tvmArgs = { ow: credentials.ow, apiUrl: options.tvmApiUrl || _defaultTvmApiUrl }
     if (options.tvmCacheFile) tvmArgs.cacheFile = options.tvmCacheFile
