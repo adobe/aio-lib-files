@@ -136,19 +136,19 @@ describe('init', () => {
       expect(AzureStorage.init).toHaveBeenCalledTimes(1)
       expect(AzureStorage.init).toHaveBeenCalledWith(fakeAzureTVMResponse)
     })
-    test('when tvm returns with a 401', async () => {
+    test('when tvm rejects with a 401', async () => {
       TvmClient.prototype.getAzureBlobCredentials.mockRejectedValue({ statusCode: 401 })
       await expect(storageSDK.init.bind(storageSDK, { ow: fakeOWCreds })).toThrowForbidden()
     })
-    test('when tvm returns with a 403', async () => {
+    test('when tvm rejects with a 403', async () => {
       TvmClient.prototype.getAzureBlobCredentials.mockRejectedValue({ statusCode: 403 })
       await expect(storageSDK.init.bind(storageSDK, { ow: fakeOWCreds })).toThrowForbidden()
     })
-    test('when tvm returns an error with an unhandled status code', async () => {
+    test('when tvm rejects with an unhandled status code', async () => {
       TvmClient.prototype.getAzureBlobCredentials.mockRejectedValue({ statusCode: 444 })
       await expect(storageSDK.init.bind(storageSDK, { ow: fakeOWCreds })).toThrowInternalWithStatus(444)
     })
-    test('when tvm returns an error with no status code', async () => {
+    test('when tvm rejects with no status code', async () => {
       TvmClient.prototype.getAzureBlobCredentials.mockRejectedValue(true)
       await expect(storageSDK.init.bind(storageSDK, { ow: fakeOWCreds })).toThrowInternal()
     })

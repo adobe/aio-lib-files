@@ -64,11 +64,9 @@ describe('init', () => {
       expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, {})
       expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, { access: 'blob' })
     })
-    test('when there is an error on blob container creation', async () => {
+    test('when there is an unknown error on blob container creation', async () => {
       mockContainerCreate.mockRejectedValue('error')
       await expect(AzureStorage.init.bind(null, fakeUserCredentials)).toThrowInternal()
-    })
-    test('when there is an error with status on blob container creation', async () => {
       mockContainerCreate.mockRejectedValue({ response: { status: 444 } })
       await expect(AzureStorage.init.bind(null, fakeUserCredentials)).toThrowInternalWithStatus(444)
     })
@@ -147,17 +145,15 @@ describe('list', () => {
       expect(mockContainerPublicList).toHaveBeenCalledTimes(0)
       expect(mockContainerPrivateList).toHaveBeenCalledTimes(0)
     })
-    test('when there is a provider forbidden access error', async () => {
-      mockBlobGetProperties.mockRejectedValue({ response: { status: 403 } })
-      await expect(storage.list.bind(storage, fileInPrivateDir)).toThrowForbidden()
-    })
-    test('when there is a provider error with a status code', async () => {
+    test('when there is an unknown provider error', async () => {
       mockBlobGetProperties.mockRejectedValue({ response: { status: 444 } })
       await expect(storage.list.bind(storage, fileInPrivateDir)).toThrowInternalWithStatus(444)
-    })
-    test('when there is a provider error without a status code', async () => {
       mockBlobGetProperties.mockRejectedValue(true)
       await expect(storage.list.bind(storage, fileInPrivateDir)).toThrowInternal()
+    })
+    test('when there is a forbidden provider error', async () => {
+      mockBlobGetProperties.mockRejectedValue({ response: { status: 403 } })
+      await expect(storage.list.bind(storage, fileInPrivateDir)).toThrowForbidden()
     })
   })
 
@@ -208,17 +204,15 @@ describe('list', () => {
       expect(mockContainerPrivateList).toHaveBeenCalledTimes(0)
       expect(mockContainerPublicList).toHaveBeenCalledWith(...fakeListArguments(publicDir))
     })
-    test('when there is a provider forbidden access error', async () => {
-      mockContainerPublicList.mockRejectedValue({ response: { status: 403 } })
-      await expect(storage.list.bind(storage, publicDir)).toThrowForbidden()
-    })
-    test('when there is a provider error with a status code', async () => {
+    test('when there is an unknown provider error', async () => {
       mockContainerPublicList.mockRejectedValue({ response: { status: 444 } })
       await expect(storage.list.bind(storage, publicDir)).toThrowInternalWithStatus(444)
-    })
-    test('when there is a provider error without a status code', async () => {
       mockContainerPublicList.mockRejectedValue(true)
       await expect(storage.list.bind(storage, publicDir)).toThrowInternal()
+    })
+    test('when there is a forbidden provider error', async () => {
+      mockContainerPublicList.mockRejectedValue({ response: { status: 403 } })
+      await expect(storage.list.bind(storage, publicDir)).toThrowForbidden()
     })
   })
 })
