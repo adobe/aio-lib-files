@@ -1,5 +1,6 @@
 const { AzureStorage } = require('../../lib/azure/AzureStorage')
 const { StorageError } = require('../../lib/StorageError')
+const stream = require('stream')
 
 const azure = require('@azure/storage-blob')
 jest.mock('@azure/storage-blob')
@@ -146,13 +147,13 @@ describe('list', () => {
       expect(mockContainerPublicList).toHaveBeenCalledTimes(0)
       expect(mockContainerPrivateList).toHaveBeenCalledTimes(0)
     })
-    test('when there is an unknown provider error', async () => {
+    test('when azure.BlockBlobURL.getProperties rejects with a 403', async () => {
       mockBlobGetProperties.mockRejectedValue({ response: { status: 444 } })
       await expect(storage.list.bind(storage, fileInPrivateDir)).toThrowInternalWithStatus(444)
       mockBlobGetProperties.mockRejectedValue(true)
       await expect(storage.list.bind(storage, fileInPrivateDir)).toThrowInternal()
     })
-    test('when there is a forbidden provider error', async () => {
+    test('when azure.BlockBlobURL.getProperties rejects with an unknown status/error', async () => {
       mockBlobGetProperties.mockRejectedValue({ response: { status: 403 } })
       await expect(storage.list.bind(storage, fileInPrivateDir)).toThrowForbidden()
     })
@@ -205,13 +206,13 @@ describe('list', () => {
       expect(mockContainerPrivateList).toHaveBeenCalledTimes(0)
       expect(mockContainerPublicList).toHaveBeenCalledWith(...fakeListArguments(publicDir))
     })
-    test('when there is an unknown provider error', async () => {
+    test('when azure.ContainerURL.list rejects with an unknown status/error', async () => {
       mockContainerPublicList.mockRejectedValue({ response: { status: 444 } })
       await expect(storage.list.bind(storage, publicDir)).toThrowInternalWithStatus(444)
       mockContainerPublicList.mockRejectedValue(true)
       await expect(storage.list.bind(storage, publicDir)).toThrowInternal()
     })
-    test('when there is a forbidden provider error', async () => {
+    test('when azure.ContainerURL.list rejects with a 403 error', async () => {
       mockContainerPublicList.mockRejectedValue({ response: { status: 403 } })
       await expect(storage.list.bind(storage, publicDir)).toThrowForbidden()
     })
@@ -286,7 +287,7 @@ describe('delete', () => {
     mockAzureDelete.mockRejectedValue({ response: { status: 444 } })
     await expect(storage.delete.bind(storage, fakeDir)).toThrowInternalWithStatus(444)
     mockAzureDelete.mockRejectedValue(true)
-    await expect(storage.delete.bind(storage, fakeDir)).toThrowInternal
+    await expect(storage.delete.bind(storage, fakeDir)).toThrowInternal()
   })
   test('when list rejects with an error', async () => {
     let error = new StorageError('fakeError')
@@ -295,5 +296,116 @@ describe('delete', () => {
     error = new Error('fakeError')
     mockList.mockRejectedValue(error)
     await expect(storage.delete(fakeDir)).rejects.toThrow(error)
+  })
+})
+
+describe('createReadStream', () => {
+  // todo read is not specific to azure (based on storage.createReadStream) can
+  // we move this somewhere reusable?
+  /* Common setup for delete tests */
+  const fakeFile = 'a/dir/file1'
+  const mockAzureDownload = jest.fn()
+  let storage
+  beforeEach(async () => {
+    mockAzureDownload.mockReset()
+    azure.BlockBlobURL.fromContainerURL = jest.fn().mockReturnValue({ download: mockAzureDownload })
+    azure.ContainerURL = jest.fn()
+    storage = await AzureStorage.init(fakeSASCredentials)
+    storage._azure.aborter = fakeAborter
+  })
+
+  describe('for a file', () => {
+    let fakeRdStream
+    const fakeOptions = { position: 1, length: 10 }
+    beforeEach(() => {
+      fakeRdStream = new stream.Readable()
+      fakeRdStream.push(null)
+      mockAzureDownload.mockResolvedValue({ readableStreamBody: fakeRdStream })
+    })
+    test('w/o options', async () => {
+      const res = await storage.createReadStream(fakeFile)
+      expect(res).toBe(fakeRdStream)
+      expect(mockAzureDownload).toHaveBeenCalledTimes(1)
+      expect(mockAzureDownload).toHaveBeenCalledWith(fakeAborter, 0, undefined)
+    })
+    test('with options', async () => {
+      const res = await storage.createReadStream(fakeFile, fakeOptions)
+      expect(res).toBe(fakeRdStream)
+      expect(mockAzureDownload).toHaveBeenCalledTimes(1)
+      expect(mockAzureDownload).toHaveBeenCalledWith(fakeAborter, fakeOptions.position, fakeOptions.length)
+    })
+  })
+
+  test('for a directory (not allowed)', async () => {
+    await expect(storage.createReadStream.bind(storage, 'a/dir/')).toThrowBadArgDirectory('a/dir/')
+  })
+  test('when azure.BlockBlobURL.download rejects with 404', async () => {
+    mockAzureDownload.mockRejectedValue({ response: { status: 404 } })
+    await expect(storage.createReadStream.bind(storage, fakeFile)).toThrowFileNotExists(fakeFile)
+  })
+  test('when azure.BlockBlobURL.download rejects with 403', async () => {
+    mockAzureDownload.mockRejectedValue({ response: { status: 403 } })
+    await expect(storage.createReadStream.bind(storage, fakeFile)).toThrowForbidden()
+  })
+  test('when azure.BlockBlobURL.download rejects with an unknown status/error', async () => {
+    mockAzureDownload.mockRejectedValue({ response: { status: 444 } })
+    await expect(storage.createReadStream.bind(storage, fakeFile)).toThrowInternalWithStatus(444)
+
+    mockAzureDownload.mockRejectedValue(true)
+    await expect(storage.createReadStream.bind(storage, fakeFile)).toThrowInternal()
+  })
+})
+
+describe('read', () => {
+  // todo read is not specific to azure (based on storage.createReadStream) we
+  // should move it to a common/base test file once we have a second implementation
+  /* Common setup for delete tests */
+  const fakeFile = 'a/dir/file1'
+  const mockCreateReadStream = jest.fn()
+  let storage
+
+  beforeEach(async () => {
+    mockCreateReadStream.mockReset()
+    azure.ContainerURL = jest.fn()
+    storage = await AzureStorage.init(fakeSASCredentials)
+    storage._azure.aborter = fakeAborter
+    storage.createReadStream = mockCreateReadStream
+  })
+
+  describe('a file', () => {
+    let fakeRdStream
+    const fakeContent = 'some fake content @#$%^&*()@!12-=][;"\n\trewq'
+    const fakeOptions = { position: 1, length: 10 }
+    beforeEach(() => {
+      fakeRdStream = new stream.Readable()
+      fakeRdStream.push(fakeContent)
+      fakeRdStream.push(null)
+      mockCreateReadStream.mockResolvedValue(fakeRdStream)
+    })
+    test('w/o options', async () => {
+      const res = await storage.read(fakeFile, {})
+      expect(res).toBeInstanceOf(Buffer)
+      expect(res.toString()).toEqual(fakeContent)
+      expect(mockCreateReadStream).toHaveBeenCalledTimes(1)
+      expect(mockCreateReadStream).toHaveBeenCalledWith(fakeFile, {})
+    })
+    test('with options', async () => {
+      // here we just check that the options are passed to the createReadStream
+      // but don't care about what they do as we mock the returned content
+      const res = await storage.read(fakeFile, fakeOptions)
+      expect(res).toBeInstanceOf(Buffer)
+      expect(res.toString()).toEqual(fakeContent)
+      expect(mockCreateReadStream).toHaveBeenCalledTimes(1)
+      expect(mockCreateReadStream).toHaveBeenCalledWith(fakeFile, fakeOptions)
+    })
+  })
+  test('when createReadStream rejects with an error', async () => {
+    // should cover file doesn't exist + is dir b/c known errors are thrown from createReadStream
+    let error = new StorageError('fakeError')
+    mockCreateReadStream.mockRejectedValue(error)
+    await expect(storage.read(fakeFile)).rejects.toThrow(error)
+    error = new Error('fakeError')
+    mockCreateReadStream.mockRejectedValue(error)
+    await expect(storage.read(fakeFile)).rejects.toThrow(error)
   })
 })

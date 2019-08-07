@@ -39,5 +39,6 @@ expect.extend({
   toThrowForbidden: (received) => toThrowWithCodeAndMessageContains(received, StorageError.codes.Forbidden, ['forbidden', 'credentials']),
   toThrowInternalWithStatus: (received, status) => toThrowWithCodeAndMessageContains(received, StorageError.codes.Internal, ['' + status, 'unknown']),
   toThrowInternal: (received) => toThrowWithCodeAndMessageContains(received, StorageError.codes.Internal, ['unknown']),
-  toThrowFileNotExists: (received) => toThrowWithCodeAndMessageContains(received, StorageError.codes.FileNotExists, ['file', 'not exists'])
+  toThrowFileNotExists: (received, filePath) => toThrowWithCodeAndMessageContains(received, StorageError.codes.FileNotExists, ['file', 'not exist', filePath]),
+  toThrowBadArgDirectory: (received, filePath) => toThrowWithCodeAndMessageContains(received, StorageError.codes.BadArgument, ['file', 'directory', filePath])
 })
