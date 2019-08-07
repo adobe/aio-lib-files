@@ -1,5 +1,4 @@
 const storageSDK = require('../index')
-const { StorageError } = require('../lib/StorageError')
 
 const { AzureStorage } = require('../lib/azure/AzureStorage')
 jest.mock('../lib/azure/AzureStorage.js')
@@ -43,16 +42,16 @@ describe('init', () => {
 
   describe('with bad arguments', () => {
     test('when empty credentials', async () => {
-      await expect(storageSDK.init).toThrowBadArgErrWithMessageContaining(['credentials', 'required'])
+      await expect(storageSDK.init).toThrowBadArgWithMessageContaining(['credentials', 'required'])
     })
     test('when credentials with empty ow object', async () => {
-      await expect(storageSDK.init.bind(null, { ow: {} })).toThrowBadArgErrWithMessageContaining(['ow'])
+      await expect(storageSDK.init.bind(null, { ow: {} })).toThrowBadArgWithMessageContaining(['ow'])
     })
     test('when credentials with empty azure object', async () => {
-      await expect(storageSDK.init.bind(null, { azure: {} })).toThrowBadArgErrWithMessageContaining(['azure'])
+      await expect(storageSDK.init.bind(null, { azure: {} })).toThrowBadArgWithMessageContaining(['azure'])
     })
     test('when credentials with both ow and azure credentials set', async () => {
-      await expect(storageSDK.init.bind(null, { azure: fakeAzureUserCredentials, ow: fakeOWCreds })).toThrowBadArgErrWithMessageContaining(['azure', 'ow'])
+      await expect(storageSDK.init.bind(null, { azure: fakeAzureUserCredentials, ow: fakeOWCreds })).toThrowBadArgWithMessageContaining(['azure', 'ow'])
     })
   })
 
@@ -138,49 +137,20 @@ describe('init', () => {
       expect(AzureStorage.init).toHaveBeenCalledWith(fakeAzureTVMResponse)
     })
     test('when tvm returns with a 401', async () => {
-      expect.assertions(2)
       TvmClient.prototype.getAzureBlobCredentials.mockRejectedValue({ statusCode: 401 })
-      try {
-        await storageSDK.init({ ow: fakeOWCreds })
-      } catch (e) {
-        // we expect every provider error to be wrapped
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.Forbidden)
-      }
+      await expect(storageSDK.init.bind(storageSDK, { ow: fakeOWCreds })).toThrowForbidden()
     })
     test('when tvm returns with a 403', async () => {
-      expect.assertions(2)
       TvmClient.prototype.getAzureBlobCredentials.mockRejectedValue({ statusCode: 403 })
-      try {
-        await storageSDK.init({ ow: fakeOWCreds })
-      } catch (e) {
-        // we expect every provider error to be wrapped
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.Forbidden)
-      }
+      await expect(storageSDK.init.bind(storageSDK, { ow: fakeOWCreds })).toThrowForbidden()
     })
     test('when tvm returns an error with an unhandled status code', async () => {
-      expect.assertions(3)
-      TvmClient.prototype.getAzureBlobCredentials.mockRejectedValue({ statusCode: 500 })
-      try {
-        await storageSDK.init({ ow: fakeOWCreds })
-      } catch (e) {
-        // we expect every provider error to be wrapped
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.Internal)
-        expect(e.message).toContain('500')
-      }
+      TvmClient.prototype.getAzureBlobCredentials.mockRejectedValue({ statusCode: 444 })
+      await expect(storageSDK.init.bind(storageSDK, { ow: fakeOWCreds })).toThrowInternalWithStatus(444)
     })
     test('when tvm returns an error with no status code', async () => {
-      expect.assertions(2)
-      TvmClient.prototype.getAzureBlobCredentials.mockRejectedValue({})
-      try {
-        await storageSDK.init({ ow: fakeOWCreds })
-      } catch (e) {
-        // we expect every provider error to be wrapped
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.Internal)
-      }
+      TvmClient.prototype.getAzureBlobCredentials.mockRejectedValue(true)
+      await expect(storageSDK.init.bind(storageSDK, { ow: fakeOWCreds })).toThrowInternal()
     })
   })
 })

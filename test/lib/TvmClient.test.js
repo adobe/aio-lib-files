@@ -47,19 +47,19 @@ describe('constructor', () => {
   describe('with bad arguments', () => {
     test('no args', async () => {
       const instantiate = () => new TvmClient()
-      await expect(instantiate).toThrowBadArgErrWithMessageContaining(['config', 'required'], false)
+      await expect(instantiate).toThrowBadArgWithMessageContaining(['config', 'required'], false)
     })
     test('missing ow object', async () => {
       const badInput = { ...fakeTVMInput }
       badInput.ow = undefined
       const instantiate = () => new TvmClient(badInput)
-      await expect(instantiate).toThrowBadArgErrWithMessageContaining(['ow', 'required'], false)
+      await expect(instantiate).toThrowBadArgWithMessageContaining(['ow', 'required'], false)
     })
     test('missing apiUrl', async () => {
       const badInput = { ...fakeTVMInput }
       badInput.apiUrl = undefined
       const instantiate = () => new TvmClient(badInput)
-      await expect(instantiate).toThrowBadArgErrWithMessageContaining(['apiUrl', 'required'], false)
+      await expect(instantiate).toThrowBadArgWithMessageContaining(['apiUrl', 'required'], false)
     })
   })
 })

@@ -1,4 +1,3 @@
-const { StorageError } = require('../../lib/StorageError')
 const { AzureStorage } = require('../../lib/azure/AzureStorage')
 
 const azure = require('@azure/storage-blob')
@@ -31,20 +30,20 @@ describe('init', () => {
 
   describe('with bad args', () => {
     test('when called with no arguments', async () => {
-      await expect(AzureStorage.init).toThrowBadArgErrWithMessageContaining(['credentials', 'required'])
+      await expect(AzureStorage.init).toThrowBadArgWithMessageContaining(['credentials', 'required'])
     })
     test('when called with incomplete SAS credentials', async () => {
       const badInput = { ...fakeSASCredentials }
       delete badInput.sasURLPrivate
-      await expect(AzureStorage.init.bind(null, badInput)).toThrowBadArgErrWithMessageContaining(['credentials', 'required', 'sasURLPrivate'])
+      await expect(AzureStorage.init.bind(null, badInput)).toThrowBadArgWithMessageContaining(['credentials', 'required', 'sasURLPrivate'])
     })
     test('when called with incomplete user credentials', async () => {
       const badInput = { ...fakeUserCredentials }
       delete badInput.containerName
-      await expect(AzureStorage.init.bind(null, badInput)).toThrowBadArgErrWithMessageContaining(['credentials', 'required', 'containerName'])
+      await expect(AzureStorage.init.bind(null, badInput)).toThrowBadArgWithMessageContaining(['credentials', 'required', 'containerName'])
     })
     test('when called with both sas and user credentials', async () => {
-      await expect(AzureStorage.init.bind(null, { ...fakeUserCredentials, ...fakeSASCredentials })).toThrowBadArgErrWithMessageContaining(['credentials', 'conflict'])
+      await expect(AzureStorage.init.bind(null, { ...fakeUserCredentials, ...fakeSASCredentials })).toThrowBadArgWithMessageContaining(['credentials', 'conflict'])
     })
   })
 
@@ -66,38 +65,16 @@ describe('init', () => {
       expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, { access: 'blob' })
     })
     test('when there is an error on blob container creation', async () => {
-      expect.assertions(2)
       mockContainerCreate.mockRejectedValue('error')
-      try {
-        await AzureStorage.init(fakeUserCredentials)
-      } catch (e) {
-        // we expect every provider error to be wrapped
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.Internal)
-      }
+      await expect(AzureStorage.init.bind(null, fakeUserCredentials)).toThrowInternal()
     })
     test('when there is an error with status on blob container creation', async () => {
-      expect.assertions(3)
-      mockContainerCreate.mockRejectedValue({ response: { status: 500 } })
-      try {
-        await AzureStorage.init(fakeUserCredentials)
-      } catch (e) {
-        // we expect every provider error to be wrapped
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.Internal)
-        expect(e.message).toContain('500')
-      }
+      mockContainerCreate.mockRejectedValue({ response: { status: 444 } })
+      await expect(AzureStorage.init.bind(null, fakeUserCredentials)).toThrowInternalWithStatus(444)
     })
     test('when there is an error with forbidden status on blob container creation', async () => {
-      expect.assertions(2)
       mockContainerCreate.mockRejectedValue({ response: { status: 403 } })
-      try {
-        await AzureStorage.init(fakeUserCredentials)
-      } catch (e) {
-        // we expect every provider error to be wrapped
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.Forbidden)
-      }
+      await expect(AzureStorage.init.bind(null, fakeUserCredentials)).toThrowForbidden()
     })
   })
   test('with azure SAS credentials', async () => {
@@ -171,35 +148,16 @@ describe('list', () => {
       expect(mockContainerPrivateList).toHaveBeenCalledTimes(0)
     })
     test('when there is a provider forbidden access error', async () => {
-      expect.assertions(2)
       mockBlobGetProperties.mockRejectedValue({ response: { status: 403 } })
-      try {
-        await storage.list(fileInPrivateDir)
-      } catch (e) {
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.Forbidden)
-      }
+      await expect(storage.list.bind(storage, fileInPrivateDir)).toThrowForbidden()
     })
     test('when there is a provider error with a status code', async () => {
-      expect.assertions(3)
-      mockBlobGetProperties.mockRejectedValue({ response: { status: 500 } })
-      try {
-        await storage.list(fileInPrivateDir)
-      } catch (e) {
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.Internal)
-        expect(e.message).toContain('500')
-      }
+      mockBlobGetProperties.mockRejectedValue({ response: { status: 444 } })
+      await expect(storage.list.bind(storage, fileInPrivateDir)).toThrowInternalWithStatus(444)
     })
     test('when there is a provider error without a status code', async () => {
-      expect.assertions(2)
       mockBlobGetProperties.mockRejectedValue(true)
-      try {
-        await storage.list(fileInPrivateDir)
-      } catch (e) {
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.Internal)
-      }
+      await expect(storage.list.bind(storage, fileInPrivateDir)).toThrowInternal()
     })
   })
 
@@ -251,35 +209,16 @@ describe('list', () => {
       expect(mockContainerPublicList).toHaveBeenCalledWith(...fakeListArguments(publicDir))
     })
     test('when there is a provider forbidden access error', async () => {
-      expect.assertions(2)
       mockContainerPublicList.mockRejectedValue({ response: { status: 403 } })
-      try {
-        await storage.list(publicDir)
-      } catch (e) {
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.Forbidden)
-      }
+      await expect(storage.list.bind(storage, publicDir)).toThrowForbidden()
     })
     test('when there is a provider error with a status code', async () => {
-      expect.assertions(3)
-      mockContainerPublicList.mockRejectedValue({ response: { status: 500 } })
-      try {
-        await storage.list(publicDir)
-      } catch (e) {
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.Internal)
-        expect(e.message).toContain('500')
-      }
+      mockContainerPublicList.mockRejectedValue({ response: { status: 444 } })
+      await expect(storage.list.bind(storage, publicDir)).toThrowInternalWithStatus(444)
     })
     test('when there is a provider error without a status code', async () => {
-      expect.assertions(2)
       mockContainerPublicList.mockRejectedValue(true)
-      try {
-        await storage.list(publicDir)
-      } catch (e) {
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.Internal)
-      }
+      await expect(storage.list.bind(storage, publicDir)).toThrowInternal()
     })
   })
 })
