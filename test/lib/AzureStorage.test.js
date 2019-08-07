@@ -1,4 +1,5 @@
 const { AzureStorage } = require('../../lib/azure/AzureStorage')
+const { StorageError } = require('../../lib/StorageError')
 
 const azure = require('@azure/storage-blob')
 jest.mock('@azure/storage-blob')
@@ -7,6 +8,7 @@ const fakeSASCredentials = {
   sasURLPrivate: 'https://fake.com/private',
   sasURLPublic: 'https://fake.com/public'
 }
+const fakeAborter = 'fakeAborter'
 
 beforeEach(async () => {
   expect.hasAssertions()
@@ -106,7 +108,6 @@ describe('list', () => {
   const mockBlobGetProperties = jest.fn()
   const mockContainerPublicList = jest.fn()
   const mockContainerPrivateList = jest.fn()
-  const fakeAborter = 'fakeAborter'
   const fakeListArguments = (prefix, marker) => [fakeAborter, marker, { prefix: prefix, delimiter: '/' }]
   let storage
 
@@ -214,5 +215,85 @@ describe('list', () => {
       mockContainerPublicList.mockRejectedValue({ response: { status: 403 } })
       await expect(storage.list.bind(storage, publicDir)).toThrowForbidden()
     })
+  })
+})
+
+describe('delete', () => {
+  /* Common setup for delete tests */
+  const fakeDir = 'a/dir/'
+  const fakeFiles = ['file1', 'folder/file2', 'file3'].map(f => fakeDir + f)
+  const mockList = jest.fn()
+  const mockAzureDelete = jest.fn()
+  let storage
+
+  beforeEach(async () => {
+    mockAzureDelete.mockReset()
+    mockAzureDelete.mockResolvedValue(true) // defaults to promise
+    mockList.mockReset()
+    azure.ContainerURL = jest.fn()
+    azure.BlockBlobURL.fromContainerURL = jest.fn().mockReturnValue({ delete: mockAzureDelete })
+    storage = await AzureStorage.init(fakeSASCredentials)
+    storage._azure.aborter = fakeAborter
+    storage.list = mockList
+  })
+
+  test('a file', async () => {
+    mockList.mockResolvedValue([fakeFiles[0]])
+    const res = await storage.delete(fakeFiles[0])
+    expect(mockList).toHaveBeenCalledTimes(1)
+    expect(mockList).toHaveBeenCalledWith(fakeFiles[0])
+    expect(mockAzureDelete).toHaveBeenCalledTimes(1)
+    expect(res).toEqual([fakeFiles[0]])
+  })
+  test('a file that does not exist', async () => {
+    mockList.mockResolvedValue([])
+    const res = await storage.delete(fakeFiles[0])
+    expect(mockList).toHaveBeenCalledTimes(1)
+    expect(mockList).toHaveBeenCalledWith(fakeFiles[0])
+    expect(mockAzureDelete).toHaveBeenCalledTimes(0)
+    expect(res).toEqual([])
+  })
+  test('a directory with 3 files when options.progressCallback is set', async () => {
+    const mockProgressCB = jest.fn()
+    mockList.mockResolvedValue(fakeFiles)
+    const res = await storage.delete(fakeDir, { progressCallback: mockProgressCB })
+    expect(res).toEqual(fakeFiles)
+    expect(mockList).toHaveBeenCalledTimes(1)
+    expect(mockList).toHaveBeenCalledWith(fakeDir)
+    expect(mockAzureDelete).toHaveBeenCalledTimes(3)
+    expect(mockProgressCB).toHaveBeenCalledWith(fakeFiles[0])
+    expect(mockProgressCB).toHaveBeenCalledWith(fakeFiles[1])
+    expect(mockProgressCB).toHaveBeenCalledWith(fakeFiles[2])
+    expect(mockProgressCB).toHaveBeenCalledTimes(3)
+  })
+  test('an empty directory', async () => {
+    const mockProgressCB = jest.fn()
+    mockList.mockResolvedValue([])
+    const res = await storage.delete(fakeDir, { progressCallback: mockProgressCB })
+    expect(res).toEqual([])
+    expect(mockList).toHaveBeenCalledTimes(1)
+    expect(mockList).toHaveBeenCalledWith(fakeDir)
+    expect(mockAzureDelete).toHaveBeenCalledTimes(0)
+    expect(mockProgressCB).toHaveBeenCalledTimes(0)
+  })
+  test('when azure.BlockBlobURL.delete rejects with a forbidden status', async () => {
+    mockList.mockResolvedValue(fakeFiles)
+    mockAzureDelete.mockRejectedValue({ response: { status: 403 } })
+    await expect(storage.delete.bind(storage, fakeDir)).toThrowForbidden()
+  })
+  test('when azure.BlockBlobURL.delete rejects with an unknown status/error', async () => {
+    mockList.mockResolvedValue(fakeFiles)
+    mockAzureDelete.mockRejectedValue({ response: { status: 444 } })
+    await expect(storage.delete.bind(storage, fakeDir)).toThrowInternalWithStatus(444)
+    mockAzureDelete.mockRejectedValue(true)
+    await expect(storage.delete.bind(storage, fakeDir)).toThrowInternal
+  })
+  test('when list rejects with an error', async () => {
+    let error = new StorageError('fakeError')
+    mockList.mockRejectedValue(error)
+    await expect(storage.delete(fakeDir)).rejects.toThrow(error)
+    error = new Error('fakeError')
+    mockList.mockRejectedValue(error)
+    await expect(storage.delete(fakeDir)).rejects.toThrow(error)
   })
 })
