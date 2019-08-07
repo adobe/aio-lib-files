@@ -14,7 +14,7 @@
   "author": "Adobe Inc.",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=10.0.0"
+    "node": ">=8.0.0"
   },
   "repository": "adobe/adobeio-cna-cloud-storage",
   "keywords": [
