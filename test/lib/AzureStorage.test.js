@@ -31,54 +31,20 @@ describe('init', () => {
 
   describe('with bad args', () => {
     test('when called with no arguments', async () => {
-      expect.assertions(4)
-      try {
-        await AzureStorage.init()
-      } catch (e) {
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.BadArgument)
-        expect(e.message).toContain('credentials')
-        expect(e.message).toContain('required')
-      }
+      await expect(AzureStorage.init).toThrowBadArgErrWithMessageContaining(['credentials', 'required'])
     })
     test('when called with incomplete SAS credentials', async () => {
-      expect.assertions(5)
-      try {
-        const badInput = { ...fakeSASCredentials }
-        delete badInput.sasURLPrivate
-        await AzureStorage.init(badInput)
-      } catch (e) {
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.BadArgument)
-        expect(e.message).toContain('credentials')
-        expect(e.message).toContain('required')
-        expect(e.message).toContain('sasURLPrivate')
-      }
+      const badInput = { ...fakeSASCredentials }
+      delete badInput.sasURLPrivate
+      await expect(AzureStorage.init.bind(null, badInput)).toThrowBadArgErrWithMessageContaining(['credentials', 'required', 'sasURLPrivate'])
     })
     test('when called with incomplete user credentials', async () => {
-      expect.assertions(5)
-      try {
-        const badInput = { ...fakeUserCredentials }
-        delete badInput.containerName
-        await AzureStorage.init(badInput)
-      } catch (e) {
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.BadArgument)
-        expect(e.message).toContain('credentials')
-        expect(e.message).toContain('required')
-        expect(e.message).toContain('containerName')
-      }
+      const badInput = { ...fakeUserCredentials }
+      delete badInput.containerName
+      await expect(AzureStorage.init.bind(null, badInput)).toThrowBadArgErrWithMessageContaining(['credentials', 'required', 'containerName'])
     })
     test('when called with both sas and user credentials', async () => {
-      expect.assertions(4)
-      try {
-        await AzureStorage.init({ ...fakeUserCredentials, ...fakeSASCredentials })
-      } catch (e) {
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.BadArgument)
-        expect(e.message).toContain('credentials')
-        expect(e.message).toContain('conflict')
-      }
+      await expect(AzureStorage.init.bind(null, { ...fakeUserCredentials, ...fakeSASCredentials })).toThrowBadArgErrWithMessageContaining(['credentials', 'conflict'])
     })
   })
 
@@ -134,9 +100,8 @@ describe('init', () => {
       }
     })
   })
-
-  // change to describe with beforeEach when more than one test for SAS credentials
   test('with azure SAS credentials', async () => {
+    // change to describe with beforeEach when more than one test for SAS credentials
     // setup & before
     const fakeAzurePipeline = 'fakeAzurePipeline'
     const fakeAzureAborter = 'fakeAborter'
@@ -161,7 +126,6 @@ describe('list', () => {
   const fileWithoutExtension = 'afile'
   const privateDir = 'some/private/dir/'
   const publicDir = 'public/some/dir/'
-
   const fakeAzureListResponse = (files, marker) => { return { marker: marker, segment: { blobItems: files.map(name => { return { name } }) } } }
   const fakeAzureFileProps = { fake: 'props' }
   const mockBlobGetProperties = jest.fn()
@@ -169,16 +133,14 @@ describe('list', () => {
   const mockContainerPrivateList = jest.fn()
   const fakeAborter = 'fakeAborter'
   const fakeListArguments = (prefix, marker) => [fakeAborter, marker, { prefix: prefix, delimiter: '/' }]
-
   let storage
+
   beforeEach(async () => {
     mockBlobGetProperties.mockReset()
     mockContainerPublicList.mockReset()
     mockContainerPrivateList.mockReset()
     azure.ContainerURL = jest.fn()
-    azure.BlockBlobURL.fromContainerURL = jest.fn().mockReturnValue({
-      getProperties: mockBlobGetProperties
-    })
+    azure.BlockBlobURL.fromContainerURL = jest.fn().mockReturnValue({ getProperties: mockBlobGetProperties })
     storage = await AzureStorage.init(fakeSASCredentials)
     storage._azure.containerURLPrivate = { listBlobFlatSegment: mockContainerPrivateList }
     storage._azure.containerURLPublic = { listBlobFlatSegment: mockContainerPublicList }
@@ -242,16 +204,20 @@ describe('list', () => {
   })
 
   describe('a directory', () => {
-    const testRoot = (rootString) => async () => {
-      mockContainerPublicList.mockResolvedValue(fakeAzureListResponse([fileInPublicDir, fileInPublicSubDir]))
-      mockContainerPrivateList.mockResolvedValue(fakeAzureListResponse([fileInPrivateDir, fileInRoot]))
-      expect(await storage.list(rootString)).toEqual([fileInPrivateDir, fileInRoot, fileInPublicDir, fileInPublicSubDir])
-      expect(mockBlobGetProperties).toHaveBeenCalledTimes(0)
-      expect(mockContainerPublicList).toHaveBeenCalledTimes(1)
-      expect(mockContainerPublicList).toHaveBeenCalledWith(...fakeListArguments('public'))
-      expect(mockContainerPrivateList).toHaveBeenCalledTimes(1)
-      expect(mockContainerPrivateList).toHaveBeenCalledWith(...fakeListArguments(''))
+    // eslint-disable-next-line jsdoc/require-jsdoc
+    function testRoot (rootString) {
+      return async () => {
+        mockContainerPublicList.mockResolvedValue(fakeAzureListResponse([fileInPublicDir, fileInPublicSubDir]))
+        mockContainerPrivateList.mockResolvedValue(fakeAzureListResponse([fileInPrivateDir, fileInRoot]))
+        expect(await storage.list(rootString)).toEqual([fileInPrivateDir, fileInRoot, fileInPublicDir, fileInPublicSubDir])
+        expect(mockBlobGetProperties).toHaveBeenCalledTimes(0)
+        expect(mockContainerPublicList).toHaveBeenCalledTimes(1)
+        expect(mockContainerPublicList).toHaveBeenCalledWith(...fakeListArguments('public'))
+        expect(mockContainerPrivateList).toHaveBeenCalledTimes(1)
+        expect(mockContainerPrivateList).toHaveBeenCalledWith(...fakeListArguments(''))
+      }
     }
+
     test('when it is the root (`/`)', testRoot('/'))
     test('when it is the root (empty string)', testRoot(''))
     test('when it is the root (undefined arg)', testRoot())

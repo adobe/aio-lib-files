@@ -45,9 +45,21 @@ beforeEach(async () => {
 
 describe('constructor', () => {
   describe('with bad arguments', () => {
-    test('empty object', async () => {
-      const instantiate = () => new TvmClient({})
-      expect(instantiate.bind(this)).toThrowWithMessageContaining(['required'])
+    test('no args', async () => {
+      const instantiate = () => new TvmClient()
+      await expect(instantiate).toThrowBadArgErrWithMessageContaining(['config', 'required'], false)
+    })
+    test('missing ow object', async () => {
+      const badInput = { ...fakeTVMInput }
+      badInput.ow = undefined
+      const instantiate = () => new TvmClient(badInput)
+      await expect(instantiate).toThrowBadArgErrWithMessageContaining(['ow', 'required'], false)
+    })
+    test('missing apiUrl', async () => {
+      const badInput = { ...fakeTVMInput }
+      badInput.apiUrl = undefined
+      const instantiate = () => new TvmClient(badInput)
+      await expect(instantiate).toThrowBadArgErrWithMessageContaining(['apiUrl', 'required'], false)
     })
   })
 })

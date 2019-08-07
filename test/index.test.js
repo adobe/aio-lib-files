@@ -43,49 +43,16 @@ describe('init', () => {
 
   describe('with bad arguments', () => {
     test('when empty credentials', async () => {
-      expect.assertions(3)
-      try {
-        await storageSDK.init()
-      } catch (e) {
-        // we expect every provider error to be wrapped
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.BadArgument)
-        expect(e.message).toContain('credentials')
-      }
+      await expect(storageSDK.init).toThrowBadArgErrWithMessageContaining(['credentials', 'required'])
     })
     test('when credentials with empty ow object', async () => {
-      expect.assertions(3)
-      try {
-        await storageSDK.init({ ow: {} })
-      } catch (e) {
-        // we expect every provider error to be wrapped
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.BadArgument)
-        expect(e.message).toContain('ow')
-      }
+      await expect(storageSDK.init.bind(null, { ow: {} })).toThrowBadArgErrWithMessageContaining(['ow'])
     })
     test('when credentials with empty azure object', async () => {
-      expect.assertions(3)
-      try {
-        await storageSDK.init({ azure: {} })
-      } catch (e) {
-        // we expect every provider error to be wrapped
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.BadArgument)
-        expect(e.message).toContain('azure')
-      }
+      await expect(storageSDK.init.bind(null, { azure: {} })).toThrowBadArgErrWithMessageContaining(['azure'])
     })
     test('when credentials with both ow and azure credentials set', async () => {
-      expect.assertions(4)
-      try {
-        await storageSDK.init({ azure: fakeAzureUserCredentials, ow: fakeOWCreds })
-      } catch (e) {
-        // we expect every provider error to be wrapped
-        expect(e).toBeInstanceOf(StorageError)
-        expect(e.code).toEqual(StorageError.codes.BadArgument)
-        expect(e.message).toContain('ow')
-        expect(e.message).toContain('azure')
-      }
+      await expect(storageSDK.init.bind(null, { azure: fakeAzureUserCredentials, ow: fakeOWCreds })).toThrowBadArgErrWithMessageContaining(['azure', 'ow'])
     })
   })
 
