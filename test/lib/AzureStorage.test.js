@@ -553,3 +553,51 @@ describe('createWriteStream', () => {
     })
   })
 })
+
+describe('copy', () => {
+  // if we make a separate test for copyRemoteToRemote we could make copy
+  // generic
+  const fakeSrcFile = 'a/dir/file1.html'
+  const fakeDestFile = 'another/dir/file2.txt'
+  const mockCreateReadStream = jest.fn()
+  const mockWrite = jest.fn()
+  const mockList = jest.fn()
+  const mockAzureCopy = jest.fn()
+  /** @type {AzureStorage} */
+  let storage
+
+  beforeEach(async () => {
+    mockCreateReadStream.mockReset() // for remote -> local
+    mockWrite.mockReset() // for local -> remote
+    mockList.mockReset() // for all
+    mockAzureCopy.mockReset() // for remote -> remote
+    mockAzureCopy.mockResolvedValue(true)
+    mockWrite.mockResolvedValue(true)
+
+    azure.BlockBlobURL.fromContainerURL = jest.fn().mockReturnValue({ startCopyFromURL: mockAzureCopy })
+    azure.ContainerURL = jest.fn()
+    storage = await AzureStorage.init(fakeSASCredentials)
+    storage._azure.aborter = fakeAborter
+    storage.createReadStream = mockCreateReadStream
+    storage.list = mockList
+    storage.write = mockWrite
+    storage.createReadStream = mockCreateReadStream
+  })
+
+  describe('from a remote location to a remote location', () => {
+    describe('with src and dest being files', () => {
+      test('when source file does not exist', async () => {
+        mockList.mockImplementation(async f => f === fakeSrcFile ? [] : [f])
+        await expect(storage.copy.bind(storage, fakeSrcFile, fakeDestFile)).toThrowFileNotExists(fakeSrcFile)
+      })
+      // test('when dest does not exist and options.override is true', async () => {
+      // })
+      // test('when dest does not exist and override is false', async () => {
+      // })
+      // test('when dest exists and options.override is false', async () => {
+      // })
+      // test('when dest exists and options.override is true', async () => {
+      // })
+    })
+  })
+})
