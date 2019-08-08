@@ -277,7 +277,7 @@ describe('delete', () => {
     expect(mockAzureDelete).toHaveBeenCalledTimes(0)
     expect(mockProgressCB).toHaveBeenCalledTimes(0)
   })
-  test('when azure.BlockBlobURL.delete rejects with a forbidden status', async () => {
+  test('when azure.BlockBlobURL.delete rejects with 403', async () => {
     mockList.mockResolvedValue(fakeFiles)
     mockAzureDelete.mockRejectedValue({ response: { status: 403 } })
     await expect(storage.delete.bind(storage, fakeDir)).toThrowForbidden()
@@ -302,7 +302,6 @@ describe('delete', () => {
 describe('createReadStream', () => {
   // todo read is not specific to azure (based on storage.createReadStream) can
   // we move this somewhere reusable?
-  /* Common setup for delete tests */
   const fakeFile = 'a/dir/file1'
   const mockAzureDownload = jest.fn()
   let storage
@@ -359,7 +358,6 @@ describe('createReadStream', () => {
 describe('read', () => {
   // todo read is not specific to azure (based on storage.createReadStream) we
   // should move it to a common/base test file once we have a second implementation
-  /* Common setup for delete tests */
   const fakeFile = 'a/dir/file1'
   const mockCreateReadStream = jest.fn()
   let storage
@@ -407,5 +405,141 @@ describe('read', () => {
     error = new Error('fakeError')
     mockCreateReadStream.mockRejectedValue(error)
     await expect(storage.read(fakeFile)).rejects.toThrow(error)
+  })
+})
+
+describe('write', () => {
+  const fakeFile = 'a/dir/file1'
+  const mockAzureUpload = jest.fn()
+  const mockAzureStreamUpload = jest.fn()
+  let storage
+  beforeEach(async () => {
+    mockAzureStreamUpload.mockReset()
+    mockAzureUpload.mockReset()
+    mockAzureUpload.mockResolvedValue(true)
+    mockAzureStreamUpload.mockImplementation((_, stream) => new Promise((resolve) => stream.on('end', resolve))) // tight coupling..
+    azure.uploadStreamToBlockBlob = mockAzureStreamUpload
+    azure.BlockBlobURL.fromContainerURL = jest.fn().mockReturnValue({ upload: mockAzureUpload })
+    azure.ContainerURL = jest.fn()
+    storage = await AzureStorage.init(fakeSASCredentials)
+    storage._azure.aborter = fakeAborter
+  })
+
+  test('to a directory (not allowed)', async () => {
+    await expect(storage.createReadStream.bind(storage, 'a/dir/')).toThrowBadArgDirectory('a/dir/')
+  })
+
+  describe('to a file', () => {
+    const fakeContent = 'some fake content @#$%^&*()@!12-=][;"\n\trewq'
+    test('with html extension and content being a string', async () => {
+      const res = await storage.write(fakeFile + '.html', fakeContent)
+      expect(res).toBe(fakeContent.length)
+      expect(mockAzureUpload).toHaveBeenCalledTimes(1)
+      const buffer = Buffer.from(fakeContent)
+      expect(mockAzureUpload).toHaveBeenCalledWith(fakeAborter, buffer, buffer.length, { blobHTTPHeaders: { blobContentType: 'text/html' } })
+    })
+    test('with html extension and content being a buffer', async () => {
+      const buffer = Buffer.from(fakeContent)
+      const res = await storage.write(fakeFile + '.json', buffer)
+      expect(res).toBe(buffer.length)
+      expect(mockAzureUpload).toHaveBeenCalledTimes(1)
+      expect(mockAzureUpload).toHaveBeenCalledWith(fakeAborter, buffer, buffer.length, { blobHTTPHeaders: { blobContentType: 'application/json' } })
+    })
+    test('with no extension and content being a ReadableStream', async () => {
+      const fakeRdStream = new stream.Readable()
+      fakeRdStream.push(fakeContent)
+      fakeRdStream.push(null)
+      const res = await storage.write(fakeFile, fakeRdStream)
+      expect(res).toBe(fakeContent.length)
+      expect(mockAzureStreamUpload).toHaveBeenCalledTimes(1)
+      expect(mockAzureStreamUpload.mock.calls[0]).toEqual(expect.arrayContaining([fakeRdStream, { blobHTTPHeaders: { blobContentType: 'application/octet-stream' } }]))
+    })
+
+    test('with string content when azure.BlockBlobURL.upload rejects with 403', async () => {
+      mockAzureUpload.mockRejectedValue({ response: { status: 403 } })
+      await expect(storage.write.bind(storage, fakeFile, fakeContent)).toThrowForbidden()
+    })
+    test('with string content when azure.BlockBlobURL.download rejects with an unknown status/error', async () => {
+      mockAzureUpload.mockRejectedValue({ response: { status: 444 } })
+      await expect(storage.write.bind(storage, fakeFile, fakeContent)).toThrowInternalWithStatus(444)
+      mockAzureUpload.mockRejectedValue(true)
+      await expect(storage.write.bind(storage, fakeFile, fakeContent)).toThrowInternal()
+    })
+    test('with ReadableStream content when azure.uploadStreamToBlockBlob rejects with 403', async () => {
+      const fakeRdStream = new stream.Readable()
+      fakeRdStream.push(fakeContent)
+      fakeRdStream.push(null)
+      mockAzureStreamUpload.mockRejectedValue({ response: { status: 403 } })
+      await expect(storage.write.bind(storage, fakeFile, fakeRdStream)).toThrowForbidden()
+    })
+    test('with ReadableStream content when azure.uploadStreamToBlockBlob rejects with an unknown status/error', async () => {
+      const fakeRdStream = new stream.Readable()
+      fakeRdStream.push(fakeContent)
+      fakeRdStream.push(null)
+      mockAzureStreamUpload.mockRejectedValue({ response: { status: 444 } })
+      await expect(storage.write.bind(storage, fakeFile, fakeRdStream)).toThrowInternalWithStatus(444)
+      mockAzureStreamUpload.mockRejectedValue(true)
+      await expect(storage.write.bind(storage, fakeFile, fakeRdStream)).toThrowInternal()
+    })
+  })
+})
+
+describe('createWriteStream', () => {
+  const fakeFile = 'a/dir/file1'
+  const mockAzureStreamUpload = jest.fn()
+  /** @type {AzureStorage} */
+  let storage
+  beforeEach(async () => {
+    mockAzureStreamUpload.mockReset()
+    mockAzureStreamUpload.mockImplementation((_, stream) => new Promise((resolve) => stream.on('end', resolve))) // tight coupling..
+    azure.uploadStreamToBlockBlob = mockAzureStreamUpload
+    azure.ContainerURL = jest.fn()
+    storage = await AzureStorage.init(fakeSASCredentials)
+    storage._azure.aborter = fakeAborter
+  })
+
+  test('from a directory (not allowed)', async () => {
+    await expect(storage.createWriteStream.bind(storage, 'a/dir/')).toThrowBadArgDirectory('a/dir/')
+  })
+
+  describe('from a file', () => {
+    const fakeChunks = ['some ', 'fake con', 'tent @#$%^&*()@!', '12-=][;"\n\trewq']
+    const fakeChunksSize = fakeChunks.reduce((prev, curr) => prev + curr.length, 0)
+
+    test('with html extension, write multiple chunks and end the stream', async done => {
+      expect.assertions(6)
+      const wrStream = await storage.createWriteStream(fakeFile + '.html')
+      expect(wrStream).toBeInstanceOf(stream.Writable)
+      fakeChunks.forEach(chunk => wrStream.write(chunk))
+      wrStream.end()
+      wrStream.on('finish', async bytesWritten => {
+        expect(bytesWritten).toEqual(fakeChunksSize)
+        // also check promise result
+        expect(await wrStream.promise).toEqual(fakeChunksSize)
+        // also check field
+        expect(wrStream.bytesWritten).toEqual(fakeChunksSize)
+        expect(mockAzureStreamUpload).toHaveBeenCalledTimes(1)
+        expect(mockAzureStreamUpload.mock.calls[0]).toEqual(expect.arrayContaining([{ blobHTTPHeaders: { blobContentType: 'text/html' } }]))
+        done()
+      })
+    })
+    test('when stream is written and azure.uploadStreamToBlockBlob rejects with an unknown status/error', async done => {
+      mockAzureStreamUpload.mockRejectedValue({ response: { status: 444 } })
+      const wrStream = await storage.createWriteStream(fakeFile)
+      wrStream.write('hi')
+      wrStream.on('error', async e => {
+        await expect(e).toThrowInternalWithStatus(444)
+        done()
+      })
+    })
+    test('when stream is written and azure.uploadStreamToBlockBlob rejects with 403', async done => {
+      mockAzureStreamUpload.mockRejectedValue({ response: { status: 403 } })
+      const wrStream = await storage.createWriteStream(fakeFile)
+      wrStream.write('hi')
+      wrStream.on('error', async e => {
+        await expect(e).toThrowForbidden()
+        done()
+      })
+    })
   })
 })

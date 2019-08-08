@@ -21,6 +21,9 @@ async function toThrowWithCodeAndMessageContains (received, code, words, checkEr
     }
   }
   try {
+    // hack to also support passing directly errors (this is a hack as in that
+    // case the function has no reason to be async)
+    if (received instanceof Error) throw received
     await received()
   } catch (e) {
     if (checkErrorType) {

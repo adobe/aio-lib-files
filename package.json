@@ -25,6 +25,7 @@
     "adobe-io"
   ],
   "devDependencies": {
+    "@types/jest": "^24.0.17",
     "eslint": "^5.16.0",
     "eslint-config-standard": "^12.0.0",
     "eslint-plugin-import": "^2.17.3",
