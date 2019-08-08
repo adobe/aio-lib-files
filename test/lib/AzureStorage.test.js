@@ -507,15 +507,13 @@ describe('createWriteStream', () => {
     const fakeChunksSize = fakeChunks.reduce((prev, curr) => prev + curr.length, 0)
 
     test('with html extension, write multiple chunks and end the stream', async done => {
-      expect.assertions(6)
+      expect.assertions(5)
       const wrStream = await storage.createWriteStream(fakeFile + '.html')
       expect(wrStream).toBeInstanceOf(stream.Writable)
       fakeChunks.forEach(chunk => wrStream.write(chunk))
       wrStream.end()
       wrStream.on('finish', async bytesWritten => {
         expect(bytesWritten).toEqual(fakeChunksSize)
-        // also check promise result
-        expect(await wrStream.promise).toEqual(fakeChunksSize)
         // also check field
         expect(wrStream.bytesWritten).toEqual(fakeChunksSize)
         expect(mockAzureStreamUpload).toHaveBeenCalledTimes(1)

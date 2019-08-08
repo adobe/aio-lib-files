@@ -1,6 +1,10 @@
 /* eslint-disable jsdoc/require-jsdoc */
 const { StorageError } = require('../lib/StorageError')
 
+process.on('unhandledRejection', error => {
+  throw error
+})
+
 async function toThrowWithCodeAndMessageContains (received, code, words, checkErrorType = true) {
   function checkErrorCode (e, code) {
     if (!(e instanceof StorageError)) {
