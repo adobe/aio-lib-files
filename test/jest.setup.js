@@ -37,9 +37,6 @@ async function toThrowWithCodeAndMessageContains (received, code, words, checkEr
     }
   }
   try {
-    // hack to also support passing directly errors (this is a hack as in that
-    // case the function has no reason to be async)
-    if (received instanceof Error) throw received
     await received()
   } catch (e) {
     if (checkErrorType) {
@@ -59,5 +56,66 @@ expect.extend({
   toThrowInternalWithStatus: (received, status) => toThrowWithCodeAndMessageContains(received, StorageError.codes.Internal, ['' + status, 'unknown']),
   toThrowInternal: (received) => toThrowWithCodeAndMessageContains(received, StorageError.codes.Internal, ['unknown']),
   toThrowFileNotExists: (received, filePath) => toThrowWithCodeAndMessageContains(received, StorageError.codes.FileNotExists, ['file', 'not exist', filePath]),
-  toThrowBadArgDirectory: (received, filePath) => toThrowWithCodeAndMessageContains(received, StorageError.codes.BadArgument, ['file', 'directory', filePath])
+  toThrowBadArgDirectory: (received, filePath) => toThrowWithCodeAndMessageContains(received, StorageError.codes.BadArgument, ['file', 'directory', filePath]),
+  toThrowFileExistsNoOverride: (received) => toThrowWithCodeAndMessageContains(received, StorageError.codes.FileExistsNoOverrides, ['override'])
 })
+const stream = require('stream')
+global.createStream = (content) => {
+  const rdStream = new stream.Readable()
+  rdStream.push(content)
+  rdStream.push(null)
+  return rdStream
+}
+
+// Fake FS, in house only a few features needed to test storage.copy
+const upath = require('upath')
+const fakeFs = { files: {} }
+fakeFs.reset = () => { fakeFs.files = {} }
+fakeFs.set = files => { fakeFs.files = files }
+fakeFs._throw = code => {
+  const e = new Error(code)
+  e.code = code
+  throw e
+}
+fakeFs._find = f => {
+  // make sure to remove resolves
+  f = upath.relative(process.cwd(), f)
+  let traverse = fakeFs.files
+  const parts = f.split('/')
+  for (let i = 0; i < parts.length; ++i) {
+    if (traverse[parts[i]] !== undefined) traverse = traverse[parts[i]]
+    else fakeFs._throw('ENOENT')
+  }
+  return traverse
+}
+fakeFs.addFile = (fpath, content = '') => {
+  const filename = upath.basename(fpath)
+  const dirname = upath.dirname(fpath)
+  let traverse = fakeFs.files
+  if (dirname !== '.') {
+    dirname.split('/').forEach(dir => {
+      if (!traverse[dir]) traverse[dir] = {}
+      if (typeof traverse[dir] !== 'object') {
+        throw new Error(`cannot add dir on file ${dir}`)
+      }
+      traverse = traverse[dir]
+    })
+  }
+  traverse[filename] = content
+}
+fakeFs.stat = async f => (typeof fakeFs._find(f) === 'object') ? { isFile: () => false, isDirectory: () => true } : { isFile: () => true, isDirectory: () => false }
+fakeFs.readdir = async f => {
+  const traverse = fakeFs._find(f)
+  if (typeof traverse !== 'object') {
+    fakeFs._throw('ENOTDIR')
+  }
+  return Object.keys(traverse)
+}
+fakeFs.createReadStream = f => {
+  const traverse = fakeFs._find(f)
+  if (typeof traverse === 'object') {
+    fakeFs._throw('EISDIR')
+  }
+  return global.createStream(traverse)
+}
+global.fakeFs = () => fakeFs
