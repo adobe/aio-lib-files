@@ -594,7 +594,7 @@ Reads a stream into a buffer
 <a name="new_StorageError_new"></a>
 
 ### new StorageError()
-An custom error class for errors thrown from the cloud storage module
+A custom error class for errors thrown from the cloud storage module
 
 <a name="StorageError.StorageError"></a>
 
