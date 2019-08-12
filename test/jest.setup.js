@@ -57,7 +57,8 @@ expect.extend({
   toThrowInternal: (received) => toThrowWithCodeAndMessageContains(received, StorageError.codes.Internal, ['unknown']),
   toThrowFileNotExists: (received, filePath) => toThrowWithCodeAndMessageContains(received, StorageError.codes.FileNotExists, ['file', 'not exist', filePath]),
   toThrowBadArgDirectory: (received, filePath) => toThrowWithCodeAndMessageContains(received, StorageError.codes.BadArgument, ['file', 'directory', filePath]),
-  toThrowFileExistsNoOverride: (received) => toThrowWithCodeAndMessageContains(received, StorageError.codes.FileExistsNoOverrides, ['override'])
+  toThrowFileExistsNoOverride: (received) => toThrowWithCodeAndMessageContains(received, StorageError.codes.FileExistsNoOverrides, ['override']),
+  toThrowBadFileType: (received, filePath) => toThrowWithCodeAndMessageContains(received, StorageError.codes.BadFileType, [filePath] || [])
 })
 const stream = require('stream')
 global.createStream = (content) => {
@@ -104,6 +105,15 @@ fakeFs.addFile = (fpath, content = '') => {
   traverse[filename] = content
 }
 fakeFs.stat = async f => (typeof fakeFs._find(f) === 'object') ? { isFile: () => false, isDirectory: () => true } : { isFile: () => true, isDirectory: () => false }
+fakeFs.pathExists = async f => {
+  try {
+    fakeFs._find(f)
+    return true
+  } catch (e) {
+    if (e.code === 'ENOENT') return false
+    else throw e
+  }
+}
 fakeFs.readdir = async f => {
   const traverse = fakeFs._find(f)
   if (typeof traverse !== 'object') {
