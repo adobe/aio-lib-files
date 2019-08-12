@@ -9,7 +9,6 @@ the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTA
 OF ANY KIND, either express or implied. See the License for the specific language
 governing permissions and limitations under the License.
 */
-
 const joi = require('@hapi/joi')
 
 const { AzureStorage } = require('./lib/azure/AzureStorage')
@@ -41,8 +40,31 @@ async function wrapTVMRequest (tvm) {
   }
 }
 
+// todo find a way to not copy defs around
 /**
- * @typedef {import('./lib/azure/AzureStorage').AzureCredentials} AzureCredentials
+ * An object holding the credentials needed to instantiate AzureStorage.
+ * It can either contain `{ sasURLPrivate, sasURLPublic }` or
+ * `{ storageAccessKey, storage Account, containerName }`
+ * In case you pass SAS URLs make sure the associated containers already exist
+ *
+ * @typedef AzureCredentials
+ * @type {object}
+ * @property {string} [sasURLPrivate] sas url to existing private azure blob container
+ * @property {string} [sasURLPublic] sas url to existing public azure blob container
+ *
+ * @property {string} [storageAccount] name of azure storage account
+ * @property {string} [storageAccessKey] access key for azure storage account
+ * @property {string} [containerName] name of the blob container. Another
+ * `${containerName}-public` container will also be used. Non existing
+ * containers will be created.
+ */
+/**
+ * An object holding the OpenWhisk credentials
+ *
+ * @typedef OpenWhiskCredentials
+ * @type {object}
+ * @property {string} [namespace] user namespace
+ * @property {string} [auth] auth key
  */
 
 /**
@@ -55,13 +77,11 @@ async function wrapTVMRequest (tvm) {
  *
  * @param {object} credentials used to init the sdk
  *
- * @param {object} [credentials.ow] OpenWhisk credentials, set those if you want
+ * @param {OpenWhiskCredentials} [credentials.ow] OpenWhisk credentials, set those if you want
  * to use our storage auto-generated temporary cloud storage credentials from the token
- * vending machine (tvm) for our storage infrastructure
- * @param {string} [credentials.ow.namespace] OpenWhisk namespace, can also be passed
- *   in an environment variable `OW_NAMESPACE` or `__OW_NAMESPACE`
- * @param {string} [credentials.ow.auth] OpenWhisk auth, can also be passed
- *   in an environment variable `OW_AUTH` or `__OW_AUTH`
+ * vending machine (tvm) for our storage infrastructure. You can also pass the
+ * namespace and auth through environment variables: `OW_NAMESPACE` or
+ * `__OW_NAMESPACE` and `OW_AUTH` or `__OW_AUTH`
  *
  * @param {AzureCredentials} [credentials.azure] {@link AzureCredentials}
  *

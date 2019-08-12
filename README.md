@@ -23,7 +23,7 @@ supported cloud providers.
 ### APIs
 
 - **Storage**:
-see [Storage.js](lib/Storage.js)
+see [JSDoc](jsdoc.md)
 
 ## Contributing
 
