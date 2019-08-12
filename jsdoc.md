@@ -3,6 +3,8 @@
 <dl>
 <dt><a href="#Storage">Storage</a></dt>
 <dd></dd>
+<dt><a href="#StorageError">StorageError</a> ⇐ <code>Error</code></dt>
+<dd></dd>
 <dt><a href="#TvmClient">TvmClient</a></dt>
 <dd></dd>
 <dt><a href="#TvmClient">TvmClient</a></dt>
@@ -19,9 +21,6 @@
 <p>To use the SDK you must either provide provide your OpenWhisk credentials in
 <code>credentials.ow</code> or your own cloud storage credentials in <code>credentials.azure</code>.</p>
 <p>OpenWhisk credentials can also be read from environment variables</p>
-</dd>
-<dt><a href="#urlJoin">urlJoin(...args)</a> ⇒ <code>string</code></dt>
-<dd><p>Joins url path parts</p>
 </dd>
 </dl>
 
@@ -42,6 +41,8 @@ In case you pass SAS URLs make sure the associated containers already exist</p>
 a directory if and only if it ends with a <code>/</code> otherwise it will be treated
 as a plain file.</p>
 </dd>
+<dt><a href="#StorageErrorCode">StorageErrorCode</a> : <code>string</code></dt>
+<dd></dd>
 <dt><a href="#OpenWhiskCredentials">OpenWhiskCredentials</a> : <code>object</code></dt>
 <dd><p>An object holding the OpenWhisk credentials</p>
 </dd>
@@ -110,7 +111,7 @@ Wraps errors for request to the cloud provider
 **Returns**: <code>Promise</code> - promise resolving to same value as requestPromise  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: protected  
 
@@ -129,7 +130,7 @@ This is comparable to bash's `ls` command
 **Returns**: <code>Promise.&lt;Array.&lt;string&gt;&gt;</code> - resolves to array of paths  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: public  
 
@@ -146,7 +147,7 @@ Deletes a remote file or directory
 **Returns**: <code>Promise.&lt;Array.&lt;string&gt;&gt;</code> - resolves to array of deleted paths  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: public  
 
@@ -167,7 +168,7 @@ Creates a read stream
 **Returns**: <code>Promise.&lt;NodeJS.ReadableStream&gt;</code> - a readable stream  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: public  
 
@@ -191,7 +192,7 @@ Use `.on('finish', (bytesWritten) => {})` to listen on completion event
 **Returns**: <code>Promise.&lt;NodeJS.WritableStream&gt;</code> - a writable stream  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: public  
 
@@ -209,7 +210,7 @@ Reads a remote file content
 **Returns**: <code>Promise.&lt;Buffer&gt;</code> - buffer holding content  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: public  
 
@@ -230,7 +231,7 @@ Writes content to a file
 **Returns**: <code>Promise.&lt;number&gt;</code> - resolves to number of bytes written  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: public  
 
@@ -248,7 +249,7 @@ Reads properties of a file
 **Returns**: <code>Promise.&lt;RemoteFileProperties&gt;</code> - resolves to RemoteFileProperties  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 
 | Param | Type | Description |
@@ -264,7 +265,7 @@ Reads properties of a file
 **Returns**: <code>Promise.&lt;Array.&lt;string&gt;&gt;</code> - resolves to array of paths  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: protected  
 
@@ -281,7 +282,7 @@ Reads properties of a file
 **Returns**: <code>Promise.&lt;boolean&gt;</code> - resolves to array of paths  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: protected  
 
@@ -298,7 +299,7 @@ Reads properties of a file
 **Returns**: <code>Promise.&lt;string&gt;</code> - resolves to filePath  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: protected  
 
@@ -316,7 +317,7 @@ Reads properties of a file
 **Returns**: <code>Promise.&lt;NodeJS.ReadableStream&gt;</code> - a readable stream  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: protected  
 
@@ -337,7 +338,7 @@ Reads properties of a file
 **Returns**: <code>Promise.&lt;NodeJS.WritableStream&gt;</code> - a writable stream  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: protected  
 
@@ -355,7 +356,7 @@ Reads properties of a file
 **Returns**: <code>Promise.&lt;number&gt;</code> - resolves to number of bytes written  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: protected  
 
@@ -373,7 +374,7 @@ Reads properties of a file
 **Returns**: <code>Promise.&lt;number&gt;</code> - resolves to number of bytes written  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: public  
 
@@ -454,7 +455,7 @@ Rules for copy files are:
 of copied file destination paths  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 
 | Param | Type | Default | Description |
@@ -542,7 +543,7 @@ Initializes and returns a new storage instance
 **Kind**: static method of [<code>Storage</code>](#Storage)  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: protected  
 
@@ -567,7 +568,6 @@ Reads a stream into a buffer
 
 ### *Storage.RemoteFileProperties : <code>object</code>*
 **Kind**: static typedef of [<code>Storage</code>](#Storage)  
-**Access**: public  
 **Properties**
 
 | Name | Type | Description |
@@ -575,6 +575,56 @@ Reads a stream into a buffer
 | isDirectory | <code>boolean</code> | true if file is a path |
 | isPublic | <code>boolean</code> | true if file is public |
 | url | <code>string</code> | remote file url |
+
+<a name="StorageError"></a>
+
+## StorageError ⇐ <code>Error</code>
+**Kind**: global class  
+**Extends**: <code>Error</code>  
+
+* [StorageError](#StorageError) ⇐ <code>Error</code>
+    * [new StorageError()](#new_StorageError_new)
+    * [.StorageError](#StorageError.StorageError)
+        * [new StorageError(message, code, internal)](#new_StorageError.StorageError_new)
+    * [.codes](#StorageError.codes) : <code>object</code>
+
+<a name="new_StorageError_new"></a>
+
+### new StorageError()
+A custom error class for errors thrown from the cloud storage module
+
+<a name="StorageError.StorageError"></a>
+
+### StorageError.StorageError
+**Kind**: static class of [<code>StorageError</code>](#StorageError)  
+<a name="new_StorageError.StorageError_new"></a>
+
+#### new StorageError(message, code, internal)
+Creates an instance of StorageError.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| message | <code>string</code> | error message |
+| code | [<code>StorageErrorCode</code>](#StorageErrorCode) | Storage Error code |
+| internal | <code>object</code> | debug error object for internal/underlying wrapped errors |
+
+<a name="StorageError.codes"></a>
+
+### StorageError.codes : <code>object</code>
+codes
+
+**Kind**: static property of [<code>StorageError</code>](#StorageError)  
+**Properties**
+
+| Name | Type |
+| --- | --- |
+| Internal | [<code>StorageErrorCode</code>](#StorageErrorCode) | 
+| BadArgument | [<code>StorageErrorCode</code>](#StorageErrorCode) | 
+| Forbidden | [<code>StorageErrorCode</code>](#StorageErrorCode) | 
+| FileNotExists | [<code>StorageErrorCode</code>](#StorageErrorCode) | 
+| FileExistsNoOverrides | [<code>StorageErrorCode</code>](#StorageErrorCode) | 
+| BadFileType | [<code>StorageErrorCode</code>](#StorageErrorCode) | 
 
 <a name="TvmClient"></a>
 
@@ -683,7 +733,7 @@ Wraps errors for request to the cloud provider
 **Returns**: <code>Promise</code> - promise resolving to same value as requestPromise  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: protected  
 
@@ -702,7 +752,7 @@ This is comparable to bash's `ls` command
 **Returns**: <code>Promise.&lt;Array.&lt;string&gt;&gt;</code> - resolves to array of paths  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: public  
 
@@ -719,7 +769,7 @@ Deletes a remote file or directory
 **Returns**: <code>Promise.&lt;Array.&lt;string&gt;&gt;</code> - resolves to array of deleted paths  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: public  
 
@@ -740,7 +790,7 @@ Creates a read stream
 **Returns**: <code>Promise.&lt;NodeJS.ReadableStream&gt;</code> - a readable stream  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: public  
 
@@ -764,7 +814,7 @@ Use `.on('finish', (bytesWritten) => {})` to listen on completion event
 **Returns**: <code>Promise.&lt;NodeJS.WritableStream&gt;</code> - a writable stream  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: public  
 
@@ -782,7 +832,7 @@ Reads a remote file content
 **Returns**: <code>Promise.&lt;Buffer&gt;</code> - buffer holding content  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: public  
 
@@ -803,7 +853,7 @@ Writes content to a file
 **Returns**: <code>Promise.&lt;number&gt;</code> - resolves to number of bytes written  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 **Access**: public  
 
@@ -821,7 +871,7 @@ Reads properties of a file
 **Returns**: <code>Promise.&lt;RemoteFileProperties&gt;</code> - resolves to RemoteFileProperties  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 
 | Param | Type | Description |
@@ -858,7 +908,7 @@ Rules for copy files are:
 of copied file destination paths  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 
 | Param | Type | Default | Description |
@@ -898,7 +948,7 @@ OpenWhisk credentials can also be read from environment variables
 **Returns**: [<code>Promise.&lt;Storage&gt;</code>](#Storage) - A storage instance  
 **Throws**:
 
-- <code>StorageError</code> 
+- [<code>StorageError</code>](#StorageError) 
 
 
 | Param | Type | Default | Description |
@@ -909,18 +959,6 @@ OpenWhisk credentials can also be read from environment variables
 | [options] | <code>object</code> | <code>{}</code> | options |
 | [options.tvmApiUrl] | <code>string</code> |  | alternative tvm api url, works only together with credentials.ow |
 | [options.tvmCacheFile] | <code>string</code> |  | alternative tvm cache file, defaults to tmp `<tmpfolder>/.tvmCache`. Set to `false` to disable caching. Works only together with credentials.ow |
-
-<a name="urlJoin"></a>
-
-## urlJoin(...args) ⇒ <code>string</code>
-Joins url path parts
-
-**Kind**: global function  
-**Returns**: <code>string</code> - joined url  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| ...args | <code>string</code> | url parts |
 
 <a name="AzureCredentials"></a>
 
@@ -961,6 +999,10 @@ a string to the remote file path. The path will be treated as
 a directory if and only if it ends with a `/` otherwise it will be treated
 as a plain file.
 
+**Kind**: global typedef  
+<a name="StorageErrorCode"></a>
+
+## StorageErrorCode : <code>string</code>
 **Kind**: global typedef  
 <a name="OpenWhiskCredentials"></a>
 
