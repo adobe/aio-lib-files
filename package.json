@@ -7,7 +7,7 @@
     "lib": "lib"
   },
   "scripts": {
-    "lint": "eslint .",
+    "lint": "eslint . --ignore-path .gitignore",
     "beautify": "npm run lint -- --fix",
     "test": "jest -c ./jest.config.js && npm run lint"
   },
@@ -25,6 +25,7 @@
     "adobe-io"
   ],
   "devDependencies": {
+    "@types/jest": "^24.0.17",
     "eslint": "^5.16.0",
     "eslint-config-standard": "^12.0.0",
     "eslint-plugin-import": "^2.17.3",
@@ -38,6 +39,7 @@
   "dependencies": {
     "@azure/storage-blob": "^10.3.0",
     "@hapi/joi": "^15.1.0",
+    "@types/hapi__joi": "^15.0.3",
     "fs-extra": "^8.0.1",
     "mime-types": "^2.1.24",
     "request-promise": "^4.2.4",
