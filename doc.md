@@ -41,6 +41,8 @@ In case you pass SAS URLs make sure the associated containers already exist</p>
 a directory if and only if it ends with a <code>/</code> otherwise it will be treated
 as a plain file.</p>
 </dd>
+<dt><a href="#StorageErrorCode">StorageErrorCode</a> : <code>string</code></dt>
+<dd></dd>
 <dt><a href="#OpenWhiskCredentials">OpenWhiskCredentials</a> : <code>object</code></dt>
 <dd><p>An object holding the OpenWhisk credentials</p>
 </dd>
@@ -94,7 +96,6 @@ In case you pass SAS URLs make sure the associated containers already exist</p>
         * *[._throwIfRemoteDirectory(filePath)](#Storage._throwIfRemoteDirectory)*
         * *[._readStream(stream)](#Storage._readStream) ⇒ <code>Promise.&lt;Buffer&gt;</code>*
         * *[.RemoteFileProperties](#Storage.RemoteFileProperties) : <code>object</code>*
-        * *[.StorageErrorCode](#Storage.StorageErrorCode) : <code>string</code>*
 
 <a name="new_Storage_new"></a>
 
@@ -575,10 +576,6 @@ Reads a stream into a buffer
 | isPublic | <code>boolean</code> | true if file is public |
 | url | <code>string</code> | remote file url |
 
-<a name="Storage.StorageErrorCode"></a>
-
-### *Storage.StorageErrorCode : <code>string</code>*
-**Kind**: static typedef of [<code>Storage</code>](#Storage)  
 <a name="StorageError"></a>
 
 ## StorageError ⇐ <code>Error</code>
@@ -609,7 +606,7 @@ Creates an instance of StorageError.
 | Param | Type | Description |
 | --- | --- | --- |
 | message | <code>string</code> | error message |
-| code | <code>StorageErrorCode</code> | Storage Error code |
+| code | [<code>StorageErrorCode</code>](#StorageErrorCode) | Storage Error code |
 | internal | <code>object</code> | debug error object for internal/underlying wrapped errors |
 
 <a name="StorageError.codes"></a>
@@ -622,12 +619,12 @@ codes
 
 | Name | Type |
 | --- | --- |
-| Internal | <code>StorageErrorCode</code> | 
-| BadArgument | <code>StorageErrorCode</code> | 
-| Forbidden | <code>StorageErrorCode</code> | 
-| FileNotExists | <code>StorageErrorCode</code> | 
-| FileExistsNoOverrides | <code>StorageErrorCode</code> | 
-| BadFileType | <code>StorageErrorCode</code> | 
+| Internal | [<code>StorageErrorCode</code>](#StorageErrorCode) | 
+| BadArgument | [<code>StorageErrorCode</code>](#StorageErrorCode) | 
+| Forbidden | [<code>StorageErrorCode</code>](#StorageErrorCode) | 
+| FileNotExists | [<code>StorageErrorCode</code>](#StorageErrorCode) | 
+| FileExistsNoOverrides | [<code>StorageErrorCode</code>](#StorageErrorCode) | 
+| BadFileType | [<code>StorageErrorCode</code>](#StorageErrorCode) | 
 
 <a name="TvmClient"></a>
 
@@ -1002,6 +999,10 @@ a string to the remote file path. The path will be treated as
 a directory if and only if it ends with a `/` otherwise it will be treated
 as a plain file.
 
+**Kind**: global typedef  
+<a name="StorageErrorCode"></a>
+
+## StorageErrorCode : <code>string</code>
 **Kind**: global typedef  
 <a name="OpenWhiskCredentials"></a>
 
