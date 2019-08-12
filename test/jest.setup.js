@@ -58,7 +58,8 @@ expect.extend({
   toThrowFileNotExists: (received, filePath) => toThrowWithCodeAndMessageContains(received, StorageError.codes.FileNotExists, ['file', 'not exist', filePath]),
   toThrowBadArgDirectory: (received, filePath) => toThrowWithCodeAndMessageContains(received, StorageError.codes.BadArgument, ['file', 'directory', filePath]),
   toThrowFileExistsNoOverride: (received) => toThrowWithCodeAndMessageContains(received, StorageError.codes.FileExistsNoOverrides, ['override']),
-  toThrowBadFileType: (received, filePath) => toThrowWithCodeAndMessageContains(received, StorageError.codes.BadFileType, [filePath] || [])
+  toThrowBadFileType: (received, filePath) => toThrowWithCodeAndMessageContains(received, StorageError.codes.BadFileType, [filePath] || []),
+  toThrowNotImplemented: (received, methodName) => toThrowWithCodeAndMessageContains(received, StorageError.codes.NotImplemented, ['not implemented', methodName])
 })
 const stream = require('stream')
 global.createStream = (content) => {
@@ -104,7 +105,19 @@ fakeFs.addFile = (fpath, content = '') => {
   }
   traverse[filename] = content
 }
-fakeFs.stat = async f => (typeof fakeFs._find(f) === 'object') ? { isFile: () => false, isDirectory: () => true } : { isFile: () => true, isDirectory: () => false }
+fakeFs.stat = async f => {
+  const found = fakeFs._find(f)
+  if (found instanceof Error) {
+    throw found
+  }
+  if (typeof found === 'object') {
+    return { isFile: () => false, isDirectory: () => true, isSymbolicLink: () => false }
+  }
+  if (found === 'SYMLINK') {
+    return { isFile: () => false, isDirectory: () => false, isSymbolicLink: () => true }
+  }
+  return { isFile: () => true, isDirectory: () => false, isSymbolicLink: () => false }
+}
 fakeFs.pathExists = async f => {
   try {
     fakeFs._find(f)

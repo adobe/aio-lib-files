@@ -558,6 +558,75 @@ describe('createWriteStream', () => {
   })
 })
 
+describe('getProperties', () => {
+  const mockBlockBlob = jest.fn()
+  const setMockBlobUrl = url => {
+    azure.BlockBlobURL.fromContainerURL = mockBlockBlob.mockReturnValue({ url })
+  }
+  /** @type {AzureStorage} */
+  let storage
+  beforeEach(async () => {
+    mockBlockBlob.mockReset()
+    azure.ContainerURL = jest.fn()
+    storage = await AzureStorage.init(fakeSASCredentials)
+    storage._azure.aborter = fakeAborter
+  })
+
+  describe('for a directory', () => {
+    test('which is private', async () => {
+      const cleanUrl = 'https://fakeFiles.com/fake/fakesub/'
+      setMockBlobUrl(cleanUrl + '?password=xxxx')
+      const res = await storage.getProperties('fakeprivate/sub/')
+      expect(res.url).toEqual(cleanUrl)
+      expect(res.isDirectory).toEqual(true)
+      expect(res.isPublic).toEqual(false)
+    })
+    test('which is public', async () => {
+      const cleanUrl = 'https://fakeFiles.com/fake/fakesub/'
+      setMockBlobUrl(cleanUrl + '?password=xxxx')
+      const res = await storage.getProperties('public/fake/fakesub/')
+      expect(res.url).toEqual(cleanUrl)
+      expect(res.isDirectory).toEqual(true)
+      expect(res.isPublic).toEqual(true)
+    })
+  })
+  describe('for a file', () => {
+    test('which is private', async () => {
+      const cleanUrl = 'https://fakeFiles.com/fake/file.html'
+      setMockBlobUrl(cleanUrl + '?password=xxxx')
+      const res = await storage.getProperties('fake/file.html')
+      expect(res.url).toEqual(cleanUrl)
+      expect(res.isDirectory).toEqual(false)
+      expect(res.isPublic).toEqual(false)
+    })
+    test('which is public', async () => {
+      const cleanUrl = 'https://fakeFiles.com/fake/file.html'
+      setMockBlobUrl(cleanUrl + '?password=xxxx')
+      const res = await storage.getProperties('public/fake/file.html')
+      expect(res.url).toEqual(cleanUrl)
+      expect(res.isDirectory).toEqual(false)
+      expect(res.isPublic).toEqual(true)
+    })
+    test('which does not have an extension name', async () => {
+      const cleanUrl = 'https://fakeFiles.com/fake/file.html'
+      setMockBlobUrl(cleanUrl + '?password=xxxx')
+      const res = await storage.getProperties('public/fake/fakesub/')
+      expect(res.url).toEqual(cleanUrl)
+      expect(res.isDirectory).toEqual(true)
+      expect(res.isPublic).toEqual(true)
+    })
+  })
+
+  describe('with bad input', () => {
+    test('when path is not a string', async () => {
+      await expect(storage.getProperties.bind(storage, 3)).toThrowBadArgWithMessageContaining(['filePath', 'string'])
+    })
+    test('when path is undefined', async () => {
+      await expect(storage.getProperties.bind(storage, undefined)).toThrowBadArgWithMessageContaining(['filePath', 'required'])
+    })
+  })
+})
+
 describe('copy', () => {
   // if we make a separate test for copyRemoteToRemote we could make copy
   // generic
@@ -758,11 +827,37 @@ describe('copy', () => {
       fs.readdir.mockImplementation(fakeFs.readdir)
       fs.stat.mockImplementation(fakeFs.stat)
     })
-    describe('with src and dest being files', () => {
+    describe('with bad inputs', () => {
+      test('when fs.stat returns a non ENOENT error for src file', async () => {
+        const e = Error('no fs code')
+        fakeFs.addFile(fakeSrcFile, e)
+        try {
+          await storage.copy(fakeSrcFile, fakeDestFile, { localSrc: true })
+        } catch (e) {
+          expect(e).toBe(e)
+        }
+      })
       test('when source file does not exist', async () => {
         setMockList([fakeDestFile])
         await expect(storage.copy.bind(storage, fakeSrcFile, fakeDestFile, { localSrc: true })).toThrowFileNotExists(fakeSrcFile)
       })
+      test('when source file is a symlink', async () => {
+        setMockList([fakeDestFile])
+        fakeFs.addFile(fakeSrcFile, 'SYMLINK')
+        await expect(storage.copy.bind(storage, fakeSrcFile, fakeDestFile, { localSrc: true })).toThrowBadFileType(fakeSrcFile)
+      })
+      test('when source is a directory containing a file that returns an error on stats', async () => {
+        const e = Error('no fs code')
+        const dir = 'dir/'
+        fakeFs.addFile(dir + fakeSrcFile, e)
+        try {
+          await storage.copy(dir, fakeDestFile, { localSrc: true })
+        } catch (e) {
+          expect(e).toBe(e)
+        }
+      })
+    })
+    describe('with src and dest being files', () => {
       test('when dest does not exist', async () => {
         fakeFs.addFile(fakeSrcFile)
         setMockList([])
@@ -852,6 +947,18 @@ describe('copy', () => {
         expect(mockProgressCb).toHaveBeenCalledWith(destFiles[1])
         expect(mockProgressCb).toHaveBeenCalledWith(destFiles[2])
       })
+      test('src base dir contains a symlink (should still work - symlinks are just ignored)', async () => {
+        const srcFiles = ['file2.html', 'b/d/file3']
+        const symlinkSrc = 'a/file1.html'
+        srcFiles.map(f => upath.join(fakeSrcDir, f)).forEach(f => fakeFs.addFile(f, 'hello'))
+        fakeFs.addFile(upath.join(fakeSrcDir, symlinkSrc), 'SYMLINK')
+        setMockList([])
+        // result files do not include the symlink
+        const cpDestFiles = srcFiles.map(f => upath.join(fakeDestDir, upath.join(upath.basename(fakeSrcDir), f)))
+        const res = await storage.copy(fakeSrcDir, fakeDestDir, { localSrc: true, override: true })
+        expect(res).toEqual(cpDestFiles)
+        expect(mockWrite).toHaveBeenCalledTimes(2)
+      })
       test('src base dir name already exists in dest with override true', async () => {
         const srcFiles = ['a/file1.html', 'file2.html']
         const filesInDest = ['a/file1.html'].map(f => upath.join(fakeDestDir, upath.join(upath.basename(fakeSrcDir), f)))
@@ -905,12 +1012,40 @@ describe('copy', () => {
       fs.pathExists.mockImplementation(fakeFs.pathExists)
       mockCreateReadStream.mockResolvedValue(global.createStream('hello'))
     })
-    describe('with src and dest being files', () => {
+    describe('with bad inputs', () => {
+      test('when fs.stat returns a non ENOENT error for dest file', async () => {
+        const e = Error('no fs code')
+        fakeFs.addFile(fakeDestFile, e)
+        setMockList([fakeSrcFile])
+        try {
+          await storage.copy(fakeSrcFile, fakeDestFile, { localDest: true })
+        } catch (e) {
+          expect(e).toBe(e)
+        }
+      })
       test('when source file does not exist', async () => {
         setMockList([])
         fakeFs.addFile(fakeDestFile)
         await expect(storage.copy.bind(storage, fakeSrcFile, fakeDestFile, { localDest: true })).toThrowFileNotExists(fakeSrcFile)
       })
+      test('when dest is a directory containing a file that returns an error on stats', async () => {
+        const e = Error('no fs code')
+        const dir = 'dir/'
+        fakeFs.addFile(dir + upath.basename(fakeSrcFile), e)
+        setMockList([fakeSrcFile])
+        try {
+          await storage.copy(fakeSrcFile, dir, { localDest: true, override: true })
+        } catch (e) {
+          expect(e).toBe(e)
+        }
+      })
+      test('when destination file is a symlink', async () => {
+        setMockList([fakeSrcFile])
+        fakeFs.addFile(fakeDestFile, 'SYMLINK')
+        await expect(storage.copy.bind(storage, fakeSrcFile, fakeDestFile, { localDest: true })).toThrowBadFileType(fakeDestFile)
+      })
+    })
+    describe('with src and dest being files', () => {
       test('when dest does not exist', async () => {
         setMockList([fakeSrcFile])
         const res = await storage.copy(fakeSrcFile, fakeDestFile, { localDest: true })
@@ -933,6 +1068,18 @@ describe('copy', () => {
         fakeFs.addFile(fakeDestFile)
         setMockList([fakeSrcFile])
         await expect(storage.copy.bind(storage, fakeSrcFile, fakeDestFile, { localDest: true, override: false })).toThrowFileExistsNoOverride()
+      })
+      test('when options.progressCallback function is set', async () => {
+        setMockList([fakeSrcFile])
+        const mockProgressCb = jest.fn()
+        const res = await storage.copy(fakeSrcFile, fakeDestFile, { localDest: true, progressCallback: mockProgressCb })
+        expect(res).toEqual([upath.resolve(fakeDestFile)])
+        expect(mockCreateReadStream).toHaveBeenCalledTimes(1)
+        expect(mockCreateReadStream.mock.calls[0][0]).toEqual(fakeSrcFile)
+        expect(fs.createWriteStream).toHaveBeenCalledTimes(1)
+        expect(fs.createWriteStream).toHaveBeenCalledWith(upath.resolve(fakeDestFile))
+        expect(mockProgressCb).toHaveBeenCalledTimes(1)
+        expect(mockProgressCb).toHaveBeenCalledWith(upath.resolve(fakeDestFile))
       })
     })
     describe('with src being a file and dest being a folder', () => {

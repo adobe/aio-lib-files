@@ -39,6 +39,7 @@
   "dependencies": {
     "@azure/storage-blob": "^10.3.0",
     "@hapi/joi": "^15.1.0",
+    "@types/hapi__joi": "^15.0.3",
     "fs-extra": "^8.0.1",
     "mime-types": "^2.1.24",
     "request-promise": "^4.2.4",
