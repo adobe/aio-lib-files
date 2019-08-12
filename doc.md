@@ -586,6 +586,7 @@ Reads a stream into a buffer
     * [new StorageError()](#new_StorageError_new)
     * [.StorageError](#StorageError.StorageError)
         * [new StorageError(message, code, internal)](#new_StorageError.StorageError_new)
+    * [.codes](#StorageError.codes) : <code>object</code>
 
 <a name="new_StorageError_new"></a>
 
@@ -607,6 +608,23 @@ Creates an instance of StorageError.
 | message | <code>string</code> | error message |
 | code | [<code>StorageErrorCode</code>](#StorageErrorCode) | Storage Error code |
 | internal | <code>object</code> | debug error object for internal/underlying wrapped errors |
+
+<a name="StorageError.codes"></a>
+
+### StorageError.codes : <code>object</code>
+codes
+
+**Kind**: static property of [<code>StorageError</code>](#StorageError)  
+**Properties**
+
+| Name | Type |
+| --- | --- |
+| Internal | [<code>StorageErrorCode</code>](#StorageErrorCode) | 
+| BadArgument | [<code>StorageErrorCode</code>](#StorageErrorCode) | 
+| Forbidden | [<code>StorageErrorCode</code>](#StorageErrorCode) | 
+| FileNotExists | [<code>StorageErrorCode</code>](#StorageErrorCode) | 
+| FileExistsNoOverrides | [<code>StorageErrorCode</code>](#StorageErrorCode) | 
+| BadFileType | [<code>StorageErrorCode</code>](#StorageErrorCode) | 
 
 <a name="TvmClient"></a>
 
