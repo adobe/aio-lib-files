@@ -9,7 +9,6 @@ the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTA
 OF ANY KIND, either express or implied. See the License for the specific language
 governing permissions and limitations under the License.
 */
-
 const joi = require('@hapi/joi')
 
 const { AzureStorage } = require('./lib/azure/AzureStorage')
@@ -42,35 +41,33 @@ async function wrapTVMRequest (tvm) {
 }
 
 /**
- * @typedef {import('./lib/azure/AzureStorage').AzureCredentials} AzureCredentials
- */
-
-/**
  * Initializes and returns the storage SDK.
  *
- * To use the SDK you must either provide provide your OpenWhisk credentials in
- * `credentials.ow` or your own cloud storage credentials in `credentials.azure`.
+ * To use the SDK you must either provide provide your
+ * [OpenWhisk credentials]{@link module:types~OpenWhiskCredentials} in
+ * `credentials.ow` or your own
+ * [Azure storage credentials]{@link module:types~AzureCredentialsAccount} in `credentials.azure`.
  *
- * OpenWhisk credentials can also be read from environment variables
+ * OpenWhisk credentials can also be read from environment variables (`OW_NAMESPACE` or `__OW_NAMESPACE` and `OW_AUTH` or `__OW_AUTH`).
  *
  * @param {object} credentials used to init the sdk
  *
- * @param {object} [credentials.ow] OpenWhisk credentials, set those if you want
- * to use our storage auto-generated temporary cloud storage credentials from the token
- * vending machine (tvm) for our storage infrastructure
- * @param {string} [credentials.ow.namespace] OpenWhisk namespace, can also be passed
- *   in an environment variable `OW_NAMESPACE` or `__OW_NAMESPACE`
- * @param {string} [credentials.ow.auth] OpenWhisk auth, can also be passed
- *   in an environment variable `OW_AUTH` or `__OW_AUTH`
+ * @param {module:types~OpenWhiskCredentials} [credentials.ow]
+ * {@link module:types~OpenWhiskCredentials}. Set those if you want
+ * to use ootb credentials to access our storage infrastructure. OpenWhisk
+ * namespace and auth can also be passed through environment variables:
+ * `OW_NAMESPACE` or `__OW_NAMESPACE` and `OW_AUTH` or `__OW_AUTH`
  *
- * @param {AzureCredentials} [credentials.azure] {@link AzureCredentials}
+ * @param {module:types~AzureCredentialsAccount|module:types~AzureCredentialsSAS} [credentials.azure]
+ * bring your own [Azure SAS credentials]{@link module:types~AzureCredentialsSAS} or
+ * [Azure storage account credentials]{@link module:types~AzureCredentialsAccount}
  *
  * @param {object} [options={}] options
- * @param {string} [options.tvmApiUrl] alternative tvm api url, works only
- * together with credentials.ow
+ * @param {string} [options.tvmApiUrl] alternative tvm api url. Only makes
+ * sense in the context of OpenWhisk credentials.
  * @param {string} [options.tvmCacheFile] alternative tvm cache file, defaults
- * to tmp `<tmpfolder>/.tvmCache`. Set to `false` to disable caching. Works only
- * together with credentials.ow
+ * to `<tmpfolder>/.tvmCache`. Set to `false` to disable caching. Only makes
+ * sense in the context of OpenWhisk credentials.
  * @returns {Promise<Storage>} A storage instance
  * @throws {StorageError}
  */
