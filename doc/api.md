@@ -307,7 +307,7 @@ Cloud Storage Errors
 
 * [StorageError](#StorageError) ⇐ <code>Error</code>
     * [.StorageError](#StorageError.StorageError)
-        * [new StorageError(message, code, internal)](#new_StorageError.StorageError_new)
+        * [new StorageError(message, code, [internal])](#new_StorageError.StorageError_new)
     * [.codes](#StorageError.codes) : <code>enum</code>
 
 <a name="StorageError.StorageError"></a>
@@ -316,7 +316,7 @@ Cloud Storage Errors
 **Kind**: static class of [<code>StorageError</code>](#StorageError)  
 <a name="new_StorageError.StorageError_new"></a>
 
-#### new StorageError(message, code, internal)
+#### new StorageError(message, code, [internal])
 Creates an instance of StorageError.
 
 
@@ -324,7 +324,7 @@ Creates an instance of StorageError.
 | --- | --- | --- |
 | message | <code>string</code> | error message |
 | code | [<code>codes</code>](#StorageError.codes) | Storage Error code |
-| internal | <code>object</code> | debug error object for internal/underlying wrapped errors |
+| [internal] | <code>object</code> | debug error object for internal/underlying wrapped errors |
 
 <a name="StorageError.codes"></a>
 
