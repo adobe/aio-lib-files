@@ -56,9 +56,9 @@ supported cloud providers.
   await storage.copy('public/my-static-app/', 'my/private/folder')
 ```
 
-### APIs
+### API
 
-see [APIs](doc/api.md)
+`goto` [API](doc/api.md)
 
 ## Contributing
 
