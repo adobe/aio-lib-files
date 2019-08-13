@@ -7,7 +7,7 @@
     "lib": "lib"
   },
   "scripts": {
-    "lint": "eslint index.js 'lib/**/*.js' 'test/**/*.js'",
+    "lint": "eslint index.js lib/**/*.js test/**/*.js",
     "beautify": "npm run lint -- --fix",
     "test": "jest -c ./jest.config.js && npm run lint",
     "generate-jsdoc": "jsdoc2md -f index.js 'lib/**/*.js' > doc/api.md"
@@ -27,6 +27,7 @@
   ],
   "devDependencies": {
     "@types/jest": "^24.0.17",
+    "codecov": "^3.5.0",
     "eslint": "^5.16.0",
     "eslint-config-standard": "^12.0.0",
     "eslint-plugin-import": "^2.17.3",
