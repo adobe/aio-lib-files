@@ -1,15 +1,38 @@
+<!--
+Copyright 2019 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License.
+-->
+
+[![Version](https://img.shields.io/npm/v/@adobe/adobeio-cna-cloud-storage.svg)](https://npmjs.org/package/@adobe/adobeio-cna-cloud-storage)
+[![Downloads/week](https://img.shields.io/npm/dw/@adobe/adobeio-cna-cloud-storage.svg)](https://npmjs.org/package/@adobe/adobeio-cna-cloud-storage)
+[![Build Status](https://travis-ci.org/adobe/adobeio-cna-cloud-storage.svg?branch=master)](https://travis-ci.org/adobe/adobeio-cna-cloud-storage)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Codecov Coverage](https://img.shields.io/codecov/c/github/adobe/adobeio-cna-cloud-storage/master.svg?style=flat-square)](https://codecov.io/gh/adobe/adobeio-cna-cloud-storage/)
+
 # Adobe I/O CNA Storage SDK
 
-An abstraction on top of blob cloud storage exposing a file like API.
-To use this SDK you can either provide your I/O Runtime or credentials from
-supported cloud providers.
+An abstraction on top of cloud blob storage exposing a file like API.
+
+You can initialize the SDK with your Adobe I/O Runtime (a.k.a OpenWhisk)
+credentials.
+
+Alternatively, you can bring your own cloud storage keys. Note however, that as
+of now we only support Azure Blob Storage. AWS S3 is the next on the todo list
+and will soon be available.
 
 ## Storage SDK
 
 ### Usage example
 
 ```js
-  const storageSDK = require('@adobe/io-cna-storage')
+  const storageSDK = require('@adobe/adobeio-cna-cloud-storage')
 
   // init sdk using OpenWhisk credentials
   const storage = await storageSDK.init({ ow: { namespace, auth } })

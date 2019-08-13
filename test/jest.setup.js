@@ -81,7 +81,7 @@ fakeFs._throw = code => {
 }
 fakeFs._find = f => {
   // make sure to remove resolves
-  f = upath.relative(process.cwd(), f)
+  f = upath.toUnix(upath.relative(process.cwd(), f))
   let traverse = fakeFs.files
   const parts = f.split('/')
   for (let i = 0; i < parts.length; ++i) {
@@ -91,6 +91,7 @@ fakeFs._find = f => {
   return traverse
 }
 fakeFs.addFile = (fpath, content = '') => {
+  fpath = upath.toUnix(fpath)
   const filename = upath.basename(fpath)
   const dirname = upath.dirname(fpath)
   let traverse = fakeFs.files

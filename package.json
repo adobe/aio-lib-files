@@ -1,6 +1,6 @@
 {
   "name": "@adobe/adobeio-cna-cloud-storage",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "An abstraction on top of blob cloud storage exposing a file like API",
   "main": "index.js",
   "directories": {
@@ -9,7 +9,8 @@
   "scripts": {
     "lint": "eslint index.js lib/**/*.js test/**/*.js",
     "beautify": "npm run lint -- --fix",
-    "test": "jest -c ./jest.config.js && npm run lint"
+    "test": "jest -c ./jest.config.js && npm run lint",
+    "generate-jsdoc": "jsdoc2md -f index.js 'lib/**/*.js' > doc/api.md"
   },
   "author": "Adobe Inc.",
   "license": "Apache-2.0",
@@ -26,6 +27,7 @@
   ],
   "devDependencies": {
     "@types/jest": "^24.0.17",
+    "codecov": "^3.5.0",
     "eslint": "^5.16.0",
     "eslint-config-standard": "^12.0.0",
     "eslint-plugin-import": "^2.17.3",
@@ -34,7 +36,8 @@
     "eslint-plugin-node": "^9.1.0",
     "eslint-plugin-promise": "^4.1.1",
     "eslint-plugin-standard": "^4.0.0",
-    "jest": "^24.8.0"
+    "jest": "^24.8.0",
+    "jsdoc-to-markdown": "^5.0.0"
   },
   "dependencies": {
     "@azure/storage-blob": "^10.3.0",

@@ -642,8 +642,10 @@ describe('copy', () => {
   let storage
 
   const setMockList = (files = []) => {
+    files = files.map(f => upath.toUnix(f))
     files = new Set(files)
     mockList.mockImplementation(file => {
+      file = upath.toUnix(file)
       if (file.endsWith('/')) {
         // is dir
         return [...files].filter(f => f.startsWith(file))
@@ -651,7 +653,7 @@ describe('copy', () => {
       return (files.has(file) && [file]) || []
     })
   }
-  const pathFileInDir = (dir, file) => upath.join(dir, upath.basename(file))
+  const pathFileInDir = (dir, file) => upath.toUnix(upath.join(dir, upath.basename(file)))
 
   beforeEach(async () => {
     mockCreateReadStream.mockReset() // for remote -> local
@@ -727,8 +729,8 @@ describe('copy', () => {
         expect(mockAzureCopy).toHaveBeenCalledTimes(1)
       })
       test('when dest has one subdir with a file that has the same name as src and options.override is false (should be allowed)', async () => {
-        const srcInDestDir = upath.join(fakeDestDir, upath.basename(fakeSrcFile))
-        const srcInSubDestDir = upath.join(fakeDestDir, 'another-dir/', upath.basename(fakeSrcFile))
+        const srcInDestDir = upath.toUnix(upath.join(fakeDestDir, upath.basename(fakeSrcFile)))
+        const srcInSubDestDir = upath.toUnix(upath.join(fakeDestDir, 'another-dir/', upath.basename(fakeSrcFile)))
         setMockList([fakeSrcFile, srcInSubDestDir])
         const res = await storage.copy(fakeSrcFile, fakeDestDir)
         expect(res).toEqual([srcInDestDir])
@@ -762,7 +764,7 @@ describe('copy', () => {
         const mockProgressCb = jest.fn()
         // we want copy(a/dir/, another/dir2) to result into another/dir2/dir/*
         const files = ['a/file1.html', 'b/c/file2.css', 'file3']
-        const destFiles = files.map(f => upath.join(fakeDestDir, upath.join(upath.basename(fakeSrcDir), f)))
+        const destFiles = files.map(f => upath.toUnix(upath.join(fakeDestDir, upath.join(upath.basename(fakeSrcDir), f))))
         setMockList(files.map(f => upath.join(fakeSrcDir, f)))
         const res = await storage.copy(fakeSrcDir, fakeDestDir, { progressCallback: mockProgressCb })
         expect(res).toEqual(destFiles)
@@ -777,7 +779,7 @@ describe('copy', () => {
         const filesDest = ['file4.html', 'file5.css', 'file6.js']
         setMockList(files.map(f => upath.join(fakeSrcDir, f)).concat(filesDest.map(f => upath.join(fakeDestDir, f))))
         const res = await storage.copy(fakeSrcDir, fakeDestDir, { override: false })
-        expect(res).toEqual(files.map(f => upath.join(fakeDestDir, upath.join(upath.basename(fakeSrcDir), f))))
+        expect(res).toEqual(files.map(f => upath.toUnix(upath.join(fakeDestDir, upath.join(upath.basename(fakeSrcDir), f)))))
         expect(mockAzureCopy).toHaveBeenCalledTimes(3)
       })
       test('src base dir name already exists in dest with override true', async () => {
@@ -785,7 +787,7 @@ describe('copy', () => {
         const filesDest = ['a/file1.html', 'b/file2.html']
         setMockList(files.map(f => upath.join(fakeSrcDir, f)).concat(filesDest.map(f => upath.join(fakeDestDir, upath.basename(fakeSrcDir), f))))
         const res = await storage.copy(fakeSrcDir, fakeDestDir, { override: true })
-        expect(res).toEqual(files.map(f => upath.join(fakeDestDir, upath.join(upath.basename(fakeSrcDir), f))))
+        expect(res).toEqual(files.map(f => upath.toUnix(upath.join(fakeDestDir, upath.join(upath.basename(fakeSrcDir), f)))))
         expect(mockAzureCopy).toHaveBeenCalledTimes(1)
       })
       test('1 file in src that already exist in dest with override false', async () => {
@@ -800,7 +802,7 @@ describe('copy', () => {
         // if we cp dir/ to file we get file/
         // as opposed to dir/ to dir2/ we would get dir/dir2/
         const files = ['a/file1.html', 'b/c/file2.css', 'file3']
-        const destFiles = files.map(f => upath.join(fakeDestFile, f))
+        const destFiles = files.map(f => upath.toUnix(upath.join(fakeDestFile, f)))
         setMockList(files.map(f => upath.join(fakeSrcDir, f)))
         const res = await storage.copy(fakeSrcDir, fakeDestFile)
         expect(res).toEqual(destFiles)
@@ -810,7 +812,7 @@ describe('copy', () => {
         // if we cp dir/ to file we get file/
         // as opposed to dir/ to dir2/ we would get dir/dir2/
         const files = ['a/file1.html', 'b/c/file2.css', 'file3']
-        const destFiles = files.map(f => upath.join(fakeDestFile, f))
+        const destFiles = files.map(f => upath.toUnix(upath.join(fakeDestFile, f)))
         setMockList(files.map(f => upath.join(fakeSrcDir, f)).concat([fakeDestFile]))
         const res = await storage.copy(fakeSrcDir, fakeDestFile, { override: false })
         expect(res).toEqual(destFiles)
@@ -907,8 +909,8 @@ describe('copy', () => {
       })
       test('when dest has one subdir with a file that has the same name as src and options.override is false (should be allowed)', async () => {
         fakeFs.addFile(fakeSrcFile)
-        const srcInDestDir = upath.join(fakeDestDir, upath.basename(fakeSrcFile))
-        const srcInSubDestDir = upath.join(fakeDestDir, 'another-dir/', upath.basename(fakeSrcFile))
+        const srcInDestDir = upath.toUnix(upath.join(fakeDestDir, upath.basename(fakeSrcFile)))
+        const srcInSubDestDir = upath.toUnix(upath.join(fakeDestDir, 'another-dir/', upath.basename(fakeSrcFile)))
         setMockList([srcInSubDestDir])
         const res = await storage.copy(fakeSrcFile, fakeDestDir, { localSrc: true, override: false })
         expect(res).toEqual([srcInDestDir])
@@ -936,7 +938,7 @@ describe('copy', () => {
         const mockProgressCb = jest.fn()
         const files = ['a/file1.html', 'b/c/file2.css', 'file3']
         files.map(f => upath.join(fakeSrcDir, f)).forEach(f => fakeFs.addFile(f, 'hello'))
-        const destFiles = files.map(f => upath.join(fakeDestDir, upath.join(upath.basename(fakeSrcDir), f)))
+        const destFiles = files.map(f => upath.toUnix(upath.join(fakeDestDir, upath.join(upath.basename(fakeSrcDir), f))))
         setMockList([])
         const res = await storage.copy(fakeSrcDir, fakeDestDir, { progressCallback: mockProgressCb, localSrc: true })
         expect(res).toEqual(destFiles)
@@ -954,7 +956,7 @@ describe('copy', () => {
         fakeFs.addFile(upath.join(fakeSrcDir, symlinkSrc), 'SYMLINK')
         setMockList([])
         // result files do not include the symlink
-        const cpDestFiles = srcFiles.map(f => upath.join(fakeDestDir, upath.join(upath.basename(fakeSrcDir), f)))
+        const cpDestFiles = srcFiles.map(f => upath.toUnix(upath.join(fakeDestDir, upath.join(upath.basename(fakeSrcDir), f))))
         const res = await storage.copy(fakeSrcDir, fakeDestDir, { localSrc: true, override: true })
         expect(res).toEqual(cpDestFiles)
         expect(mockWrite).toHaveBeenCalledTimes(2)
@@ -964,7 +966,7 @@ describe('copy', () => {
         const filesInDest = ['a/file1.html'].map(f => upath.join(fakeDestDir, upath.join(upath.basename(fakeSrcDir), f)))
         srcFiles.map(f => upath.join(fakeSrcDir, f)).forEach(f => fakeFs.addFile(f, 'hello'))
         setMockList(filesInDest)
-        const cpDestFiles = srcFiles.map(f => upath.join(fakeDestDir, upath.join(upath.basename(fakeSrcDir), f)))
+        const cpDestFiles = srcFiles.map(f => upath.toUnix(upath.join(fakeDestDir, upath.join(upath.basename(fakeSrcDir), f))))
         const res = await storage.copy(fakeSrcDir, fakeDestDir, { localSrc: true, override: true })
         expect(res).toEqual(cpDestFiles)
         expect(mockWrite).toHaveBeenCalledTimes(2)
@@ -983,7 +985,7 @@ describe('copy', () => {
         const srcFiles = ['a/file1.html', 'file2.html', 'file3']
         srcFiles.map(f => upath.join(fakeSrcDir, f)).forEach(f => fakeFs.addFile(f, 'hello'))
         setMockList([])
-        const cpDestFiles = srcFiles.map(f => upath.join(fakeDestFile, f))
+        const cpDestFiles = srcFiles.map(f => upath.toUnix(upath.join(fakeDestFile, f)))
         const res = await storage.copy(fakeSrcDir, fakeDestFile, { localSrc: true })
         expect(res).toEqual(cpDestFiles)
         expect(mockWrite).toHaveBeenCalledTimes(3)
@@ -993,7 +995,7 @@ describe('copy', () => {
         // as opposed to dir/ to dir2/ we would get dir/dir2/
         const srcFiles = ['a/file1.html', 'file2.html', 'file3']
         srcFiles.map(f => upath.join(fakeSrcDir, f)).forEach(f => fakeFs.addFile(f, 'hello'))
-        const cpDestFiles = srcFiles.map(f => upath.join(fakeDestFile, f))
+        const cpDestFiles = srcFiles.map(f => upath.toUnix(upath.join(fakeDestFile, f)))
         setMockList([fakeDestFile])
         const res = await storage.copy(fakeSrcDir, fakeDestFile, { localSrc: true, override: false })
         expect(res).toEqual(cpDestFiles)
@@ -1049,20 +1051,21 @@ describe('copy', () => {
       test('when dest does not exist', async () => {
         setMockList([fakeSrcFile])
         const res = await storage.copy(fakeSrcFile, fakeDestFile, { localDest: true })
-        expect(res).toEqual([upath.resolve(fakeDestFile)])
+        expect(res).toEqual([upath.toUnix(upath.resolve(fakeDestFile))])
         expect(mockCreateReadStream).toHaveBeenCalledTimes(1)
         expect(mockCreateReadStream.mock.calls[0][0]).toEqual(fakeSrcFile)
         expect(fs.createWriteStream).toHaveBeenCalledTimes(1)
       })
       test('when dest does exist and override is true', async () => {
+        const resolvedFakeDestFile = upath.toUnix(upath.resolve(fakeDestFile))
         fakeFs.addFile(fakeDestFile)
         setMockList([fakeSrcFile])
         const res = await storage.copy(fakeSrcFile, fakeDestFile, { localDest: true, override: true })
-        expect(res).toEqual([upath.resolve(fakeDestFile)])
+        expect(res).toEqual([resolvedFakeDestFile])
         expect(mockCreateReadStream).toHaveBeenCalledTimes(1)
         expect(mockCreateReadStream.mock.calls[0][0]).toEqual(fakeSrcFile)
         expect(fs.createWriteStream).toHaveBeenCalledTimes(1)
-        expect(fs.createWriteStream).toHaveBeenCalledWith(upath.resolve(fakeDestFile))
+        expect(fs.createWriteStream).toHaveBeenCalledWith(resolvedFakeDestFile)
       })
       test('when dest does exist and override is false', async () => {
         fakeFs.addFile(fakeDestFile)
@@ -1070,51 +1073,55 @@ describe('copy', () => {
         await expect(storage.copy.bind(storage, fakeSrcFile, fakeDestFile, { localDest: true, override: false })).toThrowFileExistsNoOverride()
       })
       test('when options.progressCallback function is set', async () => {
+        const resolvedFakeDestFile = upath.toUnix(upath.resolve(fakeDestFile))
         setMockList([fakeSrcFile])
         const mockProgressCb = jest.fn()
         const res = await storage.copy(fakeSrcFile, fakeDestFile, { localDest: true, progressCallback: mockProgressCb })
-        expect(res).toEqual([upath.resolve(fakeDestFile)])
+        expect(res).toEqual([resolvedFakeDestFile])
         expect(mockCreateReadStream).toHaveBeenCalledTimes(1)
         expect(mockCreateReadStream.mock.calls[0][0]).toEqual(fakeSrcFile)
         expect(fs.createWriteStream).toHaveBeenCalledTimes(1)
-        expect(fs.createWriteStream).toHaveBeenCalledWith(upath.resolve(fakeDestFile))
+        expect(fs.createWriteStream).toHaveBeenCalledWith(resolvedFakeDestFile)
         expect(mockProgressCb).toHaveBeenCalledTimes(1)
-        expect(mockProgressCb).toHaveBeenCalledWith(upath.resolve(fakeDestFile))
+        expect(mockProgressCb).toHaveBeenCalledWith(resolvedFakeDestFile)
       })
     })
     describe('with src being a file and dest being a folder', () => {
       test('when dest is empty', async () => {
         const destFile = pathFileInDir(fakeDestDir, fakeSrcFile)
+        const resolvedDestFile = upath.toUnix(upath.resolve(destFile))
         setMockList([fakeSrcFile])
         const res = await storage.copy(fakeSrcFile, fakeDestDir, { localDest: true })
-        expect(res).toEqual([upath.resolve(destFile)])
+        expect(res).toEqual([resolvedDestFile])
         expect(mockCreateReadStream).toHaveBeenCalledTimes(1)
         expect(mockCreateReadStream.mock.calls[0][0]).toEqual(fakeSrcFile)
         expect(fs.createWriteStream).toHaveBeenCalledTimes(1)
-        expect(fs.createWriteStream).toHaveBeenCalledWith(upath.resolve(destFile))
+        expect(fs.createWriteStream).toHaveBeenCalledWith(resolvedDestFile)
       })
       test('when dest has one subdir with a file that has the same name as src and options.override is false (should be allowed)', async () => {
         const srcInDestDir = upath.join(fakeDestDir, upath.basename(fakeSrcFile))
+        const resolvedSrcInDestDir = upath.toUnix(upath.resolve(srcInDestDir))
         const srcInSubDestDir = upath.join(fakeDestDir, 'another-dir/', upath.basename(fakeSrcFile))
         setMockList([fakeSrcFile])
         fakeFs.addFile(srcInSubDestDir)
         const res = await storage.copy(fakeSrcFile, fakeDestDir, { localDest: true, override: false })
-        expect(res).toEqual([upath.resolve(srcInDestDir)])
+        expect(res).toEqual([resolvedSrcInDestDir])
         expect(mockCreateReadStream).toHaveBeenCalledTimes(1)
         expect(mockCreateReadStream.mock.calls[0][0]).toEqual(fakeSrcFile)
         expect(fs.createWriteStream).toHaveBeenCalledTimes(1)
-        expect(fs.createWriteStream).toHaveBeenCalledWith(upath.resolve(srcInDestDir))
+        expect(fs.createWriteStream).toHaveBeenCalledWith(resolvedSrcInDestDir)
       })
       test('when dest has one file with the same name as src and options.override is true', async () => {
         setMockList([fakeSrcFile])
         const srcInDestDir = pathFileInDir(fakeDestDir, fakeSrcFile)
+        const resolvedSrcInDestDir = upath.toUnix(upath.resolve(srcInDestDir))
         fakeFs.addFile(srcInDestDir)
         const res = await storage.copy(fakeSrcFile, fakeDestDir, { localDest: true, override: true })
-        expect(res).toEqual([upath.resolve(srcInDestDir)])
+        expect(res).toEqual([resolvedSrcInDestDir])
         expect(mockCreateReadStream).toHaveBeenCalledTimes(1)
         expect(mockCreateReadStream.mock.calls[0][0]).toEqual(fakeSrcFile)
         expect(fs.createWriteStream).toHaveBeenCalledTimes(1)
-        expect(fs.createWriteStream).toHaveBeenCalledWith(upath.resolve(srcInDestDir))
+        expect(fs.createWriteStream).toHaveBeenCalledWith(resolvedSrcInDestDir)
       })
       test('when dest contains one file with the same name as src and options.override is false', async () => {
         setMockList([fakeSrcFile])
@@ -1128,7 +1135,7 @@ describe('copy', () => {
         const mockProgressCb = jest.fn()
         const files = ['a/file1.html', 'b/c/file2.css', 'file3']
         setMockList(files.map(f => upath.join(fakeSrcDir, f)))
-        const cpDestFiles = files.map(f => upath.join(fakeDestDir, upath.join(upath.basename(fakeSrcDir), f))).map(f => upath.resolve(f))
+        const cpDestFiles = files.map(f => upath.join(fakeDestDir, upath.join(upath.basename(fakeSrcDir), f))).map(f => upath.toUnix(upath.resolve(f)))
         const res = await storage.copy(fakeSrcDir, fakeDestDir, { progressCallback: mockProgressCb, localDest: true })
         expect(res).toEqual(cpDestFiles)
         expect(mockCreateReadStream).toHaveBeenCalledTimes(3)
@@ -1143,7 +1150,7 @@ describe('copy', () => {
         const filesInDest = ['a/file1.html'].map(f => upath.join(fakeDestDir, upath.join(upath.basename(fakeSrcDir), f)))
         setMockList(srcFiles.map(f => upath.join(fakeSrcDir, f)))
         filesInDest.map(f => fakeFs.addFile(f))
-        const cpDestFiles = srcFiles.map(f => upath.join(fakeDestDir, upath.join(upath.basename(fakeSrcDir), f))).map(f => upath.resolve(f))
+        const cpDestFiles = srcFiles.map(f => upath.join(fakeDestDir, upath.join(upath.basename(fakeSrcDir), f))).map(f => upath.toUnix(upath.resolve(f)))
         const res = await storage.copy(fakeSrcDir, fakeDestDir, { localDest: true, override: true })
         expect(res).toEqual(cpDestFiles)
         expect(mockCreateReadStream).toHaveBeenCalledTimes(2)
@@ -1161,7 +1168,7 @@ describe('copy', () => {
       test('3 files in src and dest does not exist (meaning dest does not end with / but will still be treated as a dir by local fs)', async () => {
         const srcFiles = ['a/file1.html', 'file2.html', 'file3']
         setMockList(srcFiles.map(f => upath.join(fakeSrcDir, f)))
-        const cpDestFiles = srcFiles.map(f => upath.join(fakeDestFile, f)).map(f => upath.resolve(f))
+        const cpDestFiles = srcFiles.map(f => upath.join(fakeDestFile, f)).map(f => upath.toUnix(upath.resolve(f)))
         const res = await storage.copy(fakeSrcDir, fakeDestFile, { localDest: true })
         expect(res).toEqual(cpDestFiles)
         expect(mockCreateReadStream).toHaveBeenCalledTimes(3)
@@ -1171,7 +1178,7 @@ describe('copy', () => {
         const srcFiles = ['a/file1.html']
         setMockList(srcFiles.map(f => upath.join(fakeSrcDir, f)))
         fakeFs.addFile(fakeDestFile)
-        await expect(storage.copy.bind(storage, fakeSrcDir, fakeDestFile, { localDest: true })).toThrowBadFileType(upath.resolve(fakeDestFile))
+        await expect(storage.copy.bind(storage, fakeSrcDir, fakeDestFile, { localDest: true })).toThrowBadFileType(upath.toUnix(upath.resolve(fakeDestFile)))
       })
     })
   })
