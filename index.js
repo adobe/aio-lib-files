@@ -40,57 +40,34 @@ async function wrapTVMRequest (tvm) {
   }
 }
 
-// todo find a way to not copy defs around
-/**
- * An object holding the credentials needed to instantiate AzureStorage.
- * It can either contain `{ sasURLPrivate, sasURLPublic }` or
- * `{ storageAccessKey, storage Account, containerName }`
- * In case you pass SAS URLs make sure the associated containers already exist
- *
- * @typedef AzureCredentials
- * @type {object}
- * @property {string} [sasURLPrivate] sas url to existing private azure blob container
- * @property {string} [sasURLPublic] sas url to existing public azure blob container
- *
- * @property {string} [storageAccount] name of azure storage account
- * @property {string} [storageAccessKey] access key for azure storage account
- * @property {string} [containerName] name of the blob container. Another
- * `${containerName}-public` container will also be used. Non existing
- * containers will be created.
- */
-/**
- * An object holding the OpenWhisk credentials
- *
- * @typedef OpenWhiskCredentials
- * @type {object}
- * @property {string} [namespace] user namespace
- * @property {string} [auth] auth key
- */
-
 /**
  * Initializes and returns the storage SDK.
  *
- * To use the SDK you must either provide provide your OpenWhisk credentials in
- * `credentials.ow` or your own cloud storage credentials in `credentials.azure`.
+ * To use the SDK you must either provide provide your
+ * [OpenWhisk credentials]{@link module:types~OpenWhiskCredentials} in
+ * `credentials.ow` or your own
+ * [Azure storage credentials]{@link module:types~AzureCredentialsAccount} in `credentials.azure`.
  *
- * OpenWhisk credentials can also be read from environment variables
+ * OpenWhisk credentials can also be read from environment variables (`OW_NAMESPACE` or `__OW_NAMESPACE` and `OW_AUTH` or `__OW_AUTH`).
  *
  * @param {object} credentials used to init the sdk
  *
- * @param {OpenWhiskCredentials} [credentials.ow] OpenWhisk credentials, set those if you want
- * to use our storage auto-generated temporary cloud storage credentials from the token
- * vending machine (tvm) for our storage infrastructure. You can also pass the
- * namespace and auth through environment variables: `OW_NAMESPACE` or
- * `__OW_NAMESPACE` and `OW_AUTH` or `__OW_AUTH`
+ * @param {module:types~OpenWhiskCredentials} [credentials.ow]
+ * {@link module:types~OpenWhiskCredentials}. Set those if you want
+ * to use ootb credentials to access our storage infrastructure. OpenWhisk
+ * namespace and auth can also be passed through environment variables:
+ * `OW_NAMESPACE` or `__OW_NAMESPACE` and `OW_AUTH` or `__OW_AUTH`
  *
- * @param {AzureCredentials} [credentials.azure] {@link AzureCredentials}
+ * @param {module:types~AzureCredentialsAccount|module:types~AzureCredentialsSAS} [credentials.azure]
+ * bring your own [Azure SAS credentials]{@link module:types~AzureCredentialsSAS} or
+ * [Azure storage account credentials]{@link module:types~AzureCredentialsAccount}
  *
  * @param {object} [options={}] options
- * @param {string} [options.tvmApiUrl] alternative tvm api url, works only
- * together with credentials.ow
+ * @param {string} [options.tvmApiUrl] alternative tvm api url. Only makes
+ * sense in the context of OpenWhisk credentials.
  * @param {string} [options.tvmCacheFile] alternative tvm cache file, defaults
- * to tmp `<tmpfolder>/.tvmCache`. Set to `false` to disable caching. Works only
- * together with credentials.ow
+ * to `<tmpfolder>/.tvmCache`. Set to `false` to disable caching. Only makes
+ * sense in the context of OpenWhisk credentials.
  * @returns {Promise<Storage>} A storage instance
  * @throws {StorageError}
  */
