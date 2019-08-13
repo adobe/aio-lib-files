@@ -1,15 +1,20 @@
 # Adobe I/O CNA Storage SDK
 
-An abstraction on top of blob cloud storage exposing a file like API.
-To use this SDK you can either provide your I/O Runtime or credentials from
-supported cloud providers.
+An abstraction on top of cloud blob storage exposing a file like API.
+
+You can initialize the SDK with your Adobe I/O Runtime (a.k.a OpenWhisk)
+credentials.
+
+Alternatively, you can bring your own cloud storage keys. Note however, that as
+of now we only support Azure Blob Storage. AWS S3 is the next on the todo list
+and will soon be available.
 
 ## Storage SDK
 
 ### Usage example
 
 ```js
-  const storageSDK = require('@adobe/io-cna-storage')
+  const storageSDK = require('@adobe/adobeio-cna-cloud-storage')
 
   // init sdk using OpenWhisk credentials
   const storage = await storageSDK.init({ ow: { namespace, auth } })
