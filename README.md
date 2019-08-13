@@ -29,6 +29,12 @@ and will soon be available.
 
 ## Storage SDK
 
+### Install
+
+```bash
+npm install @adobe/adobeio-cna-cloud-storage
+```
+
 ### Usage example
 
 ```js
