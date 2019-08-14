@@ -134,7 +134,11 @@ describe('list', () => {
   const mockBlobGetProperties = jest.fn()
   const mockContainerPublicList = jest.fn()
   const mockContainerPrivateList = jest.fn()
-  const fakeListArguments = (prefix, marker) => [fakeAborter, marker, { prefix: prefix, delimiter: '/' }]
+  const fakeListArguments = (prefix, marker) => {
+    const options = { delimiter: '/' }
+    if (prefix !== '') options.prefix = prefix
+    return [fakeAborter, marker, options]
+  }
   let storage
 
   beforeEach(async () => {
