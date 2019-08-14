@@ -12,7 +12,7 @@ governing permissions and limitations under the License.
 
 [![Version](https://img.shields.io/npm/v/@adobe/adobeio-cna-cloud-storage.svg)](https://npmjs.org/package/@adobe/adobeio-cna-cloud-storage)
 [![Downloads/week](https://img.shields.io/npm/dw/@adobe/adobeio-cna-cloud-storage.svg)](https://npmjs.org/package/@adobe/adobeio-cna-cloud-storage)
-[![Build Status](https://travis-ci.org/adobe/adobeio-cna-cloud-storage.svg?branch=master)](https://travis-ci.org/adobe/adobeio-cna-cloud-storage)
+[![Build Status](https://travis-ci.com/adobe/adobeio-cna-cloud-storage.svg?branch=master)](https://travis-ci.com/adobe/adobeio-cna-cloud-storage)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Codecov Coverage](https://img.shields.io/codecov/c/github/adobe/adobeio-cna-cloud-storage/master.svg?style=flat-square)](https://codecov.io/gh/adobe/adobeio-cna-cloud-storage/)
 
