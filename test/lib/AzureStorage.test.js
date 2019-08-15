@@ -82,6 +82,15 @@ describe('init', () => {
       expect(mockContainerCreate).toHaveBeenCalledTimes(2)
       expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, {})
       expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, { access: 'blob' })
+
+      mockContainerCreate.mockReset()
+
+      mockContainerCreate.mockRejectedValue({ body: { code: 'ContainerAlreadyExists' } })
+      const storage2 = await AzureStorage.init(fakeUserCredentials)
+      expect(storage2).toBeInstanceOf(AzureStorage)
+      expect(mockContainerCreate).toHaveBeenCalledTimes(2)
+      expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, {})
+      expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, { access: 'blob' })
     })
     test('when there is an unknown error on blob container creation', async () => {
       mockContainerCreate.mockRejectedValue('error')
@@ -125,7 +134,11 @@ describe('list', () => {
   const mockBlobGetProperties = jest.fn()
   const mockContainerPublicList = jest.fn()
   const mockContainerPrivateList = jest.fn()
-  const fakeListArguments = (prefix, marker) => [fakeAborter, marker, { prefix: prefix, delimiter: '/' }]
+  const fakeListArguments = (prefix, marker) => {
+    const options = { delimiter: '/' }
+    if (prefix !== '') options.prefix = prefix
+    return [fakeAborter, marker, options]
+  }
   let storage
 
   beforeEach(async () => {

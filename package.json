@@ -1,6 +1,6 @@
 {
   "name": "@adobe/adobeio-cna-cloud-storage",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "An abstraction on top of blob cloud storage exposing a file like API",
   "main": "index.js",
   "directories": {
