@@ -68,7 +68,7 @@ describe('getAzureBlobCredentials', () => {
   describe('without caching', () => {
     test('when tvm response is valid', async () => {
       // fake the request to the TVM
-      request.post.mockReturnValue(fakeAzureTVMResponse)
+      request.mockReturnValue(fakeAzureTVMResponse)
       fakeTVMInput.cacheFile = false
       const tvmClient = new TvmClient(fakeTVMInput)
       const creds = await tvmClient.getAzureBlobCredentials()
