@@ -16,9 +16,8 @@ const { StorageError } = require('./lib/StorageError')
 const { Storage } = require('./lib/Storage')
 const { TvmClient } = require('./lib/TvmClient')
 
-// hardcoded default tvm
-// TODO this is a temporary url
-const _defaultTvmApiUrl = 'https://adobeioruntime.net/api/v1/web/mraho/adobeio-cna-token-vending-machine-0.1.0'
+// Adobe I/O default token-vending-machine api host
+const _defaultTvmApiUrl = 'https://adobeio.adobeioruntime.net/apis/tvm/'
 
 // eslint-disable-next-line jsdoc/require-jsdoc
 async function wrapTVMRequest (tvm) {
