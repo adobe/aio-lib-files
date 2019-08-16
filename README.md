@@ -18,7 +18,7 @@ governing permissions and limitations under the License.
 
 # Adobe I/O CNA Storage SDK
 
-An abstraction on top of cloud blob storage exposing a file like API.
+A JavaScript abstraction on top of cloud blob storages exposing a file-system like API.
 
 You can initialize the SDK with your Adobe I/O Runtime (a.k.a OpenWhisk)
 credentials.
