@@ -27,21 +27,24 @@ Alternatively, you can bring your own cloud storage keys. Note however, that as
 of now we only support Azure Blob Storage. AWS S3 is the next on the todo list
 and will soon be available.
 
-## Storage SDK
-
-### Install
+## Install
 
 ```bash
 npm install @adobe/adobeio-cna-cloud-storage
 ```
 
-### Usage example
+## Use
 
 ```js
   const storageSDK = require('@adobe/adobeio-cna-cloud-storage')
 
+  // init
   // init sdk using OpenWhisk credentials
   const storage = await storageSDK.init({ ow: { namespace, auth } })
+  // init when env vars __OW_AUTH and __OW_NAMESPACE are set (e.g. when running in an OpenWhisk action)
+  const storage = await storageSDK.init()
+  // or if you want to use your own storage account
+  const storage = await storageSDK.init({ azure: { storageAccount, storageAccessKey, containerName } })
 
   // write private file
   await storage.write('mydir/myfile.txt', 'some private content')
@@ -85,7 +88,7 @@ npm install @adobe/adobeio-cna-cloud-storage
   await storage.copy('public/my-static-app/', 'my/private/folder')
 ```
 
-### API
+## Explore
 
 `goto` [API](doc/api.md)
 
