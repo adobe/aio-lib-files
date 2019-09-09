@@ -11,7 +11,7 @@ governing permissions and limitations under the License.
 */
 
 /* eslint-disable jsdoc/require-jsdoc */
-const { StorageError } = require('../lib/StorageError')
+const { FilesError } = require('../lib/FilesError')
 
 process.on('unhandledRejection', error => {
   throw error
@@ -19,8 +19,8 @@ process.on('unhandledRejection', error => {
 
 async function toThrowWithCodeAndMessageContains (received, code, words, checkErrorType = true) {
   function checkErrorCode (e, code) {
-    if (!(e instanceof StorageError)) {
-      return { message: () => `expected error to be instanceof "StorageError", instead received "${e.constructor.name}" with message: "${e.message}"`, pass: false }
+    if (!(e instanceof FilesError)) {
+      return { message: () => `expected error to be instanceof "FilesError", instead received "${e.constructor.name}" with message: "${e.message}"`, pass: false }
     }
     if (e.code !== code) {
       return { message: () => `expected error code to be "${code}", instead received "${e.code}" with message: "${e.message}"`, pass: false }
@@ -51,15 +51,15 @@ async function toThrowWithCodeAndMessageContains (received, code, words, checkEr
 }
 expect.extend({
   toThrowWithCodeAndMessageContains,
-  toThrowBadArgWithMessageContaining: (received, words, checkErrorType = true) => toThrowWithCodeAndMessageContains(received, StorageError.codes.BadArgument, words, checkErrorType),
-  toThrowForbidden: (received) => toThrowWithCodeAndMessageContains(received, StorageError.codes.Forbidden, ['forbidden', 'credentials']),
-  toThrowInternalWithStatus: (received, status) => toThrowWithCodeAndMessageContains(received, StorageError.codes.Internal, ['' + status, 'unknown']),
-  toThrowInternal: (received) => toThrowWithCodeAndMessageContains(received, StorageError.codes.Internal, ['unknown']),
-  toThrowFileNotExists: (received, filePath) => toThrowWithCodeAndMessageContains(received, StorageError.codes.FileNotExists, ['file', 'not exist', filePath]),
-  toThrowBadArgDirectory: (received, filePath) => toThrowWithCodeAndMessageContains(received, StorageError.codes.BadArgument, ['file', 'directory', filePath]),
-  toThrowFileExistsNoOverride: (received) => toThrowWithCodeAndMessageContains(received, StorageError.codes.FileExistsNoOverrides, ['override']),
-  toThrowBadFileType: (received, filePath) => toThrowWithCodeAndMessageContains(received, StorageError.codes.BadFileType, [filePath] || []),
-  toThrowNotImplemented: (received, methodName) => toThrowWithCodeAndMessageContains(received, StorageError.codes.NotImplemented, ['not implemented', methodName])
+  toThrowBadArgWithMessageContaining: (received, words, checkErrorType = true) => toThrowWithCodeAndMessageContains(received, FilesError.codes.BadArgument, words, checkErrorType),
+  toThrowForbidden: (received) => toThrowWithCodeAndMessageContains(received, FilesError.codes.Forbidden, ['forbidden', 'credentials']),
+  toThrowInternalWithStatus: (received, status) => toThrowWithCodeAndMessageContains(received, FilesError.codes.Internal, ['' + status, 'unknown']),
+  toThrowInternal: (received) => toThrowWithCodeAndMessageContains(received, FilesError.codes.Internal, ['unknown']),
+  toThrowFileNotExists: (received, filePath) => toThrowWithCodeAndMessageContains(received, FilesError.codes.FileNotExists, ['file', 'not exist', filePath]),
+  toThrowBadArgDirectory: (received, filePath) => toThrowWithCodeAndMessageContains(received, FilesError.codes.BadArgument, ['file', 'directory', filePath]),
+  toThrowFileExistsNoOverride: (received) => toThrowWithCodeAndMessageContains(received, FilesError.codes.FileExistsNoOverrides, ['override']),
+  toThrowBadFileType: (received, filePath) => toThrowWithCodeAndMessageContains(received, FilesError.codes.BadFileType, [filePath] || []),
+  toThrowNotImplemented: (received, methodName) => toThrowWithCodeAndMessageContains(received, FilesError.codes.NotImplemented, ['not implemented', methodName])
 })
 const stream = require('stream')
 global.createStream = (content) => {
