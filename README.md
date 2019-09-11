@@ -24,8 +24,7 @@ You can initialize the SDK with your Adobe I/O Runtime (a.k.a OpenWhisk)
 credentials.
 
 Alternatively, you can bring your own cloud storage keys. Note however, that as
-of now we only support Azure Blob Storage. AWS S3 is the next on the todo list
-and will soon be available.
+of now we only support Azure Blob Storage.
 
 ## Install
 
