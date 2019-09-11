@@ -10,13 +10,13 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 -->
 
-[![Version](https://img.shields.io/npm/v/@adobe/adobeio-cna-cloud-storage.svg)](https://npmjs.org/package/@adobe/adobeio-cna-cloud-storage)
-[![Downloads/week](https://img.shields.io/npm/dw/@adobe/adobeio-cna-cloud-storage.svg)](https://npmjs.org/package/@adobe/adobeio-cna-cloud-storage)
-[![Build Status](https://travis-ci.com/adobe/adobeio-cna-cloud-storage.svg?branch=master)](https://travis-ci.com/adobe/adobeio-cna-cloud-storage)
+[![Version](https://img.shields.io/npm/v/@adobe/aio-lib-files.svg)](https://npmjs.org/package/@adobe/aio-lib-files)
+[![Downloads/week](https://img.shields.io/npm/dw/@adobe/aio-lib-files.svg)](https://npmjs.org/package/@adobe/aio-lib-files)
+[![Build Status](https://travis-ci.com/adobe/aio-lib-files.svg?branch=master)](https://travis-ci.com/adobe/aio-lib-files)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Codecov Coverage](https://img.shields.io/codecov/c/github/adobe/adobeio-cna-cloud-storage/master.svg?style=flat-square)](https://codecov.io/gh/adobe/adobeio-cna-cloud-storage/)
+[![Codecov Coverage](https://img.shields.io/codecov/c/github/adobe/aio-lib-files/master.svg?style=flat-square)](https://codecov.io/gh/adobe/aio-lib-files/)
 
-# Adobe I/O CNA Storage SDK
+# Adobe I/O Lib Files
 
 A JavaScript abstraction on top of cloud blob storages exposing a file-system like API.
 
@@ -30,62 +30,62 @@ and will soon be available.
 ## Install
 
 ```bash
-npm install @adobe/adobeio-cna-cloud-storage
+npm install @adobe/aio-lib-files
 ```
 
 ## Use
 
 ```js
-  const storageSDK = require('@adobe/adobeio-cna-cloud-storage')
+  const filesLib = require('@adobe/aio-lib-files')
 
   // init
   // init sdk using OpenWhisk credentials
-  const storage = await storageSDK.init({ ow: { namespace, auth } })
+  const files = await filesLib.init({ ow: { namespace, auth } })
   // init when env vars __OW_AUTH and __OW_NAMESPACE are set (e.g. when running in an OpenWhisk action)
-  const storage = await storageSDK.init()
-  // or if you want to use your own storage account
-  const storage = await storageSDK.init({ azure: { storageAccount, storageAccessKey, containerName } })
+  const files = await filesLib.init()
+  // or if you want to use your own cloud storage account
+  const files = await filesLib.init({ azure: { storageAccount, storageAccessKey, containerName } })
 
   // write private file
-  await storage.write('mydir/myfile.txt', 'some private content')
+  await files.write('mydir/myfile.txt', 'some private content')
 
   // write publicly accessible file
-  await storage.write('public/index.html', '<h1>Hello World!</h1>')
+  await files.write('public/index.html', '<h1>Hello World!</h1>')
 
   // get file url
-  const props = await storage.getProperties('public/index.html')
+  const props = await files.getProperties('public/index.html')
   props.url
 
   // list all files
-  await storage.list('/') // ['mydir/myfile.txt', 'public/index.html']
+  await files.list('/') // ['mydir/myfile.txt', 'public/index.html']
 
   // read
-  const buffer = await storage.read('mydir/myfile.txt')
+  const buffer = await files.read('mydir/myfile.txt')
   buffer.toString() // 'some private content'
 
   // pipe read stream to local file
-  const rdStream = await storage.createReadStream('mydir/myfile.txt')
+  const rdStream = await files.createReadStream('mydir/myfile.txt')
   const stream = rdStream.pipe(fs.createWriteStream('my-local-file.txt'))
   stream.on('finish', () => console.log('done!'))
 
   // write read stream to remote file
   const rdStream = fs.createReadStream('my-local-file.txt')
-  await storage.write('my/remote/file.txt', rdStream)
+  await files.write('my/remote/file.txt', rdStream)
 
   // delete files in 'my/remote/' dir
-  await storage.delete('my/remote/')
+  await files.delete('my/remote/')
   // delete all public files
-  await storage.delete('public/')
+  await files.delete('public/')
   // delete all files including public
-  await storage.delete('/')
+  await files.delete('/')
 
   // copy
   // upload local directory
-  await storage.copy('my-static-app/', 'public/', { localSrc: true })
+  await files.copy('my-static-app/', 'public/', { localSrc: true })
   // download to local directory
-  await storage.copy('public/my-static-app/', 'my-static-app-copy', { localDest: true })
-  // copy files around cloud storage
-  await storage.copy('public/my-static-app/', 'my/private/folder')
+  await files.copy('public/my-static-app/', 'my-static-app-copy', { localDest: true })
+  // copy files around cloud files
+  await files.copy('public/my-static-app/', 'my/private/folder')
 ```
 
 ## Explore

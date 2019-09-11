@@ -1,6 +1,6 @@
 {
-  "name": "@adobe/adobeio-cna-cloud-storage",
-  "version": "0.1.4",
+  "name": "@adobe/aio-lib-files",
+  "version": "0.2.0",
   "description": "An abstraction on top of blob cloud storage exposing a file like API",
   "main": "index.js",
   "directories": {
@@ -17,7 +17,7 @@
   "engines": {
     "node": ">=10.0.0"
   },
-  "repository": "adobe/adobeio-cna-cloud-storage",
+  "repository": "adobe/aio-lib-files",
   "keywords": [
     "sdk",
     "openwhisk",
@@ -40,12 +40,12 @@
     "jsdoc-to-markdown": "^5.0.0"
   },
   "dependencies": {
+    "@adobe/aio-lib-tvm": "^0.4.0",
     "@azure/storage-blob": "^10.3.0",
     "@hapi/joi": "^15.1.0",
     "@types/hapi__joi": "^15.0.3",
     "fs-extra": "^8.0.1",
     "mime-types": "^2.1.24",
-    "request-promise": "^4.2.4",
     "upath": "^1.1.2"
   }
 }

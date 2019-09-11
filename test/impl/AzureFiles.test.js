@@ -10,8 +10,8 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const { AzureStorage } = require('../../lib/azure/AzureStorage')
-const { StorageError } = require('../../lib/StorageError')
+const { AzureBlobFiles } = require('../../lib/impl/AzureBlobFiles')
+const { FilesError } = require('../../lib/FilesError')
 const stream = require('stream')
 const upath = require('upath')
 
@@ -49,27 +49,27 @@ describe('init', () => {
 
   describe('with bad args', () => {
     test('when called with no arguments', async () => {
-      await expect(AzureStorage.init).toThrowBadArgWithMessageContaining(['credentials', 'required'])
+      await expect(AzureBlobFiles.init).toThrowBadArgWithMessageContaining(['credentials', 'required'])
     })
     test('when called with incomplete SAS credentials', async () => {
       const badInput = { ...fakeSASCredentials }
       delete badInput.sasURLPrivate
-      await expect(AzureStorage.init.bind(null, badInput)).toThrowBadArgWithMessageContaining(['credentials', 'required', 'sasURLPrivate'])
+      await expect(AzureBlobFiles.init.bind(null, badInput)).toThrowBadArgWithMessageContaining(['credentials', 'required', 'sasURLPrivate'])
     })
     test('when called with incomplete user credentials', async () => {
       const badInput = { ...fakeUserCredentials }
       delete badInput.containerName
-      await expect(AzureStorage.init.bind(null, badInput)).toThrowBadArgWithMessageContaining(['credentials', 'required', 'containerName'])
+      await expect(AzureBlobFiles.init.bind(null, badInput)).toThrowBadArgWithMessageContaining(['credentials', 'required', 'containerName'])
     })
     test('when called with both sas and user credentials', async () => {
-      await expect(AzureStorage.init.bind(null, { ...fakeUserCredentials, ...fakeSASCredentials })).toThrowBadArgWithMessageContaining(['credentials', 'conflict'])
+      await expect(AzureBlobFiles.init.bind(null, { ...fakeUserCredentials, ...fakeSASCredentials })).toThrowBadArgWithMessageContaining(['credentials', 'conflict'])
     })
   })
 
   describe('with azure storage account credentials', () => {
     test('when public/private blob containers do not exist', async () => {
-      const storage = await AzureStorage.init(fakeUserCredentials)
-      expect(storage).toBeInstanceOf(AzureStorage)
+      const storage = await AzureBlobFiles.init(fakeUserCredentials)
+      expect(storage).toBeInstanceOf(AzureBlobFiles)
       expect(mockContainerCreate).toHaveBeenCalledTimes(2)
       expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, {})
       expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, { access: 'blob' })
@@ -77,8 +77,8 @@ describe('init', () => {
     test('when blob containers already exist', async () => {
       // here we make sure that no error is thrown (ignore if already exist)
       mockContainerCreate.mockRejectedValue({ body: { Code: 'ContainerAlreadyExists' } })
-      const storage = await AzureStorage.init(fakeUserCredentials)
-      expect(storage).toBeInstanceOf(AzureStorage)
+      const storage = await AzureBlobFiles.init(fakeUserCredentials)
+      expect(storage).toBeInstanceOf(AzureBlobFiles)
       expect(mockContainerCreate).toHaveBeenCalledTimes(2)
       expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, {})
       expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, { access: 'blob' })
@@ -86,21 +86,21 @@ describe('init', () => {
       mockContainerCreate.mockReset()
 
       mockContainerCreate.mockRejectedValue({ body: { code: 'ContainerAlreadyExists' } })
-      const storage2 = await AzureStorage.init(fakeUserCredentials)
-      expect(storage2).toBeInstanceOf(AzureStorage)
+      const storage2 = await AzureBlobFiles.init(fakeUserCredentials)
+      expect(storage2).toBeInstanceOf(AzureBlobFiles)
       expect(mockContainerCreate).toHaveBeenCalledTimes(2)
       expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, {})
       expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, { access: 'blob' })
     })
     test('when there is an unknown error on blob container creation', async () => {
       mockContainerCreate.mockRejectedValue('error')
-      await expect(AzureStorage.init.bind(null, fakeUserCredentials)).toThrowInternal()
+      await expect(AzureBlobFiles.init.bind(null, fakeUserCredentials)).toThrowInternal()
       mockContainerCreate.mockRejectedValue({ response: { status: 444 } })
-      await expect(AzureStorage.init.bind(null, fakeUserCredentials)).toThrowInternalWithStatus(444)
+      await expect(AzureBlobFiles.init.bind(null, fakeUserCredentials)).toThrowInternalWithStatus(444)
     })
     test('when there is an error with forbidden status on blob container creation', async () => {
       mockContainerCreate.mockRejectedValue({ response: { status: 403 } })
-      await expect(AzureStorage.init.bind(null, fakeUserCredentials)).toThrowForbidden()
+      await expect(AzureBlobFiles.init.bind(null, fakeUserCredentials)).toThrowForbidden()
     })
   })
   test('with azure SAS credentials', async () => {
@@ -112,10 +112,10 @@ describe('init', () => {
     azure.ContainerURL = jest.fn()
     azure.Aborter = { none: fakeAzureAborter }
     // test
-    const storage = await AzureStorage.init(fakeSASCredentials)
+    const storage = await AzureBlobFiles.init(fakeSASCredentials)
     expect(azure.ContainerURL).toHaveBeenNthCalledWith(1, fakeSASCredentials.sasURLPrivate, fakeAzurePipeline)
     expect(azure.ContainerURL).toHaveBeenNthCalledWith(2, fakeSASCredentials.sasURLPublic, fakeAzurePipeline)
-    expect(storage).toBeInstanceOf(AzureStorage)
+    expect(storage).toBeInstanceOf(AzureBlobFiles)
   })
 })
 
@@ -147,7 +147,7 @@ describe('list', () => {
     mockContainerPrivateList.mockReset()
     azure.ContainerURL = jest.fn()
     azure.BlockBlobURL.fromContainerURL = jest.fn().mockReturnValue({ getProperties: mockBlobGetProperties })
-    storage = await AzureStorage.init(fakeSASCredentials)
+    storage = await AzureBlobFiles.init(fakeSASCredentials)
     storage._azure.containerURLPrivate = { listBlobFlatSegment: mockContainerPrivateList }
     storage._azure.containerURLPublic = { listBlobFlatSegment: mockContainerPublicList }
     storage._azure.aborter = fakeAborter
@@ -262,7 +262,7 @@ describe('delete', () => {
     mockList.mockReset()
     azure.ContainerURL = jest.fn()
     azure.BlockBlobURL.fromContainerURL = jest.fn().mockReturnValue({ delete: mockAzureDelete })
-    storage = await AzureStorage.init(fakeSASCredentials)
+    storage = await AzureBlobFiles.init(fakeSASCredentials)
     storage._azure.aborter = fakeAborter
     storage.list = mockList
   })
@@ -319,7 +319,7 @@ describe('delete', () => {
     await expect(storage.delete.bind(storage, fakeDir)).toThrowInternal()
   })
   test('when list rejects with an error', async () => {
-    let error = new StorageError('fakeError')
+    let error = new FilesError('fakeError')
     mockList.mockRejectedValue(error)
     await expect(storage.delete(fakeDir)).rejects.toThrow(error)
     error = new Error('fakeError')
@@ -338,7 +338,7 @@ describe('createReadStream', () => {
     mockAzureDownload.mockReset()
     azure.BlockBlobURL.fromContainerURL = jest.fn().mockReturnValue({ download: mockAzureDownload })
     azure.ContainerURL = jest.fn()
-    storage = await AzureStorage.init(fakeSASCredentials)
+    storage = await AzureBlobFiles.init(fakeSASCredentials)
     storage._azure.aborter = fakeAborter
   })
 
@@ -394,7 +394,7 @@ describe('read', () => {
   beforeEach(async () => {
     mockCreateReadStream.mockReset()
     azure.ContainerURL = jest.fn()
-    storage = await AzureStorage.init(fakeSASCredentials)
+    storage = await AzureBlobFiles.init(fakeSASCredentials)
     storage._azure.aborter = fakeAborter
     storage.createReadStream = mockCreateReadStream
   })
@@ -428,7 +428,7 @@ describe('read', () => {
   })
   test('when createReadStream rejects with an error', async () => {
     // should cover file doesn't exist + is dir b/c known errors are thrown from createReadStream
-    let error = new StorageError('fakeError')
+    let error = new FilesError('fakeError')
     mockCreateReadStream.mockRejectedValue(error)
     await expect(storage.read(fakeFile)).rejects.toThrow(error)
     error = new Error('fakeError')
@@ -450,7 +450,7 @@ describe('write', () => {
     azure.uploadStreamToBlockBlob = mockAzureStreamUpload
     azure.BlockBlobURL.fromContainerURL = jest.fn().mockReturnValue({ upload: mockAzureUpload })
     azure.ContainerURL = jest.fn()
-    storage = await AzureStorage.init(fakeSASCredentials)
+    storage = await AzureBlobFiles.init(fakeSASCredentials)
     storage._azure.aborter = fakeAborter
   })
 
@@ -516,14 +516,14 @@ describe('write', () => {
 describe('createWriteStream', () => {
   const fakeFile = 'a/dir/file1'
   const mockAzureStreamUpload = jest.fn()
-  /** @type {AzureStorage} */
+  /** @type {AzureBlobFiles} */
   let storage
   beforeEach(async () => {
     mockAzureStreamUpload.mockReset()
     mockAzureStreamUpload.mockImplementation((_, stream) => new Promise((resolve) => stream.on('end', resolve))) // tight coupling..
     azure.uploadStreamToBlockBlob = mockAzureStreamUpload
     azure.ContainerURL = jest.fn()
-    storage = await AzureStorage.init(fakeSASCredentials)
+    storage = await AzureBlobFiles.init(fakeSASCredentials)
     storage._azure.aborter = fakeAborter
   })
 
@@ -576,12 +576,12 @@ describe('getProperties', () => {
   const setMockBlobUrl = url => {
     azure.BlockBlobURL.fromContainerURL = mockBlockBlob.mockReturnValue({ url })
   }
-  /** @type {AzureStorage} */
+  /** @type {AzureBlobFiles} */
   let storage
   beforeEach(async () => {
     mockBlockBlob.mockReset()
     azure.ContainerURL = jest.fn()
-    storage = await AzureStorage.init(fakeSASCredentials)
+    storage = await AzureBlobFiles.init(fakeSASCredentials)
     storage._azure.aborter = fakeAborter
   })
 
@@ -651,7 +651,7 @@ describe('copy', () => {
   const mockWrite = jest.fn()
   const mockList = jest.fn()
   const mockAzureCopy = jest.fn()
-  /** @type {AzureStorage} */
+  /** @type {AzureBlobFiles} */
   let storage
 
   const setMockList = (files = []) => {
@@ -678,7 +678,7 @@ describe('copy', () => {
 
     azure.BlockBlobURL.fromContainerURL = jest.fn().mockReturnValue({ startCopyFromURL: mockAzureCopy })
     azure.ContainerURL = jest.fn()
-    storage = await AzureStorage.init(fakeSASCredentials)
+    storage = await AzureBlobFiles.init(fakeSASCredentials)
     storage._azure.aborter = fakeAborter
     storage.createReadStream = mockCreateReadStream
     storage.list = mockList
@@ -735,7 +735,7 @@ describe('copy', () => {
         expect(res).toEqual([pathFileInDir(fakeDestDir, fakeSrcFile)])
         expect(mockAzureCopy).toHaveBeenCalledTimes(1)
       })
-      test('when dest contains 3 files with a different names than src', async () => {
+      test('when dest contains 3 files with different names than src', async () => {
         setMockList([fakeSrcFile, pathFileInDir(fakeDestDir, 'a/b/afile'), pathFileInDir(fakeDestDir, 'anotherfile.json'), pathFileInDir(fakeDestDir, 'some/index.js')])
         const res = await storage.copy(fakeSrcFile, fakeDestDir)
         expect(res).toEqual([pathFileInDir(fakeDestDir, fakeSrcFile)])
