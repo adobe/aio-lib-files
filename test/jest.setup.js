@@ -57,7 +57,6 @@ expect.extend({
   toThrowInternal: (received) => toThrowWithCodeAndMessageContains(received, FilesError.codes.Internal, ['unknown']),
   toThrowFileNotExists: (received, filePath) => toThrowWithCodeAndMessageContains(received, FilesError.codes.FileNotExists, ['file', 'not exist', filePath]),
   toThrowBadArgDirectory: (received, filePath) => toThrowWithCodeAndMessageContains(received, FilesError.codes.BadArgument, ['file', 'directory', filePath]),
-  toThrowFileExistsNoOverride: (received) => toThrowWithCodeAndMessageContains(received, FilesError.codes.FileExistsNoOverrides, ['override']),
   toThrowBadFileType: (received, filePath) => toThrowWithCodeAndMessageContains(received, FilesError.codes.BadFileType, [filePath] || []),
   toThrowNotImplemented: (received, methodName) => toThrowWithCodeAndMessageContains(received, FilesError.codes.NotImplemented, ['not implemented', methodName])
 })
@@ -90,6 +89,15 @@ fakeFs._find = f => {
   }
   return traverse
 }
+fakeFs._statFound = async found => {
+  if (typeof found === 'object') {
+    return { isFile: () => false, isDirectory: () => true, isSymbolicLink: () => false }
+  }
+  if (found === 'SYMLINK') {
+    return { isFile: () => false, isDirectory: () => false, isSymbolicLink: () => true }
+  }
+  return { isFile: () => true, isDirectory: () => false, isSymbolicLink: () => false }
+}
 fakeFs.addFile = (fpath, content = '') => {
   fpath = upath.toUnix(fpath)
   const filename = upath.basename(fpath)
@@ -111,13 +119,7 @@ fakeFs.stat = async f => {
   if (found instanceof Error) {
     throw found
   }
-  if (typeof found === 'object') {
-    return { isFile: () => false, isDirectory: () => true, isSymbolicLink: () => false }
-  }
-  if (found === 'SYMLINK') {
-    return { isFile: () => false, isDirectory: () => false, isSymbolicLink: () => true }
-  }
-  return { isFile: () => true, isDirectory: () => false, isSymbolicLink: () => false }
+  return fakeFs._statFound(found)
 }
 fakeFs.pathExists = async f => {
   try {
@@ -128,12 +130,17 @@ fakeFs.pathExists = async f => {
     else throw e
   }
 }
-fakeFs.readdir = async f => {
+fakeFs.readdir = async (f, options) => {
   const traverse = fakeFs._find(f)
   if (typeof traverse !== 'object') {
     fakeFs._throw('ENOTDIR')
   }
-  return Object.keys(traverse)
+  const keys = Object.keys(traverse)
+  if (options.withFileTypes) {
+    const withTypes = await Promise.all(keys.map(async k => ({ name: k, ...(await fakeFs._statFound(traverse[k])) })))
+    return withTypes
+  }
+  return keys
 }
 fakeFs.createReadStream = f => {
   const traverse = fakeFs._find(f)

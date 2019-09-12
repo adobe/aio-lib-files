@@ -8,24 +8,24 @@
 ## Classes
 
 <dl>
-<dt><a href="#Storage">Storage</a></dt>
-<dd><p>Cloud Storage</p>
+<dt><a href="#Files">Files</a></dt>
+<dd><p>Cloud Files Abstraction</p>
 </dd>
-<dt><a href="#StorageError">StorageError</a> ⇐ <code>Error</code></dt>
-<dd><p>Cloud Storage Errors</p>
+<dt><a href="#FilesError">FilesError</a> ⇐ <code>Error</code></dt>
+<dd><p>Cloud Files Errors</p>
 </dd>
 </dl>
 
 ## Functions
 
 <dl>
-<dt><a href="#init">init(credentials, [options])</a> ⇒ <code><a href="#Storage">Promise.&lt;Storage&gt;</a></code></dt>
-<dd><p>Initializes and returns the storage SDK.</p>
+<dt><a href="#init">init([config])</a> ⇒ <code><a href="#Files">Promise.&lt;Files&gt;</a></code></dt>
+<dd><p>Initializes and returns the cloud files SDK.</p>
 <p>To use the SDK you must either provide provide your
 <a href="#module_types..OpenWhiskCredentials">OpenWhisk credentials</a> in
 <code>credentials.ow</code> or your own
-<a href="#module_types..AzureCredentialsAccount">Azure storage credentials</a> in <code>credentials.azure</code>.</p>
-<p>OpenWhisk credentials can also be read from environment variables (<code>OW_NAMESPACE</code> or <code>__OW_NAMESPACE</code> and <code>OW_AUTH</code> or <code>__OW_AUTH</code>).</p>
+<a href="#module_types..AzureCredentialsAccount">Azure blob storage credentials</a> in <code>credentials.azure</code>.</p>
+<p>OpenWhisk credentials can also be read from environment variables (<code>__OW_NAMESPACE</code> and <code>__OW_AUTH</code>).</p>
 </dd>
 </dl>
 
@@ -100,34 +100,34 @@ be treated as a directory, if not it will be treated as a file.
 | isPublic | <code>boolean</code> | true if file is public |
 | url | <code>string</code> | remote file url |
 
-<a name="Storage"></a>
+<a name="Files"></a>
 
-## *Storage*
-Cloud Storage
+## *Files*
+Cloud Files Abstraction
 
 **Kind**: global abstract class  
 
-* *[Storage](#Storage)*
-    * *[.list([filePath])](#Storage+list) ⇒ <code>Promise.&lt;Array.&lt;string&gt;&gt;</code>*
-    * *[.delete(filePath, [options])](#Storage+delete) ⇒ <code>Promise.&lt;Array.&lt;string&gt;&gt;</code>*
-    * *[.createReadStream(filePath, [options])](#Storage+createReadStream) ⇒ <code>Promise.&lt;NodeJS.ReadableStream&gt;</code>*
-    * *[.createWriteStream(filePath)](#Storage+createWriteStream) ⇒ <code>Promise.&lt;NodeJS.WritableStream&gt;</code>*
-    * *[.read(filePath, [options])](#Storage+read) ⇒ <code>Promise.&lt;Buffer&gt;</code>*
-    * *[.write(filePath, content)](#Storage+write) ⇒ <code>Promise.&lt;number&gt;</code>*
-    * *[.getProperties(filePath)](#Storage+getProperties) ⇒ [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#module_types..RemoteFileProperties)*
-    * *[.copy(srcPath, destPath, [options])](#Storage+copy) ⇒ <code>Promise.&lt;Array.&lt;string&gt;&gt;</code>*
+* *[Files](#Files)*
+    * *[.list([filePath])](#Files+list) ⇒ <code>Promise.&lt;Array.&lt;string&gt;&gt;</code>*
+    * *[.delete(filePath, [options])](#Files+delete) ⇒ <code>Promise.&lt;Array.&lt;string&gt;&gt;</code>*
+    * *[.createReadStream(filePath, [options])](#Files+createReadStream) ⇒ <code>Promise.&lt;NodeJS.ReadableStream&gt;</code>*
+    * *[.createWriteStream(filePath)](#Files+createWriteStream) ⇒ <code>Promise.&lt;NodeJS.WritableStream&gt;</code>*
+    * *[.read(filePath, [options])](#Files+read) ⇒ <code>Promise.&lt;Buffer&gt;</code>*
+    * *[.write(filePath, content)](#Files+write) ⇒ <code>Promise.&lt;number&gt;</code>*
+    * *[.getProperties(filePath)](#Files+getProperties) ⇒ [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#module_types..RemoteFileProperties)*
+    * *[.copy(srcPath, destPath, [options])](#Files+copy) ⇒ <code>Promise.&lt;object.&lt;string, string&gt;&gt;</code>*
 
-<a name="Storage+list"></a>
+<a name="Files+list"></a>
 
-### *storage.list([filePath]) ⇒ <code>Promise.&lt;Array.&lt;string&gt;&gt;</code>*
+### *files.list([filePath]) ⇒ <code>Promise.&lt;Array.&lt;string&gt;&gt;</code>*
 Lists files in a remote folder. If called on a file returns only this file path.
 This is comparable to bash's `ls` command
 
-**Kind**: instance method of [<code>Storage</code>](#Storage)  
+**Kind**: instance method of [<code>Files</code>](#Files)  
 **Returns**: <code>Promise.&lt;Array.&lt;string&gt;&gt;</code> - resolves to array of paths  
 **Throws**:
 
-- [<code>StorageError</code>](#StorageError) 
+- [<code>FilesError</code>](#FilesError) 
 
 **Access**: public  
 
@@ -135,16 +135,16 @@ This is comparable to bash's `ls` command
 | --- | --- | --- |
 | [filePath] | [<code>RemotePathString</code>](#module_types..RemotePathString) | [RemotePathString](#module_types..RemotePathString) if not specified list all files |
 
-<a name="Storage+delete"></a>
+<a name="Files+delete"></a>
 
-### *storage.delete(filePath, [options]) ⇒ <code>Promise.&lt;Array.&lt;string&gt;&gt;</code>*
+### *files.delete(filePath, [options]) ⇒ <code>Promise.&lt;Array.&lt;string&gt;&gt;</code>*
 Deletes a remote file or directory
 
-**Kind**: instance method of [<code>Storage</code>](#Storage)  
+**Kind**: instance method of [<code>Files</code>](#Files)  
 **Returns**: <code>Promise.&lt;Array.&lt;string&gt;&gt;</code> - resolves to array of deleted paths  
 **Throws**:
 
-- [<code>StorageError</code>](#StorageError) 
+- [<code>FilesError</code>](#FilesError) 
 
 **Access**: public  
 
@@ -154,18 +154,18 @@ Deletes a remote file or directory
 | [options] | <code>object</code> | <code>{}</code> | remoteDeleteOptions |
 | [options.progressCallback] | <code>function</code> |  | cb(RemoteFile) is called after  the operation completed on each file |
 
-<a name="Storage+createReadStream"></a>
+<a name="Files+createReadStream"></a>
 
-### *storage.createReadStream(filePath, [options]) ⇒ <code>Promise.&lt;NodeJS.ReadableStream&gt;</code>*
+### *files.createReadStream(filePath, [options]) ⇒ <code>Promise.&lt;NodeJS.ReadableStream&gt;</code>*
 ***NodeJS only (streams). Does not work on directories.***
 
 Creates a read stream
 
-**Kind**: instance method of [<code>Storage</code>](#Storage)  
+**Kind**: instance method of [<code>Files</code>](#Files)  
 **Returns**: <code>Promise.&lt;NodeJS.ReadableStream&gt;</code> - a readable stream  
 **Throws**:
 
-- [<code>StorageError</code>](#StorageError) 
+- [<code>FilesError</code>](#FilesError) 
 
 **Access**: public  
 
@@ -176,9 +176,9 @@ Creates a read stream
 | [options.position] | <code>number</code> |  | read start position of the file |
 | [options.length] | <code>number</code> |  | number of bytes to read |
 
-<a name="Storage+createWriteStream"></a>
+<a name="Files+createWriteStream"></a>
 
-### *storage.createWriteStream(filePath) ⇒ <code>Promise.&lt;NodeJS.WritableStream&gt;</code>*
+### *files.createWriteStream(filePath) ⇒ <code>Promise.&lt;NodeJS.WritableStream&gt;</code>*
 **[UNSTABLE] please prefer using `write(<NodeJS.ReadableStream>)`**
 
 ***NodeJS only (streams). Does not work on directories.***
@@ -186,11 +186,11 @@ Creates a read stream
 Returns a write stream.
 Use `stream.on('finish', (bytesWritten) => {})` to listen on completion event
 
-**Kind**: instance method of [<code>Storage</code>](#Storage)  
+**Kind**: instance method of [<code>Files</code>](#Files)  
 **Returns**: <code>Promise.&lt;NodeJS.WritableStream&gt;</code> - a writable stream  
 **Throws**:
 
-- [<code>StorageError</code>](#StorageError) 
+- [<code>FilesError</code>](#FilesError) 
 
 **Access**: public  
 
@@ -198,18 +198,18 @@ Use `stream.on('finish', (bytesWritten) => {})` to listen on completion event
 | --- | --- | --- |
 | filePath | [<code>RemotePathString</code>](#module_types..RemotePathString) | [RemotePathString](#module_types..RemotePathString) |
 
-<a name="Storage+read"></a>
+<a name="Files+read"></a>
 
-### *storage.read(filePath, [options]) ⇒ <code>Promise.&lt;Buffer&gt;</code>*
+### *files.read(filePath, [options]) ⇒ <code>Promise.&lt;Buffer&gt;</code>*
 ***Does not work on directories.***
 
 Reads a remote file content
 
-**Kind**: instance method of [<code>Storage</code>](#Storage)  
+**Kind**: instance method of [<code>Files</code>](#Files)  
 **Returns**: <code>Promise.&lt;Buffer&gt;</code> - buffer holding content  
 **Throws**:
 
-- [<code>StorageError</code>](#StorageError) 
+- [<code>FilesError</code>](#FilesError) 
 
 **Access**: public  
 
@@ -220,18 +220,18 @@ Reads a remote file content
 | [options.position] | <code>number</code> |  | read start position of the file |
 | [options.length] | <code>number</code> |  | number of bytes to read |
 
-<a name="Storage+write"></a>
+<a name="Files+write"></a>
 
-### *storage.write(filePath, content) ⇒ <code>Promise.&lt;number&gt;</code>*
+### *files.write(filePath, content) ⇒ <code>Promise.&lt;number&gt;</code>*
 ***Does not work on directories.***
 
 Writes content to a file
 
-**Kind**: instance method of [<code>Storage</code>](#Storage)  
+**Kind**: instance method of [<code>Files</code>](#Files)  
 **Returns**: <code>Promise.&lt;number&gt;</code> - resolves to number of bytes written  
 **Throws**:
 
-- [<code>StorageError</code>](#StorageError) 
+- [<code>FilesError</code>](#FilesError) 
 
 **Access**: public  
 
@@ -240,51 +240,51 @@ Writes content to a file
 | filePath | [<code>RemotePathString</code>](#module_types..RemotePathString) | [RemotePathString](#module_types..RemotePathString) |
 | content | <code>string</code> \| <code>Buffer</code> \| <code>NodeJS.ReadableStream</code> | to be written, `ReadableStream` input works for **NodeJS only** |
 
-<a name="Storage+getProperties"></a>
+<a name="Files+getProperties"></a>
 
-### *storage.getProperties(filePath) ⇒ [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#module_types..RemoteFileProperties)*
+### *files.getProperties(filePath) ⇒ [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#module_types..RemoteFileProperties)*
 Reads properties of a file or directory
 
-**Kind**: instance method of [<code>Storage</code>](#Storage)  
+**Kind**: instance method of [<code>Files</code>](#Files)  
 **Returns**: [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#module_types..RemoteFileProperties) - resolves [RemoteFileProperties](#module_types..RemoteFileProperties)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | filePath | [<code>RemotePathString</code>](#module_types..RemotePathString) | [RemotePathString](#module_types..RemotePathString) |
 
-<a name="Storage+copy"></a>
+<a name="Files+copy"></a>
 
-### *storage.copy(srcPath, destPath, [options]) ⇒ <code>Promise.&lt;Array.&lt;string&gt;&gt;</code>*
+### *files.copy(srcPath, destPath, [options]) ⇒ <code>Promise.&lt;object.&lt;string, string&gt;&gt;</code>*
 ***NodeJS only (streams).***
 
-A utility function to copy files and directories across remote and local storage.
+A utility function to copy files and directories across remote and local Files.
 This is comparable to the `scp` command
 
 Rules for copy files are:
  1. Remote => Remote
    - a/ (dir) => b/: b/a/
-   - a (file) => b/: b/a  *disallowed if b/a exists and override=false*
-   - a (file) => b : b    *disallowed if b exists and override=false*
-   - a/ (dir) => b : b/   *always allowed: in remote storage we can have both b and b/*
+   - a (file) => b/: b/a  *does nothing if b/a exists and noOverwrite=true*
+   - a (file) => b : b    *does nothing if b exists and noOverwrite=true*
+   - a/ (dir) => b : b/   *always allowed: in remote Files we can have both b and b/*
  2. Remote => Local
    - a/ => b/: b/a/
-   - a  => b/: b/a
-   - a  => b : b   *disallowed if b exists and override=false*
+   - a  => b/: b/a *does nothing if b/a exists and noOverwrite=true*
+   - a  => b : b   *does nothing if b exists and noOverwrite=true*
    - a/ => b : b/  *throws an error if b exists and is a file: cannot copy a remote dir to a local file*
  3. Local => Remote
    - a/ => b/: b/a/
-   - a  => b/: b/a  *disallowed if b/a exists and override=false*
-   - a  => b : b    *disallowed if b exists and override=false*
-   - a/ => b: b/    *always allowed: in remote storage we can have both b and b/*
+   - a  => b/: b/a  *does nothing if b/a exists and noOverwrite=true*
+   - a  => b : b    *does nothing if b exists and noOverwrite=true*
+   - a/ => b: b/    *always allowed: in remote Files we can have both b and b/*
  4. Local => Local
    - not supported
 
-**Kind**: instance method of [<code>Storage</code>](#Storage)  
-**Returns**: <code>Promise.&lt;Array.&lt;string&gt;&gt;</code> - returns a promise resolving to an array
-of copied file destination paths  
+**Kind**: instance method of [<code>Files</code>](#Files)  
+**Returns**: <code>Promise.&lt;object.&lt;string, string&gt;&gt;</code> - returns a promise resolving to an object containing all copied files
+from src to dest `{ srcFilePath: destFilePath }`  
 **Throws**:
 
-- [<code>StorageError</code>](#StorageError) 
+- [<code>FilesError</code>](#FilesError) 
 
 
 | Param | Type | Default | Description |
@@ -294,44 +294,44 @@ of copied file destination paths
 | [options] | <code>object</code> | <code>{}</code> | remoteCopyOptions |
 | [options.localSrc] | <code>boolean</code> | <code>false</code> | Set this option to true to copy files from the local file system. Cannot be combined with localDest. |
 | [options.localDest] | <code>boolean</code> | <code>false</code> | Set this option to true to copy files to the local file system. Cannot be combined with localSrc. |
-| [options.override] | <code>boolean</code> | <code>false</code> | set to true to override existing files |
-| [options.progressCallback] | <code>function</code> |  | a function that will be called every time the operation completes on a single file, a path to that file will be passed as argument to the callback `progressCallback(path)` |
+| [options.noOverwrite] | <code>boolean</code> | <code>false</code> | set to true to overwrite existing files |
+| [options.progressCallback] | <code>function</code> |  | a function that will be called every time the operation completes on a single file,the srcPath and destPath to the copied file are passed as argument to the callback `progressCallback(srcPath, destPath)` |
 
-<a name="StorageError"></a>
+<a name="FilesError"></a>
 
-## StorageError ⇐ <code>Error</code>
-Cloud Storage Errors
+## FilesError ⇐ <code>Error</code>
+Cloud Files Errors
 
 **Kind**: global class  
 **Extends**: <code>Error</code>  
 
-* [StorageError](#StorageError) ⇐ <code>Error</code>
-    * [.StorageError](#StorageError.StorageError)
-        * [new StorageError(message, code, [internal])](#new_StorageError.StorageError_new)
-    * [.codes](#StorageError.codes) : <code>enum</code>
+* [FilesError](#FilesError) ⇐ <code>Error</code>
+    * [.FilesError](#FilesError.FilesError)
+        * [new FilesError(message, code, [internal])](#new_FilesError.FilesError_new)
+    * [.codes](#FilesError.codes) : <code>enum</code>
 
-<a name="StorageError.StorageError"></a>
+<a name="FilesError.FilesError"></a>
 
-### StorageError.StorageError
-**Kind**: static class of [<code>StorageError</code>](#StorageError)  
-<a name="new_StorageError.StorageError_new"></a>
+### FilesError.FilesError
+**Kind**: static class of [<code>FilesError</code>](#FilesError)  
+<a name="new_FilesError.FilesError_new"></a>
 
-#### new StorageError(message, code, [internal])
-Creates an instance of StorageError.
+#### new FilesError(message, code, [internal])
+Creates an instance of FilesError.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
 | message | <code>string</code> | error message |
-| code | [<code>codes</code>](#StorageError.codes) | Storage Error code |
+| code | [<code>codes</code>](#FilesError.codes) | Cloud Files Error code |
 | [internal] | <code>object</code> | debug error object for internal/underlying wrapped errors |
 
-<a name="StorageError.codes"></a>
+<a name="FilesError.codes"></a>
 
-### StorageError.codes : <code>enum</code>
-StorageError codes
+### FilesError.codes : <code>enum</code>
+FilesError codes
 
-**Kind**: static enum of [<code>StorageError</code>](#StorageError)  
+**Kind**: static enum of [<code>FilesError</code>](#FilesError)  
 **Properties**
 
 | Name | Type | Default |
@@ -341,34 +341,33 @@ StorageError codes
 | BadArgument | <code>string</code> | <code>&quot;BadArgument&quot;</code> | 
 | Forbidden | <code>string</code> | <code>&quot;Forbidden&quot;</code> | 
 | FileNotExists | <code>string</code> | <code>&quot;FileNotExists&quot;</code> | 
-| FileExistsNoOverrides | <code>string</code> | <code>&quot;FileExistsNoOverrides&quot;</code> | 
 | BadFileType | <code>string</code> | <code>&quot;BadFileType&quot;</code> | 
 
 <a name="init"></a>
 
-## init(credentials, [options]) ⇒ [<code>Promise.&lt;Storage&gt;</code>](#Storage)
-Initializes and returns the storage SDK.
+## init([config]) ⇒ [<code>Promise.&lt;Files&gt;</code>](#Files)
+Initializes and returns the cloud files SDK.
 
 To use the SDK you must either provide provide your
 [OpenWhisk credentials](#module_types..OpenWhiskCredentials) in
 `credentials.ow` or your own
-[Azure storage credentials](#module_types..AzureCredentialsAccount) in `credentials.azure`.
+[Azure blob storage credentials](#module_types..AzureCredentialsAccount) in `credentials.azure`.
 
-OpenWhisk credentials can also be read from environment variables (`OW_NAMESPACE` or `__OW_NAMESPACE` and `OW_AUTH` or `__OW_AUTH`).
+OpenWhisk credentials can also be read from environment variables (`__OW_NAMESPACE` and `__OW_AUTH`).
 
 **Kind**: global function  
-**Returns**: [<code>Promise.&lt;Storage&gt;</code>](#Storage) - A storage instance  
+**Returns**: [<code>Promise.&lt;Files&gt;</code>](#Files) - A Files instance  
 **Throws**:
 
-- [<code>StorageError</code>](#StorageError) 
+- [<code>FilesError</code>](#FilesError) 
 
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| credentials | <code>object</code> |  | used to init the sdk |
-| [credentials.ow] | [<code>OpenWhiskCredentials</code>](#module_types..OpenWhiskCredentials) |  | [OpenWhiskCredentials](#module_types..OpenWhiskCredentials). Set those if you want to use ootb credentials to access our storage infrastructure. OpenWhisk namespace and auth can also be passed through environment variables: `OW_NAMESPACE` or `__OW_NAMESPACE` and `OW_AUTH` or `__OW_AUTH` |
-| [credentials.azure] | [<code>AzureCredentialsAccount</code>](#module_types..AzureCredentialsAccount) \| [<code>AzureCredentialsSAS</code>](#module_types..AzureCredentialsSAS) |  | bring your own [Azure SAS credentials](#module_types..AzureCredentialsSAS) or [Azure storage account credentials](#module_types..AzureCredentialsAccount) |
-| [options] | <code>object</code> | <code>{}</code> | options |
-| [options.tvmApiUrl] | <code>string</code> |  | alternative tvm api url. Only makes sense in the context of OpenWhisk credentials. |
-| [options.tvmCacheFile] | <code>string</code> |  | alternative tvm cache file, defaults to `<tmpfolder>/.tvmCache`. Set to `false` to disable caching. Only makes sense in the context of OpenWhisk credentials. |
+| [config] | <code>object</code> | <code>{}</code> | configuration used to init the sdk |
+| [config.ow] | [<code>OpenWhiskCredentials</code>](#module_types..OpenWhiskCredentials) |  | [OpenWhiskCredentials](#module_types..OpenWhiskCredentials). Set those if you want to use ootb credentials to access the state management service. OpenWhisk namespace and auth can also be passed through environment variables: `__OW_NAMESPACE` and `__OW_AUTH` |
+| [config.azure] | [<code>AzureCredentialsAccount</code>](#module_types..AzureCredentialsAccount) \| [<code>AzureCredentialsSAS</code>](#module_types..AzureCredentialsSAS) |  | bring your own [Azure SAS credentials](#module_types..AzureCredentialsSAS) or [Azure storage account credentials](#module_types..AzureCredentialsAccount) |
+| [config.tvm] | <code>object</code> |  | tvm configuration, applies only when passing OpenWhisk credentials |
+| [config.tvm.apiUrl] | <code>string</code> |  | alternative tvm api url. |
+| [config.tvm.cacheFile] | <code>string</code> |  | alternative tvm cache file, set to `false` to disable caching of temporary credentials. |
 
