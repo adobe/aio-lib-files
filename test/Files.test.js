@@ -399,6 +399,11 @@ describe('getProperties', () => {
   })
 })
 
+test('missing _statusFromProviderError implementation', async () => {
+  const files = new Files(true)
+  await expect(files._statusFromProviderError.bind(files, 'error')).toThrowNotImplemented('_statusFromProviderError')
+})
+
 describe('copy', () => {
   test('missing _copyRemoteToRemoteFile (for remote/remote case)', async () => {
     const fakeFile2 = 'fake/file2.txt'
@@ -445,30 +450,30 @@ describe('copy', () => {
     /** @type {Files} */
     let files
     // local and remote files
-    let remotefakeDirFiles
+    let remoteFakeDirFiles
     const fakeFs = global.fakeFs()
     // with local src or dest
-    const fsStatMock = jest.spyOn(fs, 'stat').mockImplementation(fakeFs.stat)
-    const fsReaddirMock = jest.spyOn(fs, 'readdir').mockImplementation(fakeFs.readdir)
-    const fsPathExistsMock = jest.spyOn(fs, 'pathExists').mockImplementation(fakeFs.pathExists)
+    const fsStatMock = jest.spyOn(fs, 'stat')
+    const fsReaddirMock = jest.spyOn(fs, 'readdir')
+    const fsPathExistsMock = jest.spyOn(fs, 'pathExists')
     // local -> remote
-    const fsCreateReadStreamMock = jest.spyOn(fs, 'createReadStream').mockImplementation(fakeFs.createReadStream)
+    const fsCreateReadStreamMock = jest.spyOn(fs, 'createReadStream')
     // remote -> local
-    const fsCreateWriteStreamMock = jest.spyOn(fs, 'createWriteStream').mockImplementation(() => new stream.Writable({ write: (chunk, enc, next) => { next() } }))
+    const fsCreateWriteStreamMock = jest.spyOn(fs, 'createWriteStream')
     beforeEach(() => {
       /* **** MOCKS **** */
       fakeFs.reset()
       files = new Files(true)
       // all cases - list
-      remotefakeDirFiles = new Set([])
+      remoteFakeDirFiles = new Set([])
       files.list = jest.fn().mockImplementation(async file => {
         file = file || ''
         file = upath.toUnix(file)
         if (file.endsWith('/')) {
           // is dir
-          return [...remotefakeDirFiles].filter(f => f.startsWith(file))
+          return [...remoteFakeDirFiles].filter(f => f.startsWith(file))
         }
-        return (remotefakeDirFiles.has(file) && [file]) || []
+        return (remoteFakeDirFiles.has(file) && [file]) || []
       })
       // remote <-> remote
       files._copyRemoteToRemoteFile = jest.fn()
@@ -477,11 +482,17 @@ describe('copy', () => {
       // local -> remote
       files.write = jest.fn()
 
-      fsStatMock.mockClear()
-      fsReaddirMock.mockClear()
-      fsPathExistsMock.mockClear()
-      fsCreateReadStreamMock.mockClear()
-      fsCreateWriteStreamMock.mockClear()
+      fsStatMock.mockReset()
+      fsReaddirMock.mockReset()
+      fsPathExistsMock.mockReset()
+      fsCreateReadStreamMock.mockReset()
+      fsCreateWriteStreamMock.mockReset()
+
+      fsStatMock.mockImplementation(fakeFs.stat)
+      fsReaddirMock.mockImplementation(fakeFs.readdir)
+      fsPathExistsMock.mockImplementation(fakeFs.pathExists)
+      fsCreateReadStreamMock.mockImplementation(fakeFs.createReadStream)
+      fsCreateWriteStreamMock.mockImplementation(() => new stream.Writable({ write: (chunk, enc, next) => { next() } }))
     })
 
     afterAll(() => {
@@ -502,7 +513,7 @@ describe('copy', () => {
       if (options.local) {
         filesToAdd.map(f => fakeFs.addFile(f, options.isSymlink ? 'SYMLINK' : 'fake content'))
       } else {
-        filesToAdd.map(f => remotefakeDirFiles.add(f))
+        filesToAdd.map(f => remoteFakeDirFiles.add(f))
       }
       return filesToAdd
     }
@@ -553,7 +564,6 @@ describe('copy', () => {
     }
     const allGenericCopyTests = (localSrc = undefined, localDest = undefined) => {
       const localOptions = { localSrc, localDest }
-
       /* ** src does not exist ** */
       test('when src does not exist', async () => {
         addFiles([], { local: localSrc })
@@ -699,6 +709,18 @@ describe('copy', () => {
         const srcFiles = addFiles(['b/a'], { local: true, prefix: fakeSrcDir })
         await testCopyOk(fakeSrcDir, fakeDestDir, { localSrc: true }, arraysToObject(srcFiles, ujoinFiles([fakeDestDir, upath.basename(fakeSrcDir)], ['b/a'])))
       })
+      test('fs.stat throws other error than ENOENT', async () => {
+        const fakeError = new Error('myerror')
+        fakeError.code = 'FAKE'
+        fsStatMock.mockRejectedValue(fakeError)
+        addFiles([fakeSrcFile], { local: false })
+        addFiles([fakeDestFile], { local: true })
+        try {
+          await files.copy(fakeSrcFile, fakeDestFile, { localSrc: true })
+        } catch (e) {
+          expect(e).toEqual(fakeError)
+        }
+      })
     })
     describe('remote -> local', () => {
       allGenericCopyTests(undefined, true)
@@ -706,6 +728,18 @@ describe('copy', () => {
         addFiles([fakeSrcFile], { local: false })
         addFiles([fakeDestFile], { local: true, isSymlink: true })
         await expect(files.copy.bind(files, fakeSrcFile, fakeDestFile, { localDest: true })).toThrowBadFileType(fakeDestFile)
+      })
+      test('fs.stat throws other error than ENOENT', async () => {
+        const fakeError = new Error('myerror')
+        fakeError.code = 'FAKE'
+        fsStatMock.mockRejectedValue(fakeError)
+        addFiles([fakeSrcFile], { local: false })
+        addFiles([fakeDestFile], { local: true })
+        try {
+          await files.copy(fakeSrcFile, fakeDestFile, { localDest: true })
+        } catch (e) {
+          expect(e).toEqual(fakeError)
+        }
       })
     })
   })
