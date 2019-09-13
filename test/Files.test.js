@@ -521,8 +521,8 @@ describe('copy', () => {
     /* **** CONST **** */
     const fakeSrcDir = 'src/subsrc/' // !! important must end with /
     const fakeDestDir = 'dest/subdest/' // !! important must end with /
-    const fakeSrcFile = upath.join(fakeSrcDir, 'file1')
-    const fakeDestFile = upath.join(fakeDestDir, 'file2')
+    const fakeSrcFile = ujoin(fakeSrcDir, 'file1')
+    const fakeDestFile = ujoin(fakeDestDir, 'file2')
     const fakeFiles = ['a', 'b/c/d/e.txt', 'f/g/h', 'f/g/ii.iiiiii'] // !! important must at least contain 4 elements
     const fakeFiles2 = ['j', 'k/l/m/n.txt', 'o/p/q', 'o/p/rr.rrrrr'] // !! important must at least contain 4 elements
 
