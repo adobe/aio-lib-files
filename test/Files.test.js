@@ -127,19 +127,21 @@ describe('delete', () => {
     test('with a bad option', async () => {
       await expect(files.delete.bind(files, fakeFile, { some__wrong__option: 'astring' })).toThrowBadArgWithMessageContaining(['some__wrong__option'])
     })
-    const testDelete = async (listedFiles) => {
+    const testDelete = async (listedFiles, hasPgCb) => {
       const progressCallback = jest.fn()
       const fakeRes = ujoinFiles('some/dir/', listedFiles)
       listMock.mockResolvedValue(fakeRes)
-      const res = await files.delete('some/dir/', { progressCallback })
+      const res = await files.delete('some/dir/', hasPgCb ? { progressCallback } : undefined)
       expect(res).toEqual(fakeRes)
       fakeRes.forEach(f => {
         expect(deleteFileMock).toHaveBeenCalledWith(f)
       })
-      expect(progressCallback).toHaveBeenCalledTimes(fakeRes.length)
+      if (hasPgCb) expect(progressCallback).toHaveBeenCalledTimes(fakeRes.length)
     }
-    test('delete a single file with progress callback', async () => testDelete(['a/b/c/d.txt']))
-    test('delete multiple files with progress callback', async () => testDelete(['a/b/c/d.txt', 'e.jpg', 'f/g/h.html']))
+    test('delete a single file without progress callback', async () => testDelete(['a/b/c/d.txt'], false))
+    test('delete multiple files without progress callback', async () => testDelete(['a/b/c/d.txt', 'e.jpg', 'f/g/h.html'], false))
+    test('delete a single file with progress callback', async () => testDelete(['a/b/c/d.txt'], true))
+    test('delete multiple files with progress callback', async () => testDelete(['a/b/c/d.txt', 'e.jpg', 'f/g/h.html'], true))
   })
 })
 
