@@ -3,6 +3,8 @@ const upath = require('upath')
 const stream = require('stream')
 const fs = require('fs-extra')
 
+jest.mock('fs-extra')
+
 const ujoin = (...args) => upath.toUnix(upath.join(...args))
 const ujoinFiles = (dirs, fakeFiles) => {
   if (!Array.isArray(dirs)) dirs = [dirs]
