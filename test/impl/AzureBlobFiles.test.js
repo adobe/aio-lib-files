@@ -12,6 +12,7 @@ governing permissions and limitations under the License.
 
 const { AzureBlobFiles } = require('../../lib/impl/AzureBlobFiles')
 const stream = require('stream')
+const cloneDeep = require('lodash.clonedeep')
 
 const azure = require('@azure/storage-blob')
 jest.mock('@azure/storage-blob')
@@ -27,20 +28,23 @@ beforeEach(async () => {
   jest.resetAllMocks()
 })
 
-const testWithProviderError = async (boundFunc, providerMock, file404) => {
+const testWithProviderError = async (boundFunc, providerMock, errorDetails, file404) => {
+  errorDetails = cloneDeep(errorDetails)
   if (file404) {
     providerMock.mockRejectedValue({ response: { status: 404 } })
-    await expect(boundFunc).toThrowFileNotExists(file404)
+    await global.expectToThrowFileNotExists(boundFunc, file404, errorDetails)
   }
   // 403
   providerMock.mockRejectedValue({ response: { status: 403 } })
-  await expect(boundFunc).toThrowForbidden()
+  await global.expectToThrowBadCredentials(boundFunc, errorDetails)
   // unknown status 444
-  providerMock.mockRejectedValue({ response: { status: 444 } })
-  await expect(boundFunc).toThrowInternalWithStatus(444)
+  let error = { response: { status: 444 }, somefield: true }
+  providerMock.mockRejectedValue(error)
+  await global.expectToThrowInternalWithStatus(boundFunc, 444, { ...errorDetails, _internal: error })
   // no status
-  providerMock.mockRejectedValue('error')
-  await expect(boundFunc).toThrowInternal()
+  error = { response: 'error', somefield: true }
+  providerMock.mockRejectedValue(error)
+  await global.expectToThrowInternal(boundFunc, { ...errorDetails, _internal: error })
 }
 
 describe('init', () => {
@@ -51,6 +55,7 @@ describe('init', () => {
     storageAccessKey: 'fakeKey',
     storageAccount: 'fakeAccount'
   }
+
   beforeEach(async () => {
     mockContainerCreate.mockReset()
     azure.ContainerURL = { fromServiceURL: jest.fn() }
@@ -60,20 +65,25 @@ describe('init', () => {
 
   describe('with bad args', () => {
     test('when called with no arguments', async () => {
-      await expect(AzureBlobFiles.init).toThrowBadArgWithMessageContaining(['credentials', 'required'])
+      await global.expectToThrowBadArg(AzureBlobFiles.init, ['credentials', 'required'], {})
     })
     test('when called with incomplete SAS credentials', async () => {
       const badInput = { ...fakeSASCredentials }
       delete badInput.sasURLPrivate
-      await expect(AzureBlobFiles.init.bind(null, badInput)).toThrowBadArgWithMessageContaining(['credentials', 'required', 'sasURLPrivate'])
+      await global.expectToThrowBadArg(AzureBlobFiles.init.bind(null, badInput), ['credentials', 'required', 'sasURLPrivate'], { sasURLPublic: fakeSASCredentials.sasURLPublic.split('?')[0] }) // hide token part of SAS in error details
     })
     test('when called with incomplete user credentials', async () => {
       const badInput = { ...fakeUserCredentials }
       delete badInput.containerName
-      await expect(AzureBlobFiles.init.bind(null, badInput)).toThrowBadArgWithMessageContaining(['credentials', 'required', 'containerName'])
+      await global.expectToThrowBadArg(AzureBlobFiles.init.bind(null, badInput), ['credentials', 'required', 'containerName'], { storageAccount: fakeUserCredentials.storageAccount }) // make storageAccessKey is not shown in error detail
     })
     test('when called with both sas and user credentials', async () => {
-      await expect(AzureBlobFiles.init.bind(null, { ...fakeUserCredentials, ...fakeSASCredentials })).toThrowBadArgWithMessageContaining(['credentials', 'conflict'])
+      const fakeErrorDetails = cloneDeep({ ...fakeUserCredentials, ...fakeSASCredentials })
+      fakeErrorDetails.sasURLPublic = fakeErrorDetails.sasURLPublic.split('?')[0]
+      fakeErrorDetails.sasURLPrivate = fakeErrorDetails.sasURLPrivate.split('?')[0]
+      delete fakeErrorDetails.storageAccessKey
+
+      await global.expectToThrowBadArg(AzureBlobFiles.init.bind(null, { ...fakeUserCredentials, ...fakeSASCredentials }), ['credentials', 'conflict'], fakeErrorDetails)
     })
   })
 
@@ -104,7 +114,7 @@ describe('init', () => {
       expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, { access: 'blob' })
     })
     test('when there is a provider error on blob container creation',
-      async () => testWithProviderError(AzureBlobFiles.init.bind(null, fakeUserCredentials), mockContainerCreate))
+      async () => testWithProviderError(AzureBlobFiles.init.bind(null, fakeUserCredentials), mockContainerCreate, { containerName: fakeUserCredentials.containerName, storageAccount: fakeUserCredentials.storageAccount }))
   })
   test('with azure SAS credentials', async () => {
     // change to describe with beforeEach when more than one test for SAS credentials
@@ -153,7 +163,7 @@ describe('_fileExists', () => {
   test('when it does not exists', async () => expectExists(false))
 
   test('when there is a provider error on azure.BlockBlobURL.getProperties',
-    async () => testWithProviderError(files._fileExists.bind(files, fileInPrivateDir), mockBlobGetProperties))
+    async () => testWithProviderError(files._fileExists.bind(files, fileInPrivateDir), mockBlobGetProperties, { filePath: fileInPrivateDir }))
 })
 
 describe('_listFolder', () => {
@@ -213,7 +223,7 @@ describe('_listFolder', () => {
     expect(mockContainerPublicList).toHaveBeenCalledWith(...fakeListArguments(publicDir))
   })
   test('when azure.ContainerURL.list rejects with an error', async () =>
-    testWithProviderError(files._listFolder.bind(files, publicDir), mockContainerPublicList))
+    testWithProviderError(files._listFolder.bind(files, publicDir), mockContainerPublicList, { filePath: publicDir }))
 })
 
 describe('_deleteFile', () => {
@@ -235,7 +245,7 @@ describe('_deleteFile', () => {
   })
   // also checks 404 (note the double 'afile')
   test('when azure.BlockBlobURL.delete rejects with an error, including file not exists (404)', async () =>
-    testWithProviderError(files._deleteFile.bind(files, 'afile'), mockAzureDelete, 'afile'))
+    testWithProviderError(files._deleteFile.bind(files, 'afile'), mockAzureDelete, { filePath: 'afile' }, 'afile'))
 })
 
 describe('_createReadStream', () => {
@@ -269,7 +279,7 @@ describe('_createReadStream', () => {
     expect(mockAzureDownload).toHaveBeenCalledWith(fakeAborter, fakeOptions.position, fakeOptions.length)
   })
   test('when azure.BlockBlobURL.download rejects with an error, including file not exists (404)', async () =>
-    testWithProviderError(files._createReadStream.bind(files, 'afile', {}), mockAzureDownload, 'afile'))
+    testWithProviderError(files._createReadStream.bind(files, 'afile', {}), mockAzureDownload, { filePath: 'afile', options: {} }, 'afile'))
 })
 
 describe('_writeBuffer', () => {
@@ -297,7 +307,7 @@ describe('_writeBuffer', () => {
   test('when file has no file extension', testWriteBuffer('', 'application/octet-stream'))
 
   test('when azure.BlockBlobURL throws an error', async () =>
-    testWithProviderError(files._writeBuffer.bind(files, 'afile', fakeBuffer), mockAzureUpload))
+    testWithProviderError(files._writeBuffer.bind(files, 'afile', fakeBuffer), mockAzureUpload, { filePath: 'afile', contentType: 'Buffer' }))
 })
 
 describe('_writeStream', () => {
@@ -329,7 +339,7 @@ describe('_writeStream', () => {
   test('when file has no file extension', testWriteStream('', 'application/octet-stream'))
 
   test('when azure.uploadStreamToBlockBlob throws an error', async () =>
-    testWithProviderError(files._writeStream.bind(files, 'afile', fakeRdStream), mockAzureStreamUpload))
+    testWithProviderError(files._writeStream.bind(files, 'afile', fakeRdStream), mockAzureStreamUpload, { filePath: 'afile', contentType: 'Readable' }))
 })
 describe('_createWriteStream', () => {
   const mockAzureStreamUpload = jest.fn()
@@ -369,7 +379,7 @@ describe('_createWriteStream', () => {
     const wrStream = await files._createWriteStream(fakeFile)
     wrStream.write('hi')
     wrStream.on('error', async e => {
-      await expect(() => { throw e }).toThrowInternalWithStatus(444)
+      await global.expectToThrowInternalWithStatus(() => { throw e }, 444, { filePath: fakeFile, _internal: { response: { status: 444 } } })
       done()
     })
   })
@@ -378,7 +388,7 @@ describe('_createWriteStream', () => {
     const wrStream = await files._createWriteStream(fakeFile)
     wrStream.write('hi')
     wrStream.on('error', async e => {
-      await expect(() => { throw e }).toThrowForbidden()
+      await global.expectToThrowBadCredentials(() => { throw e }, { filePath: fakeFile })
       done()
     })
   })
@@ -413,7 +423,7 @@ describe('_copyRemoteToRemoteFile', () => {
   })
 
   test('when azure.uploadStreamToBlockBlob throws an error', async () =>
-    testWithProviderError(files._copyRemoteToRemoteFile.bind(files, src, dest), mockStartCopyFromURL, src))
+    testWithProviderError(files._copyRemoteToRemoteFile.bind(files, src, dest), mockStartCopyFromURL, { srcPath: src, destPath: dest }, src))
 })
 
 describe('_getUrl', () => {
