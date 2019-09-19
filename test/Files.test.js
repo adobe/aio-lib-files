@@ -121,7 +121,7 @@ describe('delete', () => {
     })
 
     test('when path is not a valid string', async () => {
-      await global.expectToThrowBadArg(files.delete.bind(files, 123), ['filePath', 'string'], { filePath: 123 })
+      await global.expectToThrowBadArg(files.delete.bind(files, 123), ['filePath', 'string'], { filePath: 123, options: {} })
     })
     test('when progressCallback is not a valid function', async () => {
       await global.expectToThrowBadArg(files.delete.bind(files, 'afile', { progressCallback: 'astring' }), ['progressCallback', 'Function'], { filePath: 'afile', options: { progressCallback: 'astring' } })
@@ -168,7 +168,7 @@ describe('createReadStream', () => {
       createReadStreamMock.mockRestore()
     })
     test('when path is not a valid string', async () => {
-      await global.expectToThrowBadArg(files.createReadStream.bind(files, 123), ['filePath', 'string'], { filePath: 123 })
+      await global.expectToThrowBadArg(files.createReadStream.bind(files, 123), ['filePath', 'string'], { filePath: 123, options: {} })
     })
     test('when path is undefined', async () => {
       await global.expectToThrowBadArg(files.createReadStream.bind(files), ['filePath', 'required'], { filePath: undefined, options: {} })
@@ -183,7 +183,7 @@ describe('createReadStream', () => {
       await global.expectToThrowBadArg(files.createReadStream.bind(files, fakeFile, { length: 'astring' }), ['length', 'number'], { filePath: fakeFile, options: { length: 'astring' } })
     })
     test('with a bad option', async () => {
-      await global.expectToThrowBadArg(files.createReadStream.bind(files, fakeFile, { some__wrong__option: 'astring' }), ['length', 'number'], { filePath: fakeFile, options: { some__wrong__option: 'astring' } })
+      await global.expectToThrowBadArg(files.createReadStream.bind(files, fakeFile, { some__wrong__option: 'astring' }), ['some__wrong__option'], { filePath: fakeFile, options: { some__wrong__option: 'astring' } })
     })
     const testCreateReadStream = async (options) => {
       const res = await files.createReadStream('hello/../file', options) // test with non normalized path
@@ -215,13 +215,13 @@ describe('createWriteStream', () => {
       createWriteStreamMock.mockRestore()
     })
     test('when path is not a valid string', async () => {
-      await expect(files.createWriteStream.bind(files, 123)).toThrowBadArgWithMessageContaining(['filePath', 'string'])
+      await global.expectToThrowBadArg(files.createWriteStream.bind(files, 123), ['filePath', 'string'], { filePath: 123 })
     })
     test('when path is undefined', async () => {
-      await expect(files.createWriteStream.bind(files, undefined)).toThrowBadArgWithMessageContaining(['filePath', 'required'])
+      await global.expectToThrowBadArg(files.createWriteStream.bind(files, undefined), ['filePath', 'required'], { filePath: undefined })
     })
     test('when path is a dir (not allowed)', async () => {
-      await expect(files.createWriteStream.bind(files, 'a/dir/')).toThrowBadArgDirectory('a/dir/')
+      await global.expectToThrowBadFileType(files.createWriteStream.bind(files, 'a/dir/'), 'a/dir/', { filePath: 'a/dir/' })
     })
 
     test('when file is a non normalized path', async () => {
@@ -291,16 +291,22 @@ describe('write', () => {
       writeStreamMock.mockRestore()
     })
     test('when path is not a valid string', async () => {
-      await expect(files.write.bind(files, 123, 'content')).toThrowBadArgWithMessageContaining(['filePath', 'string'])
+      await global.expectToThrowBadArg(files.write.bind(files, 123, 'content'), ['filePath', 'string'], { filePath: 123, contentType: 'String' })
     })
     test('when path undefined', async () => {
-      await expect(files.write.bind(files, undefined, 'content')).toThrowBadArgWithMessageContaining(['filePath', 'required'])
+      await global.expectToThrowBadArg(files.write.bind(files, undefined, 'content'), ['filePath', 'required'], { filePath: undefined, contentType: 'String' })
     })
     test('when content is undefined', async () => {
-      await expect(files.write.bind(files, fakeFile)).toThrowBadArgWithMessageContaining(['content', 'required'])
+      await global.expectToThrowBadArg(files.write.bind(files, fakeFile, undefined), ['content', 'required'], { filePath: fakeFile, contentType: undefined })
+    })
+    test('when content is null', async () => {
+      await global.expectToThrowBadArg(files.write.bind(files, fakeFile, null), ['content', 'string', 'buffer'], { filePath: fakeFile, contentType: undefined })
+    })
+    test('when content is a number', async () => {
+      await global.expectToThrowBadArg(files.write.bind(files, fakeFile, 123), ['content', 'string', 'buffer'], { filePath: fakeFile, contentType: 'Number' })
     })
     test('when path is a dir (not allowed)', async () => {
-      await expect(files.write.bind(files, 'a/dir/', 'content')).toThrowBadArgDirectory('a/dir/')
+      await global.expectToThrowBadFileType(files.write.bind(files, 'a/dir/', 'content'), 'a/dir/', { filePath: 'a/dir/', contentType: 'String' })
     })
 
     const testWrite = async (content) => {
@@ -325,7 +331,7 @@ describe('write', () => {
 describe('getProperties', () => {
   test('missing _getUrl implementation', async () => {
     const files = new Files(true)
-    await global.expectToThrowNotImplemented(files.write.bind(files, fakeFile), '_getUrl')
+    await global.expectToThrowNotImplemented(files._getUrl.bind(files, fakeFile), '_getUrl')
   })
   describe('_getUrl mock implementation', () => {
     const getUrlMock = jest.spyOn(Files.prototype, '_getUrl')
@@ -340,10 +346,10 @@ describe('getProperties', () => {
       getUrlMock.mockRestore()
     })
     test('when path is not a valid string', async () => {
-      await expect(files.getProperties.bind(files, 123)).toThrowBadArgWithMessageContaining(['filePath', 'string'])
+      await global.expectToThrowBadArg(files.write.bind(files, 123), ['filePath', 'string'], { filePath: 123 })
     })
     test('when path undefined', async () => {
-      await expect(files.getProperties.bind(files, undefined)).toThrowBadArgWithMessageContaining(['filePath', 'required'])
+      await global.expectToThrowBadArg(files.write.bind(files, undefined), ['filePath', 'required'], { filePath: undefined })
     })
     test('when filePath is non normalized', async () => {
       await files.getProperties('hello/../file')
@@ -422,31 +428,31 @@ describe('copy', () => {
       files = new Files(true)
     })
     test('when srcPath is not a valid string', async () => {
-      await expect(files.copy.bind(files, 123, 'dest')).toThrowBadArgWithMessageContaining(['srcPath', 'string'])
+      await global.expectToThrowBadArg(files.copy.bind(files, 123, 'dest'), ['srcPath', 'string'], { srcPath: 123, destPath: 'dest', options: {} })
     })
     test('when destPath is not a valid string', async () => {
-      await expect(files.copy.bind(files, 'src', 123)).toThrowBadArgWithMessageContaining(['destPath', 'string'])
+      await global.expectToThrowBadArg(files.copy.bind(files, 'src', 123), ['destPath', 'string'], { srcPath: 'src', destPath: 123, options: {} })
     })
-    test('when srcPath undefined', async () => {
-      await expect(files.copy.bind(files, undefined, 'dest')).toThrowBadArgWithMessageContaining(['srcPath', 'required'])
+    test('when srcPath is undefined', async () => {
+      await global.expectToThrowBadArg(files.copy.bind(files, undefined, 'dest'), ['srcPath', 'required'], { srcPath: undefined, destPath: 'dest', options: {} })
     })
     test('when destPath undefined', async () => {
-      await expect(files.copy.bind(files, 'src', undefined)).toThrowBadArgWithMessageContaining(['destPath', 'required'])
+      await global.expectToThrowBadArg(files.copy.bind(files, 'src', undefined), ['destPath', 'required'], { srcPath: 'src', destPath: undefined, options: {} })
     })
     test('when options.noOverwrite is not a boolean', async () => {
-      await expect(files.copy.bind(files, 'src', 'dest', { noOverwrite: 1234 })).toThrowBadArgWithMessageContaining(['noOverwrite', 'boolean'])
+      await global.expectToThrowBadArg(files.copy.bind(files, 'src', 'dest', { noOverwrite: 1234 }), ['noOverwrite', 'boolean'], { srcPath: 'src', destPath: 'dest', options: { noOverwrite: 1234 } })
     })
     test('when options.localSrc is not a boolean', async () => {
-      await expect(files.copy.bind(files, 'src', 'dest', { localSrc: 1234 })).toThrowBadArgWithMessageContaining(['localSrc', 'boolean'])
+      await global.expectToThrowBadArg(files.copy.bind(files, 'src', 'dest', { localSrc: 1234 }), ['localSrc', 'boolean'], { srcPath: 'src', destPath: 'dest', options: { localSrc: 1234 } })
     })
     test('when options.localDest is not a boolean', async () => {
-      await expect(files.copy.bind(files, 'src', 'dest', { localDest: 1234 })).toThrowBadArgWithMessageContaining(['localDest', 'boolean'])
+      await global.expectToThrowBadArg(files.copy.bind(files, 'src', 'dest', { localDest: 1234 }), ['localDest', 'boolean'], { srcPath: 'src', destPath: 'dest', options: { localDest: 1234 } })
     })
     test('when options.progressCallback is not a function', async () => {
-      await expect(files.copy.bind(files, 'src', 'dest', { progressCallback: 1234 })).toThrowBadArgWithMessageContaining(['progressCallback', 'function'])
+      await global.expectToThrowBadArg(files.copy.bind(files, 'src', 'dest', { progressCallback: 1234 }), ['progressCallback', 'Function'], { srcPath: 'src', destPath: 'dest', options: { progressCallback: 1234 } })
     })
     test('when both options.localSrc and options.localDest are specified', async () => {
-      await expect(files.copy.bind(files, 'src', 'dest', { localDest: true, localSrc: true })).toThrowBadArgWithMessageContaining(['localDest', 'localSrc'])
+      await global.expectToThrowBadArg(files.copy.bind(files, 'src', 'dest', { localDest: true, localSrc: true }), ['localDest', 'localSrc'], { srcPath: 'src', destPath: 'dest', options: { localDest: true, localSrc: true } })
     })
   })
 
@@ -571,7 +577,7 @@ describe('copy', () => {
       /* ** src does not exist ** */
       test('when src does not exist', async () => {
         addFiles([], { local: localSrc })
-        await expect(files.copy.bind(files, fakeSrcFile, fakeDestFile, localOptions)).toThrowFileNotExists(fakeSrcFile)
+        await global.expectToThrowFileNotExists(files.copy.bind(files, fakeSrcFile, fakeDestFile, localOptions), fakeSrcFile, { srcPath: fakeSrcFile, destPath: fakeDestFile, options: localOptions })
       })
       /* ** dest does not exist ** */
       test('when src is a file and dest does not exist', async () => {
