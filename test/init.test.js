@@ -15,8 +15,8 @@ const filesLib = require('../index')
 const { AzureBlobFiles } = require('../lib/impl/AzureBlobFiles')
 jest.mock('../lib/impl/AzureBlobFiles.js')
 
-const TvmClient = require('@adobe/aio-lib-tvm')
-jest.mock('@adobe/aio-lib-tvm')
+const TvmClient = require('@adobe/aio-lib-core-tvm')
+jest.mock('@adobe/aio-lib-core-tvm')
 
 beforeEach(async () => {
   expect.hasAssertions()
