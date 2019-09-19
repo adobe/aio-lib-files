@@ -40,11 +40,13 @@
     "jsdoc-to-markdown": "^5.0.0"
   },
   "dependencies": {
-    "@adobe/aio-lib-tvm": "^0.4.0",
+    "@adobe/aio-lib-core-errors": "^2.0.0",
+    "@adobe/aio-lib-core-tvm": "^0.7.0",
     "@azure/storage-blob": "^10.3.0",
     "@hapi/joi": "^15.1.0",
     "@types/hapi__joi": "^15.0.3",
     "fs-extra": "^8.0.1",
+    "lodash.clonedeep": "^4.5.0",
     "mime-types": "^2.1.24",
     "upath": "^1.1.2"
   }

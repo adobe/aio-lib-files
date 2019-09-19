@@ -15,8 +15,8 @@ const filesLib = require('../index')
 const { AzureBlobFiles } = require('../lib/impl/AzureBlobFiles')
 jest.mock('../lib/impl/AzureBlobFiles.js')
 
-const TvmClient = require('@adobe/aio-lib-tvm')
-jest.mock('@adobe/aio-lib-tvm')
+const TvmClient = require('@adobe/aio-lib-core-tvm')
+jest.mock('@adobe/aio-lib-core-tvm')
 
 beforeEach(async () => {
   expect.hasAssertions()
@@ -80,11 +80,11 @@ describe('init', () => {
     })
     test('when tvm rejects with a 401 (throws wrapped error)', async () => {
       azureBlobTvmMock.mockRejectedValue({ status: 401 })
-      await expect(filesLib.init.bind(filesLib, { ow: fakeOWCreds })).toThrowForbidden()
+      await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), { namespace: fakeOWCreds.namespace })
     })
     test('when tvm rejects with a 403 (throws wrapped error)', async () => {
       azureBlobTvmMock.mockRejectedValue({ status: 403 })
-      await expect(filesLib.init.bind(filesLib, { ow: fakeOWCreds })).toThrowForbidden()
+      await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), { namespace: fakeOWCreds.namespace })
     })
     test('when tvm rejects with another status code (throws tvm error)', async () => {
       const tvmError = new Error({ status: 500 })

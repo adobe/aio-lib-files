@@ -11,55 +11,37 @@ governing permissions and limitations under the License.
 */
 
 /* eslint-disable jsdoc/require-jsdoc */
-const { FilesError } = require('../lib/FilesError')
 
 process.on('unhandledRejection', error => {
   throw error
 })
 
-async function toThrowWithCodeAndMessageContains (received, code, words, checkErrorType = true) {
-  function checkErrorCode (e, code) {
-    if (!(e instanceof FilesError)) {
-      return { message: () => `expected error to be instanceof "FilesError", instead received "${e.constructor.name}" with message: "${e.message}"`, pass: false }
-    }
-    if (e.code !== code) {
-      return { message: () => `expected error code to be "${code}", instead received "${e.code}" with message: "${e.message}"`, pass: false }
-    }
-  }
-  function checkErrorMessageContains (message, words) {
-    message = message.toLowerCase()
-    if (typeof words === 'string') words = [words]
-    for (let i = 0; i < words.length; ++i) {
-      let a = words[i].toLowerCase()
-      if (message.indexOf(a) < 0) {
-        return { message: () => `expected error message "${message}" to contain "${a}"`, pass: false }
-      }
-    }
-  }
+global.expectToThrowCustomError = async (func, code, words, expectedErrorDetails) => {
+  let err
   try {
-    await received()
+    await func()
   } catch (e) {
-    if (checkErrorType) {
-      const res = checkErrorCode(e, code)
-      if (res) return res
-    }
-    const res = checkErrorMessageContains(e.message, words)
-    if (res) return res
-    return { pass: true }
+    expect({ name: e.name, code: e.code, sdkDetails: e.sdkDetails, message: e.message }).toEqual(expect.objectContaining({
+      name: 'FilesLibError',
+      code: code,
+      sdkDetails: expectedErrorDetails
+    }))
+
+    words.concat([code, 'FilesLib'])
+    words.forEach(w => expect(e.message).toEqual(expect.stringContaining(w)))
+    err = e
   }
-  return { message: () => 'function should have thrown', pass: false }
+  expect(err).toBeInstanceOf(Error)
 }
-expect.extend({
-  toThrowWithCodeAndMessageContains,
-  toThrowBadArgWithMessageContaining: (received, words, checkErrorType = true) => toThrowWithCodeAndMessageContains(received, FilesError.codes.BadArgument, words, checkErrorType),
-  toThrowForbidden: (received) => toThrowWithCodeAndMessageContains(received, FilesError.codes.Forbidden, ['forbidden', 'credentials']),
-  toThrowInternalWithStatus: (received, status) => toThrowWithCodeAndMessageContains(received, FilesError.codes.Internal, ['' + status, 'unknown']),
-  toThrowInternal: (received) => toThrowWithCodeAndMessageContains(received, FilesError.codes.Internal, ['unknown']),
-  toThrowFileNotExists: (received, filePath) => toThrowWithCodeAndMessageContains(received, FilesError.codes.FileNotExists, ['file', 'not exist', filePath]),
-  toThrowBadArgDirectory: (received, filePath) => toThrowWithCodeAndMessageContains(received, FilesError.codes.BadArgument, ['file', 'directory', filePath]),
-  toThrowBadFileType: (received, filePath) => toThrowWithCodeAndMessageContains(received, FilesError.codes.BadFileType, [filePath] || []),
-  toThrowNotImplemented: (received, methodName) => toThrowWithCodeAndMessageContains(received, FilesError.codes.NotImplemented, ['not implemented', methodName])
-})
+
+global.expectToThrowBadArg = async (received, words, expectedErrorDetails) => global.expectToThrowCustomError(received, 'ERROR_BAD_ARGUMENT', words, expectedErrorDetails)
+global.expectToThrowBadCredentials = async (received, expectedErrorDetails) => global.expectToThrowCustomError(received, 'ERROR_BAD_CREDENTIALS', ['cannot', 'access', 'credentials'], expectedErrorDetails)
+global.expectToThrowInternalWithStatus = async (received, status, expectedErrorDetails) => global.expectToThrowCustomError(received, 'ERROR_INTERNAL', ['' + status], expectedErrorDetails)
+global.expectToThrowInternal = async (received, expectedErrorDetails) => global.expectToThrowCustomError(received, 'ERROR_INTERNAL', ['unknown'], expectedErrorDetails)
+global.expectToThrowNotImplemented = async (received, methodName) => global.expectToThrowCustomError(received, 'ERROR_NOT_IMPLEMENTED', ['not', 'implemented', methodName], {})
+global.expectToThrowBadFileType = async (received, filePath, expectedErrorDetails) => global.expectToThrowCustomError(received, 'ERROR_BAD_FILE_TYPE', [filePath], expectedErrorDetails)
+global.expectToThrowFileNotExists = async (received, filePath, expectedErrorDetails) => global.expectToThrowCustomError(received, 'ERROR_FILE_NOT_EXISTS', [filePath], expectedErrorDetails)
+
 const stream = require('stream')
 global.createStream = (content) => {
   const rdStream = new stream.Readable()
