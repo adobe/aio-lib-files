@@ -11,9 +11,6 @@
 <dt><a href="#Files">Files</a></dt>
 <dd><p>Cloud Files Abstraction</p>
 </dd>
-<dt><a href="#FilesError">FilesError</a> ⇐ <code>Error</code></dt>
-<dd><p>Cloud Files Errors</p>
-</dd>
 </dl>
 
 ## Functions
@@ -39,6 +36,7 @@
     * [~AzureCredentialsAccount](#module_types..AzureCredentialsAccount) : <code>object</code>
     * [~RemotePathString](#module_types..RemotePathString) : <code>string</code>
     * [~RemoteFileProperties](#module_types..RemoteFileProperties) : <code>object</code>
+    * [~FilesLibErrors](#module_types..FilesLibErrors) : <code>object</code>
 
 <a name="module_types..OpenWhiskCredentials"></a>
 
@@ -100,6 +98,25 @@ be treated as a directory, if not it will be treated as a file.
 | isPublic | <code>boolean</code> | true if file is public |
 | url | <code>string</code> | remote file url |
 
+<a name="module_types..FilesLibErrors"></a>
+
+### types~FilesLibErrors : <code>object</code>
+Files lib custom errors.
+
+`e.sdkDetails` provides additional context for each error (e.g. function parameter)
+
+**Kind**: inner typedef of [<code>types</code>](#module_types)  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| ERROR_BAD_ARGUMENT | <code>FilesLibError</code> | this error is thrown when an argument is missing or has invalid type |
+| ERROR_NOT_IMPLEMENTED | <code>FilesLibError</code> | this error is thrown when a method is not implemented or when calling methods directly on the abstract class (Files). |
+| ERROR_BAD_CREDENTIALS | <code>FilesLibError</code> | this error is thrown when the supplied init credentials are invalid. |
+| ERROR_INTERNAL | <code>FilesLibError</code> | this error is thrown when an unknown error is thrown by the underlying provider or TVM server for credential exchange. More details can be found in `e.sdkDetails._internal`. |
+| ERROR_FILE_NOT_EXISTS | <code>FilesLibError</code> | this error is thrown when the filePath does not exists for operations that need the file to exists (e.g. read) |
+| ERROR_BAD_FILE_TYPE | <code>FilesLibError</code> | this error is thrown when the filePath is not the expected type for operations that need the file to be of a specific type, e.g. write on a dir would fail |
+
 <a name="Files"></a>
 
 ## *Files*
@@ -125,10 +142,6 @@ This is comparable to bash's `ls` command
 
 **Kind**: instance method of [<code>Files</code>](#Files)  
 **Returns**: <code>Promise.&lt;Array.&lt;string&gt;&gt;</code> - resolves to array of paths  
-**Throws**:
-
-- [<code>FilesError</code>](#FilesError) 
-
 **Access**: public  
 
 | Param | Type | Description |
@@ -142,10 +155,6 @@ Deletes a remote file or directory
 
 **Kind**: instance method of [<code>Files</code>](#Files)  
 **Returns**: <code>Promise.&lt;Array.&lt;string&gt;&gt;</code> - resolves to array of deleted paths  
-**Throws**:
-
-- [<code>FilesError</code>](#FilesError) 
-
 **Access**: public  
 
 | Param | Type | Default | Description |
@@ -163,10 +172,6 @@ Creates a read stream
 
 **Kind**: instance method of [<code>Files</code>](#Files)  
 **Returns**: <code>Promise.&lt;NodeJS.ReadableStream&gt;</code> - a readable stream  
-**Throws**:
-
-- [<code>FilesError</code>](#FilesError) 
-
 **Access**: public  
 
 | Param | Type | Default | Description |
@@ -188,10 +193,6 @@ Use `stream.on('finish', (bytesWritten) => {})` to listen on completion event
 
 **Kind**: instance method of [<code>Files</code>](#Files)  
 **Returns**: <code>Promise.&lt;NodeJS.WritableStream&gt;</code> - a writable stream  
-**Throws**:
-
-- [<code>FilesError</code>](#FilesError) 
-
 **Access**: public  
 
 | Param | Type | Description |
@@ -207,10 +208,6 @@ Reads a remote file content
 
 **Kind**: instance method of [<code>Files</code>](#Files)  
 **Returns**: <code>Promise.&lt;Buffer&gt;</code> - buffer holding content  
-**Throws**:
-
-- [<code>FilesError</code>](#FilesError) 
-
 **Access**: public  
 
 | Param | Type | Default | Description |
@@ -229,10 +226,6 @@ Writes content to a file
 
 **Kind**: instance method of [<code>Files</code>](#Files)  
 **Returns**: <code>Promise.&lt;number&gt;</code> - resolves to number of bytes written  
-**Throws**:
-
-- [<code>FilesError</code>](#FilesError) 
-
 **Access**: public  
 
 | Param | Type | Description |
@@ -282,10 +275,6 @@ Rules for copy files are:
 **Kind**: instance method of [<code>Files</code>](#Files)  
 **Returns**: <code>Promise.&lt;object.&lt;string, string&gt;&gt;</code> - returns a promise resolving to an object containing all copied files
 from src to dest `{ srcFilePath: destFilePath }`  
-**Throws**:
-
-- [<code>FilesError</code>](#FilesError) 
-
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -296,52 +285,6 @@ from src to dest `{ srcFilePath: destFilePath }`
 | [options.localDest] | <code>boolean</code> | <code>false</code> | Set this option to true to copy files to the local file system. Cannot be combined with localSrc. |
 | [options.noOverwrite] | <code>boolean</code> | <code>false</code> | set to true to overwrite existing files |
 | [options.progressCallback] | <code>function</code> |  | a function that will be called every time the operation completes on a single file,the srcPath and destPath to the copied file are passed as argument to the callback `progressCallback(srcPath, destPath)` |
-
-<a name="FilesError"></a>
-
-## FilesError ⇐ <code>Error</code>
-Cloud Files Errors
-
-**Kind**: global class  
-**Extends**: <code>Error</code>  
-
-* [FilesError](#FilesError) ⇐ <code>Error</code>
-    * [.FilesError](#FilesError.FilesError)
-        * [new FilesError(message, code, [internal])](#new_FilesError.FilesError_new)
-    * [.codes](#FilesError.codes) : <code>enum</code>
-
-<a name="FilesError.FilesError"></a>
-
-### FilesError.FilesError
-**Kind**: static class of [<code>FilesError</code>](#FilesError)  
-<a name="new_FilesError.FilesError_new"></a>
-
-#### new FilesError(message, code, [internal])
-Creates an instance of FilesError.
-
-
-| Param | Type | Description |
-| --- | --- | --- |
-| message | <code>string</code> | error message |
-| code | [<code>codes</code>](#FilesError.codes) | Cloud Files Error code |
-| [internal] | <code>object</code> | debug error object for internal/underlying wrapped errors |
-
-<a name="FilesError.codes"></a>
-
-### FilesError.codes : <code>enum</code>
-FilesError codes
-
-**Kind**: static enum of [<code>FilesError</code>](#FilesError)  
-**Properties**
-
-| Name | Type | Default |
-| --- | --- | --- |
-| Internal | <code>string</code> | <code>&quot;Internal&quot;</code> | 
-| NotImplemented | <code>string</code> | <code>&quot;NotImplemented&quot;</code> | 
-| BadArgument | <code>string</code> | <code>&quot;BadArgument&quot;</code> | 
-| Forbidden | <code>string</code> | <code>&quot;Forbidden&quot;</code> | 
-| FileNotExists | <code>string</code> | <code>&quot;FileNotExists&quot;</code> | 
-| BadFileType | <code>string</code> | <code>&quot;BadFileType&quot;</code> | 
 
 <a name="init"></a>
 
@@ -357,10 +300,6 @@ OpenWhisk credentials can also be read from environment variables (`__OW_NAMESPA
 
 **Kind**: global function  
 **Returns**: [<code>Promise.&lt;Files&gt;</code>](#Files) - A Files instance  
-**Throws**:
-
-- [<code>FilesError</code>](#FilesError) 
-
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
