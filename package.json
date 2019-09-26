@@ -26,28 +26,28 @@
     "adobe-io"
   ],
   "devDependencies": {
-    "@types/jest": "^24.0.17",
-    "codecov": "^3.5.0",
-    "eslint": "^5.16.0",
-    "eslint-config-standard": "^12.0.0",
-    "eslint-plugin-import": "^2.17.3",
-    "eslint-plugin-jest": "^22.6.4",
-    "eslint-plugin-jsdoc": "^15.3.2",
-    "eslint-plugin-node": "^9.1.0",
-    "eslint-plugin-promise": "^4.1.1",
-    "eslint-plugin-standard": "^4.0.0",
-    "jest": "^24.8.0",
-    "jsdoc-to-markdown": "^5.0.0"
+    "@types/jest": "^24.0.18",
+    "codecov": "^3.6.1",
+    "eslint": "^6.4.0",
+    "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-jest": "^22.17.0",
+    "eslint-plugin-jsdoc": "^15.9.3",
+    "eslint-plugin-node": "^10.0.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "jest": "^24.9.0",
+    "jsdoc-to-markdown": "^5.0.1"
   },
   "dependencies": {
     "@adobe/aio-lib-core-errors": "^2.0.0",
-    "@adobe/aio-lib-core-tvm": "^0.7.0",
-    "@azure/storage-blob": "^10.3.0",
-    "@hapi/joi": "^15.1.0",
-    "@types/hapi__joi": "^15.0.3",
-    "fs-extra": "^8.0.1",
+    "@adobe/aio-lib-core-tvm": "^0.8.0",
+    "@azure/storage-blob": "^10.5.0",
+    "@hapi/joi": "^16.1.4",
+    "@types/hapi__joi": "^15.0.4",
+    "fs-extra": "^8.1.0",
     "lodash.clonedeep": "^4.5.0",
     "mime-types": "^2.1.24",
-    "upath": "^1.1.2"
+    "upath": "^1.2.0"
   }
 }

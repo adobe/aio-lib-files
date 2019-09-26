@@ -81,8 +81,8 @@ describe('list', () => {
     }
     test('when path is undefined (root folder)', async () => testRootFolder())
     test('when path is / (root folder)', async () => testRootFolder('/'))
-    test(`when path is '' (root folder)`, async () => testRootFolder(''))
-    test(`when path is '.' (root folder)`, async () => testRootFolder('.'))
+    test('when path is \'\' (root folder)', async () => testRootFolder(''))
+    test('when path is \'.\' (root folder)', async () => testRootFolder('.'))
     test('when path is a non normalized directory', async () => {
       const res = await files.list('hello/../hi/')
       expect(res).toEqual(fakeFiles('hi/'))
@@ -124,7 +124,7 @@ describe('delete', () => {
       await global.expectToThrowBadArg(files.delete.bind(files, 123), ['filePath', 'string'], { filePath: 123, options: {} })
     })
     test('when progressCallback is not a valid function', async () => {
-      await global.expectToThrowBadArg(files.delete.bind(files, 'afile', { progressCallback: 'astring' }), ['progressCallback', 'Function'], { filePath: 'afile', options: { progressCallback: 'astring' } })
+      await global.expectToThrowBadArg(files.delete.bind(files, 'afile', { progressCallback: 'astring' }), ['progressCallback', 'function'], { filePath: 'afile', options: { progressCallback: 'astring' } })
     })
     test('with a bad option', async () => {
       await global.expectToThrowBadArg(files.delete.bind(files, 'afile', { some__wrong__option: 'astring' }), ['some__wrong__option'], { filePath: 'afile', options: { some__wrong__option: 'astring' } })
@@ -205,7 +205,7 @@ describe('createWriteStream', () => {
   describe('_createWriteStream mock implementations', () => {
     const createWriteStreamMock = jest.spyOn(Files.prototype, '_createWriteStream')
     let files
-    let fakeWriteStream = new stream.Writable()
+    const fakeWriteStream = new stream.Writable()
     beforeEach(() => {
       files = new Files(true)
       createWriteStreamMock.mockReset()
@@ -300,10 +300,10 @@ describe('write', () => {
       await global.expectToThrowBadArg(files.write.bind(files, fakeFile, undefined), ['content', 'required'], { filePath: fakeFile, contentType: undefined })
     })
     test('when content is null', async () => {
-      await global.expectToThrowBadArg(files.write.bind(files, fakeFile, null), ['content', 'string', 'buffer'], { filePath: fakeFile, contentType: undefined })
+      await global.expectToThrowBadArg(files.write.bind(files, fakeFile, null), ['content', 'string', 'binary'], { filePath: fakeFile, contentType: undefined })
     })
     test('when content is a number', async () => {
-      await global.expectToThrowBadArg(files.write.bind(files, fakeFile, 123), ['content', 'string', 'buffer'], { filePath: fakeFile, contentType: 'Number' })
+      await global.expectToThrowBadArg(files.write.bind(files, fakeFile, 123), ['content', 'string', 'binary'], { filePath: fakeFile, contentType: 'Number' })
     })
     test('when path is a dir (not allowed)', async () => {
       await global.expectToThrowBadFileType(files.write.bind(files, 'a/dir/', 'content'), 'a/dir/', { filePath: 'a/dir/', contentType: 'String' })
@@ -449,7 +449,7 @@ describe('copy', () => {
       await global.expectToThrowBadArg(files.copy.bind(files, 'src', 'dest', { localDest: 1234 }), ['localDest', 'boolean'], { srcPath: 'src', destPath: 'dest', options: { localDest: 1234 } })
     })
     test('when options.progressCallback is not a function', async () => {
-      await global.expectToThrowBadArg(files.copy.bind(files, 'src', 'dest', { progressCallback: 1234 }), ['progressCallback', 'Function'], { srcPath: 'src', destPath: 'dest', options: { progressCallback: 1234 } })
+      await global.expectToThrowBadArg(files.copy.bind(files, 'src', 'dest', { progressCallback: 1234 }), ['progressCallback', 'function'], { srcPath: 'src', destPath: 'dest', options: { progressCallback: 1234 } })
     })
     test('when both options.localSrc and options.localDest are specified', async () => {
       await global.expectToThrowBadArg(files.copy.bind(files, 'src', 'dest', { localDest: true, localSrc: true }), ['localDest', 'localSrc'], { srcPath: 'src', destPath: 'dest', options: { localDest: true, localSrc: true } })
@@ -612,22 +612,22 @@ describe('copy', () => {
       test('when src is a file and dest is an existing dir containing a different file', async () => {
         addFiles(['a'], { local: localSrc })
         addFiles(['b'], { local: localDest, prefix: fakeDestDir })
-        await testCopyOk('a', fakeDestDir, localOptions, { 'a': ujoin(fakeDestDir, 'a') })
+        await testCopyOk('a', fakeDestDir, localOptions, { a: ujoin(fakeDestDir, 'a') })
       })
       test('when src is a file and dest is an existing dir containing a different file and noOverwrite and progressCallback', async () => {
         addFiles(['a'], { local: localSrc })
         addFiles(['b'], { local: localDest, prefix: fakeDestDir })
-        await testCopyOk('a', fakeDestDir, { ...localOptions, noOverwrite: true, progressCallback: jest.fn() }, { 'a': ujoin(fakeDestDir, 'a') })
+        await testCopyOk('a', fakeDestDir, { ...localOptions, noOverwrite: true, progressCallback: jest.fn() }, { a: ujoin(fakeDestDir, 'a') })
       })
       test('when src is a file and dest is an existing dir with same name as file', async () => {
         addFiles(['a'], { local: localSrc })
         addFiles(['b'], { local: localDest, prefix: 'a' })
-        await testCopyOk('a', 'a/', localOptions, { 'a': 'a/a' })
+        await testCopyOk('a', 'a/', localOptions, { a: 'a/a' })
       })
       test('when src is a file and dest is an existing dir which contain the same file name', async () => {
         addFiles(['a'], { local: localSrc })
         addFiles(['a'], { local: localDest, prefix: fakeDestDir })
-        await testCopyOk('a', fakeDestDir, localOptions, { 'a': ujoin(fakeDestDir, 'a') })
+        await testCopyOk('a', fakeDestDir, localOptions, { a: ujoin(fakeDestDir, 'a') })
       })
       test('when src is a file and dest is an existing dir which contain the same file name and noOverwrite = true', async () => {
         addFiles(['a'], { local: localSrc })
@@ -637,7 +637,7 @@ describe('copy', () => {
       test('when src is a file and dest has a subdir with the same file name and noOverwrite = true', async () => {
         addFiles(['a'], { local: localSrc })
         addFiles(['b/a'], { local: localDest, prefix: fakeDestDir })
-        await testCopyOk('a', fakeDestDir, { ...localOptions, noOverwrite: true }, { 'a': ujoin(fakeDestDir, 'a') })
+        await testCopyOk('a', fakeDestDir, { ...localOptions, noOverwrite: true }, { a: ujoin(fakeDestDir, 'a') })
       })
       /* ** src and dest are dirs ** */
       test('when src and dest are dirs containing different files', async () => {

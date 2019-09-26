@@ -28,3 +28,4 @@ coverage
 playground
 
 .tvmCache
+package-lock.json
