@@ -419,7 +419,7 @@ describe('_copyRemoteToRemoteFile', () => {
   test('when source file exists', async () => {
     await files._copyRemoteToRemoteFile(src, dest)
     expect(mockStartCopyFromURL).toHaveBeenCalledTimes(1)
-    expect(mockStartCopyFromURL.mock.calls[0]).toEqual(expect.arrayContaining([ fakeSrcURL ]))
+    expect(mockStartCopyFromURL.mock.calls[0]).toEqual(expect.arrayContaining([fakeSrcURL]))
   })
 
   test('when azure.uploadStreamToBlockBlob throws an error', async () =>
