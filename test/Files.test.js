@@ -139,6 +139,8 @@ describe('delete', () => {
         expect(deleteFileMock).toHaveBeenCalledWith(f)
       })
       if (hasPgCb) expect(progressCallback).toHaveBeenCalledTimes(fakeRes.length)
+      // test logs
+      expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('' + listedFiles.length))
     }
     test('delete a single file without progress callback', async () => testDelete(['a/b/c/d.txt'], false))
     test('delete multiple files without progress callback', async () => testDelete(['a/b/c/d.txt', 'e.jpg', 'f/g/h.html'], false))
@@ -188,7 +190,10 @@ describe('createReadStream', () => {
     const testCreateReadStream = async (options) => {
       const res = await files.createReadStream('hello/../file', options) // test with non normalized path
       expect(res).toEqual(fakeRdStream)
-      expect(createReadStreamMock).toHaveBeenCalledWith('file', options || {})
+      // must set defaults:
+      if (!options) options = {}
+      options.position = options.position || 0
+      expect(createReadStreamMock).toHaveBeenCalledWith('file', options)
     }
     test('when options are undefined and path is non normalized', async () => testCreateReadStream())
     test('when options.position is a number', async () => testCreateReadStream({ position: 1 }))
@@ -318,8 +323,10 @@ describe('write', () => {
         expect(writeStreamMock).toHaveBeenCalledWith('file', content)
       } else if (typeof content === 'string') {
         expect(writeBufferMock).toHaveBeenCalledWith('file', expect.any(Buffer))
+        expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('' + content.length))
       } else {
         expect(writeBufferMock).toHaveBeenCalledWith('file', content)
+        expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('' + content.length))
       }
     }
     test('when file is a non normalized path and content is a string', async () => testWrite('hello'))

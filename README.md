@@ -91,6 +91,10 @@ npm install @adobe/aio-lib-files
 
 `goto` [API](doc/api.md)
 
+## Debug
+
+set `DEBUG=@adobe/aio-lib-files*` to see debug logs.
+
 ## Contributing
 
 Contributions are welcomed! Read the [Contributing Guide](./.github/CONTRIBUTING.md) for more information.

@@ -30,15 +30,25 @@ describe('init', () => {
     AzureBlobFiles.init = jest.fn()
   })
 
+  const checkInitDebugLogNoSecrets = (str) => expect(global.mockLogDebug).not.toHaveBeenCalledWith(expect.stringContaining(str))
+
   describe('when passing azure credentials (owned by user)', () => {
     const fakeAzureBlobConfig = {
-      fake: 'cosmosconfig'
+      fake: 'azureblobconfig',
+      // to be hidden
+      sasURLPrivate: 'https://fakessasprivate?secret',
+      sasURLPublic: 'https://fakesaspublic?secret',
+      storageAccessKey: 'fakestorageaccesskey'
     }
-    test('with cosmos config', async () => {
+    test('with azure config', async () => {
       await filesLib.init({ azure: fakeAzureBlobConfig })
       expect(AzureBlobFiles.init).toHaveBeenCalledTimes(1)
       expect(AzureBlobFiles.init).toHaveBeenCalledWith(fakeAzureBlobConfig)
       expect(TvmClient.init).toHaveBeenCalledTimes(0)
+      expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('azure'))
+      checkInitDebugLogNoSecrets(fakeAzureBlobConfig.storageAccessKey)
+      checkInitDebugLogNoSecrets(fakeAzureBlobConfig.sasURLPrivate)
+      checkInitDebugLogNoSecrets(fakeAzureBlobConfig.sasURLPublic)
     })
   })
 
@@ -47,8 +57,8 @@ describe('init', () => {
       fakeTVMResponse: 'response'
     }
     const fakeOWCreds = {
-      auth: 'fake',
-      namespace: 'fake'
+      auth: 'fakeAuth',
+      namespace: 'fakeNs'
     }
     const fakeTVMOptions = {
       some: 'options'
@@ -69,6 +79,8 @@ describe('init', () => {
       expect(TvmClient.init).toHaveBeenCalledWith({ ow: fakeOWCreds, ...fakeTVMOptions })
       expect(AzureBlobFiles.init).toHaveBeenCalledTimes(1)
       expect(AzureBlobFiles.init).toHaveBeenCalledWith(fakeTVMResponse)
+      expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('openwhisk'))
+      checkInitDebugLogNoSecrets(fakeOWCreds.auth)
     })
     test('when empty config to be able to pass OW creds as env variables', async () => {
       azureBlobTvmMock.mockResolvedValue(fakeTVMResponse)
@@ -77,14 +89,15 @@ describe('init', () => {
       expect(TvmClient.init).toHaveBeenCalledWith({ ow: undefined })
       expect(AzureBlobFiles.init).toHaveBeenCalledTimes(1)
       expect(AzureBlobFiles.init).toHaveBeenCalledWith(fakeTVMResponse)
+      expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('openwhisk'))
     })
     test('when tvm rejects with a 401 (throws wrapped error)', async () => {
-      azureBlobTvmMock.mockRejectedValue({ status: 401 })
-      await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), { namespace: fakeOWCreds.namespace })
+      azureBlobTvmMock.mockRejectedValue({ status: 401, sdkDetails: { details: 'fake' } })
+      await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), { details: 'fake' })
     })
     test('when tvm rejects with a 403 (throws wrapped error)', async () => {
-      azureBlobTvmMock.mockRejectedValue({ status: 403 })
-      await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), { namespace: fakeOWCreds.namespace })
+      azureBlobTvmMock.mockRejectedValue({ status: 403, sdkDetails: { details: 'fake' } })
+      await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), { details: 'fake' })
     })
     test('when tvm rejects with another status code (throws tvm error)', async () => {
       const tvmError = new Error({ status: 500 })
