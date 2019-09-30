@@ -30,9 +30,15 @@ describe('init', () => {
     AzureBlobFiles.init = jest.fn()
   })
 
+  const checkInitDebugLogNoSecrets = (str) => expect(global.mockLogDebug).not.toHaveBeenCalledWith(expect.stringContaining(str))
+
   describe('when passing azure credentials (owned by user)', () => {
     const fakeAzureBlobConfig = {
-      fake: 'azureblobconfig'
+      fake: 'azureblobconfig',
+      // to be hidden
+      sasURLPrivate: 'https://fakessasprivate?secret',
+      sasURLPublic: 'https://fakesaspublic?secret',
+      storageAccessKey: 'fakestorageaccesskey'
     }
     test('with azure config', async () => {
       await filesLib.init({ azure: fakeAzureBlobConfig })
@@ -40,6 +46,9 @@ describe('init', () => {
       expect(AzureBlobFiles.init).toHaveBeenCalledWith(fakeAzureBlobConfig)
       expect(TvmClient.init).toHaveBeenCalledTimes(0)
       expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('azure'))
+      checkInitDebugLogNoSecrets(fakeAzureBlobConfig.storageAccessKey)
+      checkInitDebugLogNoSecrets(fakeAzureBlobConfig.sasURLPrivate)
+      checkInitDebugLogNoSecrets(fakeAzureBlobConfig.sasURLPublic)
     })
   })
 
@@ -48,8 +57,8 @@ describe('init', () => {
       fakeTVMResponse: 'response'
     }
     const fakeOWCreds = {
-      auth: 'fake',
-      namespace: 'fake'
+      auth: 'fakeAuth',
+      namespace: 'fakeNs'
     }
     const fakeTVMOptions = {
       some: 'options'
@@ -71,6 +80,7 @@ describe('init', () => {
       expect(AzureBlobFiles.init).toHaveBeenCalledTimes(1)
       expect(AzureBlobFiles.init).toHaveBeenCalledWith(fakeTVMResponse)
       expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('openwhisk'))
+      checkInitDebugLogNoSecrets(fakeOWCreds.auth)
     })
     test('when empty config to be able to pass OW creds as env variables', async () => {
       azureBlobTvmMock.mockResolvedValue(fakeTVMResponse)
