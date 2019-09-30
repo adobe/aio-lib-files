@@ -70,18 +70,18 @@ describe('init', () => {
     test('when called with incomplete SAS credentials', async () => {
       const badInput = { ...fakeSASCredentials }
       delete badInput.sasURLPrivate
-      await global.expectToThrowBadArg(AzureBlobFiles.init.bind(null, badInput), ['credentials', 'required', 'sasURLPrivate'], { sasURLPublic: fakeSASCredentials.sasURLPublic.split('?')[0] }) // hide token part of SAS in error details
+      await global.expectToThrowBadArg(AzureBlobFiles.init.bind(null, badInput), ['credentials', 'required', 'sasURLPrivate'], { sasURLPublic: fakeSASCredentials.sasURLPublic.split('?')[0] + '?<hidden>' }) // hide token part of SAS in error details
     })
     test('when called with incomplete user credentials', async () => {
       const badInput = { ...fakeUserCredentials }
       delete badInput.containerName
-      await global.expectToThrowBadArg(AzureBlobFiles.init.bind(null, badInput), ['credentials', 'required', 'containerName'], { storageAccount: fakeUserCredentials.storageAccount }) // make storageAccessKey is not shown in error detail
+      await global.expectToThrowBadArg(AzureBlobFiles.init.bind(null, badInput), ['credentials', 'required', 'containerName'], { storageAccount: fakeUserCredentials.storageAccount, storageAccessKey: '<hidden>' })
     })
     test('when called with both sas and user credentials', async () => {
       const fakeErrorDetails = cloneDeep({ ...fakeUserCredentials, ...fakeSASCredentials })
-      fakeErrorDetails.sasURLPublic = fakeErrorDetails.sasURLPublic.split('?')[0]
-      fakeErrorDetails.sasURLPrivate = fakeErrorDetails.sasURLPrivate.split('?')[0]
-      delete fakeErrorDetails.storageAccessKey
+      fakeErrorDetails.sasURLPublic = fakeErrorDetails.sasURLPublic.split('?')[0] + '?<hidden>'
+      fakeErrorDetails.sasURLPrivate = fakeErrorDetails.sasURLPrivate.split('?')[0] + '?<hidden>'
+      fakeErrorDetails.storageAccessKey = '<hidden>'
 
       await global.expectToThrowBadArg(AzureBlobFiles.init.bind(null, { ...fakeUserCredentials, ...fakeSASCredentials }), ['credentials', 'conflict'], fakeErrorDetails)
     })
@@ -208,7 +208,8 @@ describe('_listFolder', () => {
     }
   }
 
-  test('when it is the root (`/`)', testListFolder('/', true, true, true))
+  // test('when it is the root (`/`)', testListFolder('/', true, true, true)) // => this test is not valid as we assume
+  // that only normalized path should be passed azure blob files functions
   test('when it is the root (empty string)', testListFolder('', true, true, true))
 
   test('when it is a private', testListFolder(privateDir, false, true))
@@ -266,8 +267,8 @@ describe('_createReadStream', () => {
     fakeRdStream.push(null)
     mockAzureDownload.mockResolvedValue({ readableStreamBody: fakeRdStream })
   })
-  test('w/o options ({})', async () => {
-    const res = await files._createReadStream(fakeFile, {})
+  test('w default options ({ position: 0, length: undefined })', async () => {
+    const res = await files._createReadStream(fakeFile, { position: 0 })
     expect(res).toBe(fakeRdStream)
     expect(mockAzureDownload).toHaveBeenCalledTimes(1)
     expect(mockAzureDownload).toHaveBeenCalledWith(fakeAborter, 0, undefined)

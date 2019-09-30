@@ -188,7 +188,10 @@ describe('createReadStream', () => {
     const testCreateReadStream = async (options) => {
       const res = await files.createReadStream('hello/../file', options) // test with non normalized path
       expect(res).toEqual(fakeRdStream)
-      expect(createReadStreamMock).toHaveBeenCalledWith('file', options || {})
+      // must set defaults:
+      if (!options) options = {}
+      options.position = options.position || 0
+      expect(createReadStreamMock).toHaveBeenCalledWith('file', options)
     }
     test('when options are undefined and path is non normalized', async () => testCreateReadStream())
     test('when options.position is a number', async () => testCreateReadStream({ position: 1 }))
