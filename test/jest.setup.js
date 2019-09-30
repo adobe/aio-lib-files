@@ -16,6 +16,25 @@ process.on('unhandledRejection', error => {
   throw error
 })
 
+global.mockLogDebug = jest.fn()
+global.mockLogError = jest.fn()
+// must be mocked before any require that uses aio-lib-core-logging (doMock)
+jest.doMock('@adobe/aio-lib-core-logging', function () {
+  return function () {
+    return {
+      debug: global.mockLogDebug,
+      error: global.mockLogError
+    }
+  }
+})
+
+beforeEach(() => {
+  expect.hasAssertions()
+  jest.clearAllMocks()
+  global.mockLogDebug.mockReset()
+  global.mockLogError.mockReset()
+})
+
 global.expectToThrowCustomError = async (func, code, words, expectedErrorDetails) => {
   let err
   try {
@@ -32,6 +51,7 @@ global.expectToThrowCustomError = async (func, code, words, expectedErrorDetails
     err = e
   }
   expect(err).toBeInstanceOf(Error)
+  expect(global.mockLogError).toHaveBeenCalledWith(JSON.stringify(err, null, 2))
 }
 
 global.expectToThrowBadArg = async (received, words, expectedErrorDetails) => global.expectToThrowCustomError(received, 'ERROR_BAD_ARGUMENT', words, expectedErrorDetails)

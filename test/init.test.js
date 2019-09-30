@@ -32,13 +32,14 @@ describe('init', () => {
 
   describe('when passing azure credentials (owned by user)', () => {
     const fakeAzureBlobConfig = {
-      fake: 'cosmosconfig'
+      fake: 'azureblobconfig'
     }
-    test('with cosmos config', async () => {
+    test('with azure config', async () => {
       await filesLib.init({ azure: fakeAzureBlobConfig })
       expect(AzureBlobFiles.init).toHaveBeenCalledTimes(1)
       expect(AzureBlobFiles.init).toHaveBeenCalledWith(fakeAzureBlobConfig)
       expect(TvmClient.init).toHaveBeenCalledTimes(0)
+      expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('azure'))
     })
   })
 
@@ -69,6 +70,7 @@ describe('init', () => {
       expect(TvmClient.init).toHaveBeenCalledWith({ ow: fakeOWCreds, ...fakeTVMOptions })
       expect(AzureBlobFiles.init).toHaveBeenCalledTimes(1)
       expect(AzureBlobFiles.init).toHaveBeenCalledWith(fakeTVMResponse)
+      expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('openwhisk'))
     })
     test('when empty config to be able to pass OW creds as env variables', async () => {
       azureBlobTvmMock.mockResolvedValue(fakeTVMResponse)
@@ -77,6 +79,7 @@ describe('init', () => {
       expect(TvmClient.init).toHaveBeenCalledWith({ ow: undefined })
       expect(AzureBlobFiles.init).toHaveBeenCalledTimes(1)
       expect(AzureBlobFiles.init).toHaveBeenCalledWith(fakeTVMResponse)
+      expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('openwhisk'))
     })
     test('when tvm rejects with a 401 (throws wrapped error)', async () => {
       azureBlobTvmMock.mockRejectedValue({ status: 401, sdkDetails: { details: 'fake' } })

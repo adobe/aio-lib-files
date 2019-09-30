@@ -139,6 +139,8 @@ describe('delete', () => {
         expect(deleteFileMock).toHaveBeenCalledWith(f)
       })
       if (hasPgCb) expect(progressCallback).toHaveBeenCalledTimes(fakeRes.length)
+      // test logs
+      expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('' + listedFiles.length))
     }
     test('delete a single file without progress callback', async () => testDelete(['a/b/c/d.txt'], false))
     test('delete multiple files without progress callback', async () => testDelete(['a/b/c/d.txt', 'e.jpg', 'f/g/h.html'], false))
@@ -321,8 +323,10 @@ describe('write', () => {
         expect(writeStreamMock).toHaveBeenCalledWith('file', content)
       } else if (typeof content === 'string') {
         expect(writeBufferMock).toHaveBeenCalledWith('file', expect.any(Buffer))
+        expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('' + content.length))
       } else {
         expect(writeBufferMock).toHaveBeenCalledWith('file', content)
+        expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('' + content.length))
       }
     }
     test('when file is a non normalized path and content is a string', async () => testWrite('hello'))
