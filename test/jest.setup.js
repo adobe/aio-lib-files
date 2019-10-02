@@ -52,6 +52,10 @@ global.expectToThrowCustomError = async (func, code, words, expectedErrorDetails
   }
   expect(err).toBeInstanceOf(Error)
   expect(global.mockLogError).toHaveBeenCalledWith(JSON.stringify(err, null, 2))
+  // here we make sure that the internal error was correctly stringified and that it gets logged
+  if (expectedErrorDetails._internal instanceof Error) {
+    expect(global.mockLogError).toHaveBeenCalledWith(expect.stringContaining(expectedErrorDetails._internal.message))
+  }
 }
 
 global.expectToThrowBadArg = async (received, words, expectedErrorDetails) => global.expectToThrowCustomError(received, 'ERROR_BAD_ARGUMENT', words, expectedErrorDetails)

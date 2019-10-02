@@ -41,8 +41,8 @@ const testWithProviderError = async (boundFunc, providerMock, errorDetails, file
   let error = { response: { status: 444 }, somefield: true }
   providerMock.mockRejectedValue(error)
   await global.expectToThrowInternalWithStatus(boundFunc, 444, { ...errorDetails, _internal: error })
-  // no status
-  error = { response: 'error', somefield: true }
+  // no status Error
+  error = new Error('some fake error')
   providerMock.mockRejectedValue(error)
   await global.expectToThrowInternal(boundFunc, { ...errorDetails, _internal: error })
 }
