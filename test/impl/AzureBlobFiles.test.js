@@ -289,6 +289,10 @@ describe('_createReadStream', () => {
   })
   test('when azure.BlockBlobURL.download rejects with an error, including file not exists (404)', async () =>
     testWithProviderError(files._createReadStream.bind(files, 'afile', {}), mockAzureDownload, { filePath: 'afile', options: {} }, 'afile'))
+  test('when azure.BlockBlobURL.download rejects with a 416 error because of out of range position', async () => {
+    mockAzureDownload.mockRejectedValue({ response: { status: 416 } })
+    await global.expectToThrowBadPosition(files._createReadStream.bind(files, 'afile', { position: 1234 }), 1234, 'afile', { filePath: 'afile', options: { position: 1234 } })
+  })
 })
 
 describe('_writeBuffer', () => {
