@@ -409,24 +409,20 @@ describe('_createWriteStream', () => {
 
 describe('_copyRemoteToRemoteFile', () => {
   const mockStartCopyFromURL = jest.fn()
-  const mockGetUrl = jest.fn()
 
   const src = 'a/dir/file1'
   const dest = 'public/another/dir/file2'
-  const fakeSrcURL = 'https://fakefiles.com/a/dir/file1'
-  mockGetUrl.mockReturnValue(fakeSrcURL)
+  const fakeSrcURL = 'https://fakefiles.com/a/dir/file1?secret=xxx'// important to keep secret
+
   /** @type {AzureBlobFiles} */
   let files
   beforeEach(async () => {
-    mockGetUrl.mockReset()
     mockStartCopyFromURL.mockReset()
-    mockGetUrl.mockReturnValue(fakeSrcURL)
     mockStartCopyFromURL.mockResolvedValue(true)
-    azure.BlockBlobURL.fromContainerURL = jest.fn().mockReturnValue({ startCopyFromURL: mockStartCopyFromURL })
+    azure.BlockBlobURL.fromContainerURL = jest.fn().mockReturnValue({ startCopyFromURL: mockStartCopyFromURL, url: fakeSrcURL })
     azure.ContainerURL = jest.fn()
     files = await AzureBlobFiles.init(fakeSASCredentials)
     files._azure.aborter = fakeAborter
-    files._getUrl = mockGetUrl
   })
 
   test('when source file exists', async () => {
