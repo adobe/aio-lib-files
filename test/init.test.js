@@ -91,16 +91,22 @@ describe('init', () => {
       expect(AzureBlobFiles.init).toHaveBeenCalledWith(fakeTVMResponse)
       expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('openwhisk'))
     })
+
     test('when tvm rejects with a 401 (throws wrapped error)', async () => {
-      azureBlobTvmMock.mockRejectedValue({ status: 401, sdkDetails: { details: 'fake' } })
-      await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), { details: 'fake' })
+      const e = new Error('tvm error')
+      e.sdkDetails = { fake: 'details', status: 401 }
+      azureBlobTvmMock.mockRejectedValue(e)
+      await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), e.sdkDetails)
     })
     test('when tvm rejects with a 403 (throws wrapped error)', async () => {
-      azureBlobTvmMock.mockRejectedValue({ status: 403, sdkDetails: { details: 'fake' } })
-      await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), { details: 'fake' })
+      const e = new Error('tvm error')
+      e.sdkDetails = { fake: 'details', status: 403 }
+      azureBlobTvmMock.mockRejectedValue(e)
+      await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), e.sdkDetails)
     })
     test('when tvm rejects with another status code (throws tvm error)', async () => {
-      const tvmError = new Error({ status: 500 })
+      const tvmError = new Error('tvm error')
+      tvmError.sdkDetails = { fake: 'details', status: 500 }
       azureBlobTvmMock.mockRejectedValue(tvmError)
       try {
         await filesLib.init({ ow: fakeOWCreds })
