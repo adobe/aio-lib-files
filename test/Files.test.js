@@ -378,6 +378,14 @@ describe('getProperties', () => {
         url: fakeUrl
       })
     })
+    test('when filePath is a private path starting with `public` (publicisnotpublicfile.txt)', async () => {
+      const res = await files.getProperties('publicisnotpublicfile.txt')
+      expect(res).toEqual({
+        isDirectory: false,
+        isPublic: false,
+        url: fakeUrl
+      })
+    })
     test('when filePath is a public dir', async () => {
       const res = await files.getProperties('public/dir/')
       expect(res).toEqual({
