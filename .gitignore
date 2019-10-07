@@ -29,3 +29,5 @@ playground
 
 .tvmCache
 package-lock.json
+
+.e2e

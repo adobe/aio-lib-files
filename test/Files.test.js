@@ -184,6 +184,12 @@ describe('createReadStream', () => {
     test('when options.length is not a number', async () => {
       await global.expectToThrowBadArg(files.createReadStream.bind(files, fakeFile, { length: 'astring' }), ['length', 'number'], { filePath: fakeFile, options: { length: 'astring' } })
     })
+    test('when options.position is smaller than 0', async () => {
+      await global.expectToThrowBadArg(files.createReadStream.bind(files, fakeFile, { position: -1 }), ['position', 'larger', '0'], { filePath: fakeFile, options: { position: -1 } })
+    })
+    test('when options.length is smaller than 0', async () => {
+      await global.expectToThrowBadArg(files.createReadStream.bind(files, fakeFile, { length: -1 }), ['length', 'larger', '0'], { filePath: fakeFile, options: { length: -1 } })
+    })
     test('with a bad option', async () => {
       await global.expectToThrowBadArg(files.createReadStream.bind(files, fakeFile, { some__wrong__option: 'astring' }), ['some__wrong__option'], { filePath: fakeFile, options: { some__wrong__option: 'astring' } })
     })
@@ -375,6 +381,14 @@ describe('getProperties', () => {
       expect(res).toEqual({
         isDirectory: false,
         isPublic: true,
+        url: fakeUrl
+      })
+    })
+    test('when filePath is a private path starting with `public` (publicisnotpublicfile.txt)', async () => {
+      const res = await files.getProperties('publicisnotpublicfile.txt')
+      expect(res).toEqual({
+        isDirectory: false,
+        isPublic: false,
         url: fakeUrl
       })
     })

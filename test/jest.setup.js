@@ -65,6 +65,7 @@ global.expectToThrowInternal = async (received, expectedErrorDetails) => global.
 global.expectToThrowNotImplemented = async (received, methodName) => global.expectToThrowCustomError(received, 'ERROR_NOT_IMPLEMENTED', ['not', 'implemented', methodName], {})
 global.expectToThrowBadFileType = async (received, filePath, expectedErrorDetails) => global.expectToThrowCustomError(received, 'ERROR_BAD_FILE_TYPE', [filePath], expectedErrorDetails)
 global.expectToThrowFileNotExists = async (received, filePath, expectedErrorDetails) => global.expectToThrowCustomError(received, 'ERROR_FILE_NOT_EXISTS', [filePath], expectedErrorDetails)
+global.expectToThrowBadPosition = async (received, positionValue, filePath, expectedErrorDetails) => global.expectToThrowCustomError(received, 'ERROR_OUT_OF_RANGE', [filePath, '' + positionValue], expectedErrorDetails)
 
 const stream = require('stream')
 global.createStream = (content) => {
