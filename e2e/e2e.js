@@ -106,7 +106,7 @@ describe('e2e tests using OpenWhisk credentials (as env vars)', () => {
     }
   })
 
-  test('read-write basic test using one file: read, write, read, delete, read', async () => {
+  test('read-write-delete basic test using one file: read, write, read, delete, read', async () => {
     const files = await initFilesEnv()
 
     // 1. read file that does not exist
@@ -136,7 +136,7 @@ describe('e2e tests using OpenWhisk credentials (as env vars)', () => {
     await testACL(true)
   })
 
-  test('list and delete tests: list empty root, write public and private files, list various public/private subdirs, delete', async () => {
+  test('list tests: list empty root, write public and private files, list various public/private subdirs, delete', async () => {
     const files = await initFilesEnv()
     const testFiles = ['e2e/test/file.txt', 'e2e/testfile.txt', 'e2etestfile.txt', 'public/e2e/test/file.txt', 'public/e2e/testfile.txt', 'public/e2etestfile.txt', 'publice2etestfile.txt'].sort()
 
