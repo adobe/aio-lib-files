@@ -40,7 +40,7 @@ npm install @adobe/aio-lib-files
   // init
   // init sdk using OpenWhisk credentials
   const files = await filesLib.init({ ow: { namespace, auth } })
-  // init when env vars __OW_AUTH and __OW_NAMESPACE are set (e.g. when running in an OpenWhisk action)
+  // init when env vars __OW_API_KEY and __OW_NAMESPACE are set (e.g. when running in an OpenWhisk action)
   const files = await filesLib.init()
   // or if you want to use your own cloud storage account
   const files = await filesLib.init({ azure: { storageAccount, storageAccessKey, containerName } })

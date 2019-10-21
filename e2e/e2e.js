@@ -31,9 +31,9 @@ beforeEach(() => {
 })
 
 const initFilesEnv = async (n = 1) => {
-  delete process.env.__OW_AUTH
+  delete process.env.__OW_API_KEY
   delete process.env.__OW_NAMESPACE
-  process.env.__OW_AUTH = process.env[`TEST_AUTH_${n}`]
+  process.env.__OW_API_KEY = process.env[`TEST_AUTH_${n}`]
   process.env.__OW_NAMESPACE = process.env[`TEST_NAMESPACE_${n}`]
   // 1. init will fetch credentials from the tvm using ow creds
   const files = await filesLib.init() // { tvm: { cacheFile: false } } // keep cache for better perf?
@@ -91,9 +91,9 @@ const testACL = async (isPublic = false) => {
 
 describe('e2e tests using OpenWhisk credentials (as env vars)', () => {
   test('error bad credentials test: auth is ok but namespace is not', async () => {
-    delete process.env.__OW_AUTH
+    delete process.env.__OW_API_KEY
     delete process.env.__OW_NAMESPACE
-    process.env.__OW_AUTH = process.env.TEST_AUTH_1
+    process.env.__OW_API_KEY = process.env.TEST_AUTH_1
     process.env.__OW_NAMESPACE = process.env.TEST_NAMESPACE_1 + 'bad'
 
     try {
