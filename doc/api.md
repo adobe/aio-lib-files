@@ -22,7 +22,7 @@
 <a href="#module_types..OpenWhiskCredentials">OpenWhisk credentials</a> in
 <code>credentials.ow</code> or your own
 <a href="#module_types..AzureCredentialsAccount">Azure blob storage credentials</a> in <code>credentials.azure</code>.</p>
-<p>OpenWhisk credentials can also be read from environment variables (<code>__OW_NAMESPACE</code> and <code>__OW_AUTH</code>).</p>
+<p>OpenWhisk credentials can also be read from environment variables (<code>__OW_NAMESPACE</code> and <code>__OW_API_KEY</code>).</p>
 </dd>
 </dl>
 
@@ -178,8 +178,8 @@ Creates a read stream
 | --- | --- | --- | --- |
 | filePath | [<code>RemotePathString</code>](#module_types..RemotePathString) |  | [RemotePathString](#module_types..RemotePathString) |
 | [options] | <code>object</code> | <code>{}</code> | createReadStreamOptions |
-| [options.position] | <code>number</code> |  | read start position of the file |
-| [options.length] | <code>number</code> |  | number of bytes to read |
+| [options.position] | <code>number</code> |  | read start position of the file. By default is set to 0. If set to bigger than size, throws an ERROR_OUT_OF_RANGE error |
+| [options.length] | <code>number</code> |  | number of bytes to read. By default reads everything since starting position. If set to bigger than file size, reads until end. |
 
 <a name="Files+createWriteStream"></a>
 
@@ -214,8 +214,8 @@ Reads a remote file content
 | --- | --- | --- | --- |
 | filePath | [<code>RemotePathString</code>](#module_types..RemotePathString) |  | [RemotePathString](#module_types..RemotePathString) |
 | [options] | <code>object</code> | <code>{}</code> | remoteReadOptions |
-| [options.position] | <code>number</code> |  | read start position of the file |
-| [options.length] | <code>number</code> |  | number of bytes to read |
+| [options.position] | <code>number</code> |  | read start position of the file. By default is set to 0. If set to bigger than size, throws an ERROR_OUT_OF_RANGE error |
+| [options.length] | <code>number</code> |  | number of bytes to read. By default reads everything since starting position. If set to bigger than file size, reads until end. |
 
 <a name="Files+write"></a>
 
@@ -248,7 +248,7 @@ Reads properties of a file or directory
 <a name="Files+copy"></a>
 
 ### *files.copy(srcPath, destPath, [options]) ⇒ <code>Promise.&lt;object.&lt;string, string&gt;&gt;</code>*
-***NodeJS only (streams).***
+***NodeJS only (streams + fs).***
 
 A utility function to copy files and directories across remote and local Files.
 This is comparable to the `scp` command
@@ -296,7 +296,7 @@ To use the SDK you must either provide provide your
 `credentials.ow` or your own
 [Azure blob storage credentials](#module_types..AzureCredentialsAccount) in `credentials.azure`.
 
-OpenWhisk credentials can also be read from environment variables (`__OW_NAMESPACE` and `__OW_AUTH`).
+OpenWhisk credentials can also be read from environment variables (`__OW_NAMESPACE` and `__OW_API_KEY`).
 
 **Kind**: global function  
 **Returns**: [<code>Promise.&lt;Files&gt;</code>](#Files) - A Files instance  
@@ -304,7 +304,7 @@ OpenWhisk credentials can also be read from environment variables (`__OW_NAMESPA
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | [config] | <code>object</code> | <code>{}</code> | configuration used to init the sdk |
-| [config.ow] | [<code>OpenWhiskCredentials</code>](#module_types..OpenWhiskCredentials) |  | [OpenWhiskCredentials](#module_types..OpenWhiskCredentials). Set those if you want to use ootb credentials to access the state management service. OpenWhisk namespace and auth can also be passed through environment variables: `__OW_NAMESPACE` and `__OW_AUTH` |
+| [config.ow] | [<code>OpenWhiskCredentials</code>](#module_types..OpenWhiskCredentials) |  | [OpenWhiskCredentials](#module_types..OpenWhiskCredentials). Set those if you want to use ootb credentials to access the state management service. OpenWhisk namespace and auth can also be passed through environment variables: `__OW_NAMESPACE` and `__OW_API_KEY` |
 | [config.azure] | [<code>AzureCredentialsAccount</code>](#module_types..AzureCredentialsAccount) \| [<code>AzureCredentialsSAS</code>](#module_types..AzureCredentialsSAS) |  | bring your own [Azure SAS credentials](#module_types..AzureCredentialsSAS) or [Azure storage account credentials](#module_types..AzureCredentialsAccount) |
 | [config.tvm] | <code>object</code> |  | tvm configuration, applies only when passing OpenWhisk credentials |
 | [config.tvm.apiUrl] | <code>string</code> |  | alternative tvm api url. |
