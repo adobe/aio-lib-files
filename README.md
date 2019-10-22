@@ -62,12 +62,12 @@ npm install @adobe/aio-lib-files
   const buffer = await files.read('mydir/myfile.txt')
   buffer.toString() // 'some private content'
 
-  // pipe read stream to local file
+  // pipe read stream to local file (consider using copy below)
   const rdStream = await files.createReadStream('mydir/myfile.txt')
   const stream = rdStream.pipe(fs.createWriteStream('my-local-file.txt'))
   stream.on('finish', () => console.log('done!'))
 
-  // write read stream to remote file
+  // write read stream to remote file (consider using copy below)
   const rdStream = fs.createReadStream('my-local-file.txt')
   await files.write('my/remote/file.txt', rdStream)
 
@@ -78,12 +78,15 @@ npm install @adobe/aio-lib-files
   // delete all files including public
   await files.delete('/')
 
-  // copy
-  // upload local directory
+  // copy - higher level utility (works likes scp)
+  // works for files and directories both remotely and locally, uses streams under the hood
+  /// upload a single file
+  await files.copy('my-static-app/index.html', 'public/my-static-app/index.html', { localSrc: true })
+  /// upload local directory recursively
   await files.copy('my-static-app/', 'public/', { localSrc: true })
-  // download to local directory
+  /// download to local directory recursively (works for files as well)
   await files.copy('public/my-static-app/', 'my-static-app-copy', { localDest: true })
-  // copy files around cloud files
+  /// copy remote directories around (works for files as well)
   await files.copy('public/my-static-app/', 'my/private/folder')
 ```
 
