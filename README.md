@@ -98,6 +98,20 @@ npm install @adobe/aio-lib-files
 
 set `DEBUG=@adobe/aio-lib-files*` to see debug logs.
 
+## Troubleshooting
+
+### `"[StateLib:ERROR_INTERNAL] unknown error response from provider with status: unknown"`
+- when using `@adobe/aio-lib-files` in an action bundled with **webpack** please make sure to turn off minification and enable resolving of es6 modules. Add the following lines to your webpack config:
+```javascript
+  optimization: {
+    minimize: false
+  },
+  resolve: {
+    extensions: ['.js'],
+    mainFields: ['main']
+  }
+```
+
 ## Contributing
 
 Contributions are welcomed! Read the [Contributing Guide](./.github/CONTRIBUTING.md) for more information.
