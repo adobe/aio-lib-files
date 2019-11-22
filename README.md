@@ -40,7 +40,7 @@ npm install @adobe/aio-lib-files
   // init
   // init sdk using OpenWhisk credentials
   const files = await filesLib.init({ ow: { namespace, auth } })
-  // init when env vars __OW_AUTH and __OW_NAMESPACE are set (e.g. when running in an OpenWhisk action)
+  // init when env vars __OW_API_KEY and __OW_NAMESPACE are set (e.g. when running in an OpenWhisk action)
   const files = await filesLib.init()
   // or if you want to use your own cloud storage account
   const files = await filesLib.init({ azure: { storageAccount, storageAccessKey, containerName } })
@@ -62,12 +62,12 @@ npm install @adobe/aio-lib-files
   const buffer = await files.read('mydir/myfile.txt')
   buffer.toString() // 'some private content'
 
-  // pipe read stream to local file
+  // pipe read stream to local file (consider using copy below)
   const rdStream = await files.createReadStream('mydir/myfile.txt')
   const stream = rdStream.pipe(fs.createWriteStream('my-local-file.txt'))
   stream.on('finish', () => console.log('done!'))
 
-  // write read stream to remote file
+  // write read stream to remote file (consider using copy below)
   const rdStream = fs.createReadStream('my-local-file.txt')
   await files.write('my/remote/file.txt', rdStream)
 
@@ -78,12 +78,15 @@ npm install @adobe/aio-lib-files
   // delete all files including public
   await files.delete('/')
 
-  // copy
-  // upload local directory
+  // copy - higher level utility (works likes scp)
+  // works for files and directories both remotely and locally, uses streams under the hood
+  /// upload a single file
+  await files.copy('my-static-app/index.html', 'public/my-static-app/index.html', { localSrc: true })
+  /// upload local directory recursively
   await files.copy('my-static-app/', 'public/', { localSrc: true })
-  // download to local directory
+  /// download to local directory recursively (works for files as well)
   await files.copy('public/my-static-app/', 'my-static-app-copy', { localDest: true })
-  // copy files around cloud files
+  /// copy remote directories around (works for files as well)
   await files.copy('public/my-static-app/', 'my/private/folder')
 ```
 
@@ -94,6 +97,20 @@ npm install @adobe/aio-lib-files
 ## Debug
 
 set `DEBUG=@adobe/aio-lib-files*` to see debug logs.
+
+## Troubleshooting
+
+### `"[StateLib:ERROR_INTERNAL] unknown error response from provider with status: unknown"`
+- when using `@adobe/aio-lib-files` in an action bundled with **webpack** please make sure to turn off minification and enable resolving of es6 modules. Add the following lines to your webpack config:
+```javascript
+  optimization: {
+    minimize: false
+  },
+  resolve: {
+    extensions: ['.js'],
+    mainFields: ['main']
+  }
+```
 
 ## Contributing
 
