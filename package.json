@@ -7,7 +7,7 @@
     "lib": "lib"
   },
   "scripts": {
-    "lint": "eslint index.js lib/**/*.js test/**/*.js",
+    "lint": "eslint index.js lib test",
     "beautify": "npm run lint -- --fix",
     "test": "npm run unit && npm run lint",
     "unit": "jest -c ./jest.config.js",
@@ -33,7 +33,7 @@
     "eslint": "^6.5.1",
     "eslint-config-standard": "^14.1.0",
     "eslint-plugin-import": "^2.18.2",
-    "eslint-plugin-jest": "^22.19.0",
+    "eslint-plugin-jest": "^23.1.1",
     "eslint-plugin-jsdoc": "^18.1.5",
     "eslint-plugin-node": "^10.0.0",
     "eslint-plugin-promise": "^4.2.1",
