@@ -50,10 +50,12 @@ global.expectToThrowCustomError = async (func, code, words, expectedErrorDetails
     words.forEach(w => expect(e.message).toEqual(expect.stringContaining(w)))
     err = e
   }
-  expect(err).toBeInstanceOf(Error)
-  expect(global.mockLogError).toHaveBeenCalledWith(JSON.stringify(err, null, 2))
+
+  expect(err).toBeInstanceOf(Error) // eslint-disable-line jest/no-standalone-expect
+  expect(global.mockLogError).toHaveBeenCalledWith(JSON.stringify(err, null, 2)) // eslint-disable-line jest/no-standalone-expect
   // here we make sure that the internal error was correctly stringified and that it gets logged
   if (expectedErrorDetails._internal instanceof Error) {
+    // eslint-disable-next-line jest/no-standalone-expect
     expect(global.mockLogError).toHaveBeenCalledWith(expect.stringContaining(expectedErrorDetails._internal.message))
   }
 }
