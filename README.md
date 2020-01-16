@@ -98,6 +98,11 @@ npm install @adobe/aio-lib-files
 
 set `DEBUG=@adobe/aio-lib-files*` to see debug logs.
 
+
+## Adobe I/O Files Store Consistency Guarantees
+
+**Strong consistency** is guaranteed for all operations and across instances of the files sdk (returned by `filesLib.init()`).
+
 ## Troubleshooting
 
 ### `"[StateLib:ERROR_INTERNAL] unknown error response from provider with status: unknown"`

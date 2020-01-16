@@ -66,21 +66,28 @@ describe('init', () => {
   const checkInitDebugLogNoSecrets = (str) => expect(global.mockLogDebug).not.toHaveBeenCalledWith(expect.stringContaining(str))
 
   describe('with bad args', () => {
+    // eslint-disable-next-line jest/expect-expect
     test('when called with no arguments', async () => {
       await global.expectToThrowBadArg(AzureBlobFiles.init, ['credentials', 'required'], {})
     })
+
+    // eslint-disable-next-line jest/expect-expect
     test('when called with incomplete SAS credentials', async () => {
       const badInput = { ...fakeSASCredentials }
       delete badInput.sasURLPrivate
       const details = { sasURLPublic: fakeSASCredentials.sasURLPublic.split('?')[0] + '?<hidden>' } // hide token part of SAS in error details
       await global.expectToThrowBadArg(AzureBlobFiles.init.bind(null, badInput), ['credentials', 'required', 'sasURLPrivate'], details)
     })
+
+    // eslint-disable-next-line jest/expect-expect
     test('when called with incomplete user credentials', async () => {
       const badInput = { ...fakeUserCredentials }
       delete badInput.containerName
       const details = { storageAccount: fakeUserCredentials.storageAccount, storageAccessKey: '<hidden>' }
       await global.expectToThrowBadArg(AzureBlobFiles.init.bind(null, badInput), ['credentials', 'required', 'containerName'], details)
     })
+
+    // eslint-disable-next-line jest/expect-expect
     test('when called with both sas and user credentials', async () => {
       const fakeErrorDetails = cloneDeep({ ...fakeUserCredentials, ...fakeSASCredentials })
       fakeErrorDetails.sasURLPublic = fakeErrorDetails.sasURLPublic.split('?')[0] + '?<hidden>'
@@ -100,6 +107,7 @@ describe('init', () => {
       expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, { access: 'blob' })
       checkInitDebugLogNoSecrets(fakeUserCredentials.storageAccessKey)
     })
+
     test('when blob containers already exist', async () => {
       // here we make sure that no error is thrown (ignore if already exist)
       mockContainerCreate.mockRejectedValue({ body: { Code: 'ContainerAlreadyExists' } })
@@ -119,9 +127,13 @@ describe('init', () => {
       expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, { access: 'blob' })
       checkInitDebugLogNoSecrets(fakeUserCredentials.storageAccessKey)
     })
+
+    // eslint-disable-next-line jest/expect-expect
     test('when there is a provider error on blob container creation',
-      async () => testWithProviderError(AzureBlobFiles.init.bind(null, fakeUserCredentials), mockContainerCreate, { containerName: fakeUserCredentials.containerName, storageAccount: fakeUserCredentials.storageAccount }))
+      async () => testWithProviderError(AzureBlobFiles.init.bind(null, fakeUserCredentials), mockContainerCreate, { containerName: fakeUserCredentials.containerName, storageAccount: fakeUserCredentials.storageAccount })
+    )
   })
+
   test('with azure SAS credentials', async () => {
     // change to describe with beforeEach when more than one test for SAS credentials
     // setup & before
@@ -139,6 +151,7 @@ describe('init', () => {
     checkInitDebugLogNoSecrets(fakeSASCredentials.sasURLPrivate)
   })
 })
+
 describe('_fileExists', () => {
   const mockBlobGetProperties = jest.fn()
 
@@ -150,6 +163,7 @@ describe('_fileExists', () => {
   const fakeAzureFileProps = { fake: 'props' }
 
   let files
+
   beforeEach(async () => {
     mockBlobGetProperties.mockReset()
     azure.ContainerURL = jest.fn()
@@ -167,11 +181,14 @@ describe('_fileExists', () => {
     expect(await files._fileExists(fileWithoutExtension)).toEqual(exists)
     expect(mockBlobGetProperties).toHaveBeenCalled()
   }
-  test('when it exists', async () => expectExists(true))
-  test('when it does not exists', async () => expectExists(false))
 
+  test('when it exists', async () => expectExists(true)) // eslint-disable-line jest/expect-expect
+  test('when it does not exists', async () => expectExists(false)) // eslint-disable-line jest/expect-expect
+
+  // eslint-disable-next-line jest/expect-expect
   test('when there is a provider error on azure.BlockBlobURL.getProperties',
-    async () => testWithProviderError(files._fileExists.bind(files, fileInPrivateDir), mockBlobGetProperties, { filePath: fileInPrivateDir }))
+    async () => testWithProviderError(files._fileExists.bind(files, fileInPrivateDir), mockBlobGetProperties, { filePath: fileInPrivateDir })
+  )
 })
 
 describe('_listFolder', () => {
@@ -191,6 +208,7 @@ describe('_listFolder', () => {
   const multiFakeFiles = [['file1', 'subdir/file2', 'another/subdir/file3'], ['file4', 'subdir/file5', 'another/subdir/file6'], ['file7']]
 
   let files
+
   beforeEach(async () => {
     mockContainerPublicList.mockReset()
     mockContainerPrivateList.mockReset()
@@ -216,12 +234,14 @@ describe('_listFolder', () => {
     }
   }
 
+  // eslint-disable-next-line jest/no-commented-out-tests
   // test('when it is the root (`/`)', testListFolder('/', true, true, true)) // => this test is not valid as we assume
   // that only normalized path should be passed azure blob files functions
-  test('when it is the root (empty string)', testListFolder('', true, true, true))
+  test('when it is the root (empty string)', testListFolder('', true, true, true)) // eslint-disable-line jest/expect-expect
 
-  test('when it is a private', testListFolder(privateDir, false, true))
-  test('when it is a public', testListFolder(publicDir, true, false))
+  test('when it is a private', testListFolder(privateDir, false, true)) // eslint-disable-line jest/expect-expect
+  test('when it is a public', testListFolder(publicDir, true, false)) // eslint-disable-line jest/expect-expect
+
   test('when multiple calls are needed to list all files', async () => {
     const publicFiles = multiFakeFiles.map(arr => arr.map(f => publicDir + f))
     let count = 0
@@ -231,13 +251,17 @@ describe('_listFolder', () => {
     expect(mockContainerPrivateList).toHaveBeenCalledTimes(0)
     expect(mockContainerPublicList).toHaveBeenCalledWith(...fakeListArguments(publicDir))
   })
+
+  // eslint-disable-next-line jest/expect-expect
   test('when azure.ContainerURL.list rejects with an error', async () =>
-    testWithProviderError(files._listFolder.bind(files, publicDir), mockContainerPublicList, { filePath: publicDir }))
+    testWithProviderError(files._listFolder.bind(files, publicDir), mockContainerPublicList, { filePath: publicDir })
+  )
 })
 
 describe('_deleteFile', () => {
   const mockAzureDelete = jest.fn()
   let files
+
   beforeEach(async () => {
     mockAzureDelete.mockReset()
 
@@ -252,7 +276,9 @@ describe('_deleteFile', () => {
     await files._deleteFile('afile')
     expect(mockAzureDelete).toHaveBeenCalledTimes(1)
   })
+
   // also checks 404 (note the double 'afile')
+  // eslint-disable-next-line jest/expect-expect
   test('when azure.BlockBlobURL.delete rejects with an error, including file not exists (404)', async () =>
     testWithProviderError(files._deleteFile.bind(files, 'afile'), mockAzureDelete, { filePath: 'afile' }, 'afile'))
 })
@@ -261,6 +287,7 @@ describe('_createReadStream', () => {
   const fakeFile = 'a/dir/file1'
   const mockAzureDownload = jest.fn()
   let files
+
   beforeEach(async () => {
     mockAzureDownload.mockReset()
     azure.BlockBlobURL.fromContainerURL = jest.fn().mockReturnValue({ download: mockAzureDownload })
@@ -268,27 +295,36 @@ describe('_createReadStream', () => {
     files = await AzureBlobFiles.init(fakeSASCredentials)
     files._azure.aborter = fakeAborter
   })
+
   let fakeRdStream
   const fakeOptions = { position: 1, length: 10 }
+
   beforeEach(() => {
     fakeRdStream = new stream.Readable()
     fakeRdStream.push(null)
     mockAzureDownload.mockResolvedValue({ readableStreamBody: fakeRdStream })
   })
+
   test('w default options ({ position: 0, length: undefined })', async () => {
     const res = await files._createReadStream(fakeFile, { position: 0 })
     expect(res).toBe(fakeRdStream)
     expect(mockAzureDownload).toHaveBeenCalledTimes(1)
     expect(mockAzureDownload).toHaveBeenCalledWith(fakeAborter, 0, undefined)
   })
+
   test('with options', async () => {
     const res = await files._createReadStream(fakeFile, fakeOptions)
     expect(res).toBe(fakeRdStream)
     expect(mockAzureDownload).toHaveBeenCalledTimes(1)
     expect(mockAzureDownload).toHaveBeenCalledWith(fakeAborter, fakeOptions.position, fakeOptions.length)
   })
+
+  // eslint-disable-next-line jest/expect-expect
   test('when azure.BlockBlobURL.download rejects with an error, including file not exists (404)', async () =>
-    testWithProviderError(files._createReadStream.bind(files, 'afile', {}), mockAzureDownload, { filePath: 'afile', options: {} }, 'afile'))
+    testWithProviderError(files._createReadStream.bind(files, 'afile', {}), mockAzureDownload, { filePath: 'afile', options: {} }, 'afile')
+  )
+
+  // eslint-disable-next-line jest/expect-expect
   test('when azure.BlockBlobURL.download rejects with a 416 error because of out of range position', async () => {
     mockAzureDownload.mockRejectedValue({ response: { status: 416 } })
     await global.expectToThrowBadPosition(files._createReadStream.bind(files, 'afile', { position: 1234 }), 1234, 'afile', { filePath: 'afile', options: { position: 1234 } })
@@ -300,6 +336,7 @@ describe('_writeBuffer', () => {
   const mockAzureUpload = jest.fn()
   const fakeBuffer = Buffer.from('some fake content @#$%^&*()@!12-=][;"\n\trewq')
   let files
+
   beforeEach(async () => {
     mockAzureUpload.mockReset()
     mockAzureUpload.mockResolvedValue(true)
@@ -315,12 +352,15 @@ describe('_writeBuffer', () => {
     expect(mockAzureUpload).toHaveBeenCalledTimes(1)
     expect(mockAzureUpload).toHaveBeenCalledWith(fakeAborter, fakeBuffer, fakeBuffer.length, { blobHTTPHeaders: { blobContentType: expectMimeType } })
   }
-  test('when file has valid mime type file extension', testWriteBuffer('.json', 'application/json'))
-  test('when file has invalid mime type file extension', testWriteBuffer('.iiiiiiiii', 'application/octet-stream'))
-  test('when file has no file extension', testWriteBuffer('', 'application/octet-stream'))
 
+  test('when file has valid mime type file extension', testWriteBuffer('.json', 'application/json')) // eslint-disable-line jest/expect-expect
+  test('when file has invalid mime type file extension', testWriteBuffer('.iiiiiiiii', 'application/octet-stream')) // eslint-disable-line jest/expect-expect
+  test('when file has no file extension', testWriteBuffer('', 'application/octet-stream')) // eslint-disable-line jest/expect-expect
+
+  // eslint-disable-next-line jest/expect-expect
   test('when azure.BlockBlobURL throws an error', async () =>
-    testWithProviderError(files._writeBuffer.bind(files, 'afile', fakeBuffer), mockAzureUpload, { filePath: 'afile', contentType: 'Buffer' }))
+    testWithProviderError(files._writeBuffer.bind(files, 'afile', fakeBuffer), mockAzureUpload, { filePath: 'afile', contentType: 'Buffer' })
+  )
 })
 
 describe('_writeStream', () => {
@@ -329,6 +369,7 @@ describe('_writeStream', () => {
   const fakeContent = 'some fake content @#$%^&*()@!12-=][;"\n\trewq'
   let fakeRdStream
   let files
+
   beforeEach(async () => {
     mockAzureStreamUpload.mockReset()
     mockAzureStreamUpload.mockImplementation((_, stream) => new Promise((resolve) => stream.on('end', resolve))) // tight coupling..
@@ -347,13 +388,16 @@ describe('_writeStream', () => {
     expect(mockAzureStreamUpload).toHaveBeenCalledTimes(1)
     expect(mockAzureStreamUpload.mock.calls[0]).toEqual(expect.arrayContaining([fakeRdStream, { blobHTTPHeaders: { blobContentType: expectMimeType } }]))
   }
-  test('when file has valid mime type file extension', testWriteStream('.json', 'application/json'))
-  test('when file has invalid mime type file extension', testWriteStream('.iiiiiiiii', 'application/octet-stream'))
-  test('when file has no file extension', testWriteStream('', 'application/octet-stream'))
 
+  test('when file has valid mime type file extension', testWriteStream('.json', 'application/json')) // eslint-disable-line jest/expect-expect
+  test('when file has invalid mime type file extension', testWriteStream('.iiiiiiiii', 'application/octet-stream')) // eslint-disable-line jest/expect-expect
+  test('when file has no file extension', testWriteStream('', 'application/octet-stream')) // eslint-disable-line jest/expect-expect
+
+  // eslint-disable-next-line jest/expect-expect
   test('when azure.uploadStreamToBlockBlob throws an error', async () =>
     testWithProviderError(files._writeStream.bind(files, 'afile', fakeRdStream), mockAzureStreamUpload, { filePath: 'afile', contentType: 'Readable' }))
 })
+
 describe('_createWriteStream', () => {
   const mockAzureStreamUpload = jest.fn()
 
@@ -363,6 +407,7 @@ describe('_createWriteStream', () => {
 
   /** @type {AzureBlobFiles} */
   let files
+
   beforeEach(async () => {
     mockAzureStreamUpload.mockReset()
     mockAzureStreamUpload.mockImplementation((_, stream) => new Promise((resolve) => stream.on('end', resolve))) // tight coupling..
@@ -372,37 +417,47 @@ describe('_createWriteStream', () => {
     files._azure.aborter = fakeAborter
   })
 
-  test('with file with html extension, write multiple chunks and end the stream', async done => {
+  test('with file with html extension, write multiple chunks and end the stream', async () => {
     expect.assertions(5)
     const wrStream = await files._createWriteStream(fakeFile + '.html')
     expect(wrStream).toBeInstanceOf(stream.Writable)
     fakeChunks.forEach(chunk => wrStream.write(chunk))
     wrStream.end()
-    wrStream.on('finish', async bytesWritten => {
-      expect(bytesWritten).toEqual(fakeChunksSize)
-      // also check field
-      expect(wrStream.bytesWritten).toEqual(fakeChunksSize)
-      expect(mockAzureStreamUpload).toHaveBeenCalledTimes(1)
-      expect(mockAzureStreamUpload.mock.calls[0]).toEqual(expect.arrayContaining([{ blobHTTPHeaders: { blobContentType: 'text/html' } }]))
-      done()
+    return new Promise(resolve => {
+      wrStream.on('finish', async bytesWritten => {
+        expect(bytesWritten).toEqual(fakeChunksSize)
+        // also check field
+        expect(wrStream.bytesWritten).toEqual(fakeChunksSize)
+        expect(mockAzureStreamUpload).toHaveBeenCalledTimes(1)
+        expect(mockAzureStreamUpload.mock.calls[0]).toEqual(expect.arrayContaining([{ blobHTTPHeaders: { blobContentType: 'text/html' } }]))
+        resolve()
+      })
     })
   })
-  test('when stream is written and azure.uploadStreamToBlockBlob rejects an error', async done => {
+
+  // eslint-disable-next-line jest/expect-expect
+  test('when stream is written and azure.uploadStreamToBlockBlob rejects an error', async () => {
     mockAzureStreamUpload.mockRejectedValue({ response: { status: 444 } })
     const wrStream = await files._createWriteStream(fakeFile)
     wrStream.write('hi')
-    wrStream.on('error', async e => {
-      await global.expectToThrowInternalWithStatus(() => { throw e }, 444, { filePath: fakeFile, _internal: { response: { status: 444 } } })
-      done()
+    return new Promise(resolve => {
+      wrStream.on('error', async e => {
+        await global.expectToThrowInternalWithStatus(() => { throw e }, 444, { filePath: fakeFile, _internal: { response: { status: 444 } } })
+        resolve()
+      })
     })
   })
-  test('when stream is written and azure.uploadStreamToBlockBlob rejects with 403', async done => {
+
+  // eslint-disable-next-line jest/expect-expect
+  test('when stream is written and azure.uploadStreamToBlockBlob rejects with 403', async () => {
     mockAzureStreamUpload.mockRejectedValue({ response: { status: 403 } })
     const wrStream = await files._createWriteStream(fakeFile)
     wrStream.write('hi')
-    wrStream.on('error', async e => {
-      await global.expectToThrowBadCredentials(() => { throw e }, { filePath: fakeFile })
-      done()
+    return new Promise(resolve => {
+      wrStream.on('error', async e => {
+        await global.expectToThrowBadCredentials(() => { throw e }, { filePath: fakeFile })
+        resolve()
+      })
     })
   })
 })
@@ -416,6 +471,7 @@ describe('_copyRemoteToRemoteFile', () => {
 
   /** @type {AzureBlobFiles} */
   let files
+
   beforeEach(async () => {
     mockStartCopyFromURL.mockReset()
     mockStartCopyFromURL.mockResolvedValue(true)
@@ -431,6 +487,7 @@ describe('_copyRemoteToRemoteFile', () => {
     expect(mockStartCopyFromURL.mock.calls[0]).toEqual(expect.arrayContaining([fakeSrcURL]))
   })
 
+  // eslint-disable-next-line jest/expect-expect
   test('when azure.uploadStreamToBlockBlob throws an error', async () =>
     testWithProviderError(files._copyRemoteToRemoteFile.bind(files, src, dest), mockStartCopyFromURL, { srcPath: src, destPath: dest }, src))
 })
@@ -442,6 +499,7 @@ describe('_getUrl', () => {
   }
   /** @type {AzureBlobFiles} */
   let files
+
   beforeEach(async () => {
     mockBlockBlob.mockReset()
     azure.ContainerURL = jest.fn()
@@ -467,17 +525,21 @@ describe('_getUrl', () => {
 describe('_statusFromProviderError', () => {
   /** @type {AzureBlobFiles} */
   let files
+
   beforeEach(async () => {
     files = await AzureBlobFiles.init(fakeSASCredentials)
   })
+
   test('error has no response field', async () => {
     const status = await files._statusFromProviderError(new Error('yolo'))
     expect(status).toEqual(undefined)
   })
+
   test('error has no response.status field', async () => {
     const status = await files._statusFromProviderError({ response: 'yolo' })
     expect(status).toEqual(undefined)
   })
+
   test('error has response.status field', async () => {
     const status = await files._statusFromProviderError({ response: { status: 404 } })
     expect(status).toEqual(404)

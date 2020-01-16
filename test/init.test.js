@@ -40,6 +40,7 @@ describe('init', () => {
       sasURLPublic: 'https://fakesaspublic?secret',
       storageAccessKey: 'fakestorageaccesskey'
     }
+
     test('with azure config', async () => {
       await filesLib.init({ azure: fakeAzureBlobConfig })
       expect(AzureBlobFiles.init).toHaveBeenCalledTimes(1)
@@ -64,6 +65,7 @@ describe('init', () => {
       some: 'options'
     }
     const azureBlobTvmMock = jest.fn()
+
     beforeEach(async () => {
       TvmClient.mockReset()
       TvmClient.init.mockReset()
@@ -72,6 +74,7 @@ describe('init', () => {
         getAzureBlobCredentials: azureBlobTvmMock
       })
     })
+
     test('when tvm options', async () => {
       azureBlobTvmMock.mockResolvedValue(fakeTVMResponse)
       await filesLib.init({ ow: fakeOWCreds, tvm: fakeTVMOptions })
@@ -82,6 +85,7 @@ describe('init', () => {
       expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('openwhisk'))
       checkInitDebugLogNoSecrets(fakeOWCreds.auth)
     })
+
     test('when empty config to be able to pass OW creds as env variables', async () => {
       azureBlobTvmMock.mockResolvedValue(fakeTVMResponse)
       await filesLib.init()
@@ -92,18 +96,22 @@ describe('init', () => {
       expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('openwhisk'))
     })
 
+    // eslint-disable-next-line jest/expect-expect
     test('when tvm rejects with a 401 (throws wrapped error)', async () => {
       const e = new Error('tvm error')
       e.sdkDetails = { fake: 'details', status: 401 }
       azureBlobTvmMock.mockRejectedValue(e)
       await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), e.sdkDetails)
     })
+
+    // eslint-disable-next-line jest/expect-expect
     test('when tvm rejects with a 403 (throws wrapped error)', async () => {
       const e = new Error('tvm error')
       e.sdkDetails = { fake: 'details', status: 403 }
       azureBlobTvmMock.mockRejectedValue(e)
       await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), e.sdkDetails)
     })
+
     test('when tvm rejects with another status code (throws tvm error)', async () => {
       const tvmError = new Error('tvm error')
       tvmError.sdkDetails = { fake: 'details', status: 500 }
@@ -111,6 +119,7 @@ describe('init', () => {
       try {
         await filesLib.init({ ow: fakeOWCreds })
       } catch (e) {
+        // eslint-disable-next-line jest/no-try-expect
         expect(e).toBe(tvmError)
       }
     })

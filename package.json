@@ -1,13 +1,13 @@
 {
   "name": "@adobe/aio-lib-files",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "An abstraction on top of blob cloud storage exposing a file like API",
   "main": "index.js",
   "directories": {
     "lib": "lib"
   },
   "scripts": {
-    "lint": "eslint index.js lib/**/*.js test/**/*.js",
+    "lint": "eslint index.js lib test",
     "beautify": "npm run lint -- --fix",
     "test": "npm run unit && npm run lint",
     "unit": "jest -c ./jest.config.js",
@@ -33,9 +33,9 @@
     "eslint": "^6.5.1",
     "eslint-config-standard": "^14.1.0",
     "eslint-plugin-import": "^2.18.2",
-    "eslint-plugin-jest": "^22.19.0",
+    "eslint-plugin-jest": "^23.1.1",
     "eslint-plugin-jsdoc": "^18.1.5",
-    "eslint-plugin-node": "^10.0.0",
+    "eslint-plugin-node": "^11.0.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
     "jest": "^24.9.0",
