@@ -12,7 +12,9 @@
     "test": "npm run unit && npm run lint",
     "unit": "jest -c ./jest.config.js",
     "e2e": "jest -c ./jest.e2e.config.js",
-    "generate-jsdoc": "jsdoc2md -f index.js 'lib/**/*.js' > doc/api.md"
+    "jsdoc": "jsdoc2md -f index.js 'lib/**/*.js' > doc/api.md",
+    "typings": "jsdoc -t node_modules/tsd-jsdoc/dist -r lib -d .",
+    "generate-docs": "npm run jsdoc && npm run typings"
   },
   "author": "Adobe Inc.",
   "license": "Apache-2.0",
@@ -40,7 +42,8 @@
     "eslint-plugin-standard": "^4.0.1",
     "jest": "^24.9.0",
     "jsdoc-to-markdown": "^5.0.2",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.0",
+    "tsd-jsdoc": "^2.4.0"
   },
   "dependencies": {
     "@adobe/aio-lib-core-errors": "^3.0.0",
