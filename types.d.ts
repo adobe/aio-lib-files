@@ -9,18 +9,18 @@ declare class Files {
      * Lists files in a remote folder. If called on a file returns only this file path.
      * This is comparable to bash's `ls` command
      *
-     * @param {module:types~RemotePathString} [filePath] {@link module:types~RemotePathString} if not
+     * @param {RemotePathString} [filePath] {@link RemotePathString} if not
      * specified list all files
      * @returns {Promise<Array<string>>} resolves to array of paths
      *
      * @memberof Files
      * @public
      */
-    public list(filePath?: module): Promise<string[]>;
+    public list(filePath?: RemotePathString): Promise<string[]>;
     /**
      * Deletes a remote file or directory
      *
-     * @param {module:types~RemotePathString} filePath {@link module:types~RemotePathString}
+     * @param {RemotePathString} filePath {@link RemotePathString}
      * @param {object} [options={}] remoteDeleteOptions
      * @param {Function} [options.progressCallback] cb(RemoteFile) is called after
      *  the operation completed on each file
@@ -29,7 +29,7 @@ declare class Files {
      * @memberof Files
      * @public
      */
-    public delete(filePath: module, options?: {
+    public delete(filePath: RemotePathString, options?: {
         progressCallback?: (...params: any[]) => any;
     }): Promise<string[]>;
     /**
@@ -37,7 +37,7 @@ declare class Files {
      *
      * Creates a read stream
      *
-     * @param {module:types~RemotePathString} filePath {@link module:types~RemotePathString}
+     * @param {RemotePathString} filePath {@link RemotePathString}
      * @param {object} [options={}] createReadStreamOptions
      * @param {number} [options.position] read start position of the file. By default is set to 0. If set to bigger than
      * size, throws an ERROR_OUT_OF_RANGE error
@@ -48,7 +48,7 @@ declare class Files {
      * @memberof Files
      * @public
      */
-    public createReadStream(filePath: module, options?: {
+    public createReadStream(filePath: RemotePathString, options?: {
         position?: number;
         length?: number;
     }): Promise<NodeJS.ReadableStream>;
@@ -60,19 +60,19 @@ declare class Files {
      * Returns a write stream.
      * Use `stream.on('finish', (bytesWritten) => {})` to listen on completion event
      *
-     * @param {module:types~RemotePathString} filePath {@link module:types~RemotePathString}
+     * @param {RemotePathString} filePath {@link RemotePathString}
      * @returns {Promise<NodeJS.WritableStream>} a writable stream
      *
      * @memberof Files
      * @public
      */
-    public createWriteStream(filePath: module): Promise<NodeJS.WritableStream>;
+    public createWriteStream(filePath: RemotePathString): Promise<NodeJS.WritableStream>;
     /**
      * ***Does not work on directories.***
      *
      * Reads a remote file content
      *
-     * @param {module:types~RemotePathString} filePath {@link module:types~RemotePathString}
+     * @param {RemotePathString} filePath {@link RemotePathString}
      * @returns {Promise<Buffer>} buffer holding content
      * @param {object} [options={}] remoteReadOptions
      * @param {number} [options.position] read start position of the file. By default is set to 0. If set to bigger than
@@ -83,7 +83,7 @@ declare class Files {
      * @memberof Files
      * @public
      */
-    public read(filePath: module, options?: {
+    public read(filePath: RemotePathString, options?: {
         position?: number;
         length?: number;
     }): Promise<Buffer>;
@@ -92,7 +92,7 @@ declare class Files {
      *
      * Writes content to a file
      *
-     * @param {module:types~RemotePathString} filePath {@link module:types~RemotePathString}
+     * @param {RemotePathString} filePath {@link RemotePathString}
      * @param {string | Buffer | NodeJS.ReadableStream } content to be written,
      * `ReadableStream` input works for **NodeJS only**
      * @returns {Promise<number>} resolves to number of bytes written
@@ -100,16 +100,16 @@ declare class Files {
      * @memberof Files
      * @public
      */
-    public write(filePath: module, content: string | Buffer | NodeJS.ReadableStream): Promise<number>;
+    public write(filePath: RemotePathString, content: string | Buffer | NodeJS.ReadableStream): Promise<number>;
     /**
      * Reads properties of a file or directory
      *
-     * @param {module:types~RemotePathString} filePath {@link module:types~RemotePathString}
-     * @returns {Promise<module:types~RemoteFileProperties>} resolves {@link module:types~RemoteFileProperties}
+     * @param {RemotePathString} filePath {@link RemotePathString}
+     * @returns {Promise<RemoteFileProperties>} resolves {@link RemoteFileProperties}
      *
      * @memberof Files
      */
-    getProperties(filePath: module): Promise<module>;
+    getProperties(filePath: RemotePathString): Promise<RemoteFileProperties>;
     /**
      * ***NodeJS only (streams + fs).***
      *
@@ -135,9 +135,9 @@ declare class Files {
      *  4. Local => Local
      *    - not supported
      *
-     * @param {module:types~RemotePathString} srcPath copy source path to a file or directory. If
+     * @param {RemotePathString} srcPath copy source path to a file or directory. If
      * srcPath points to a local file set `options.localSrc` to true
-     * @param {module:types~RemotePathString} destPath copy destination path to a file or directory. If
+     * @param {RemotePathString} destPath copy destination path to a file or directory. If
      * destPath points to a local file set `options.localDest` to true
      * @param {object} [options={}] remoteCopyOptions
      * @param {boolean} [options.localSrc = false] Set this option to true to copy
@@ -153,7 +153,7 @@ declare class Files {
      * from src to dest `{ srcFilePath: destFilePath }`
      * @memberof Files
      */
-    copy(srcPath: module, destPath: module, options?: {
+    copy(srcPath: RemotePathString, destPath: RemotePathString, options?: {
         localSrc?: boolean;
         localDest?: boolean;
         noOverwrite?: boolean;
@@ -167,23 +167,23 @@ declare class Files {
  * Initializes and returns the cloud files SDK.
  *
  * To use the SDK you must either provide provide your
- * [OpenWhisk credentials]{@link module:types~OpenWhiskCredentials} in
+ * [OpenWhisk credentials]{@link OpenWhiskCredentials} in
  * `credentials.ow` or your own
- * [Azure blob storage credentials]{@link module:types~AzureCredentialsAccount} in `credentials.azure`.
+ * [Azure blob storage credentials]{@link AzureCredentialsAccount} in `credentials.azure`.
  *
  * OpenWhisk credentials can also be read from environment variables (`__OW_NAMESPACE` and `__OW_API_KEY`).
  *
  * @param {object} [config={}] configuration used to init the sdk
  *
- * @param {module:types~OpenWhiskCredentials} [config.ow]
- * {@link module:types~OpenWhiskCredentials}. Set those if you want
+ * @param {OpenWhiskCredentials} [config.ow]
+ * {@link OpenWhiskCredentials}. Set those if you want
  * to use ootb credentials to access the state management service. OpenWhisk
  * namespace and auth can also be passed through environment variables:
  * `__OW_NAMESPACE` and `__OW_API_KEY`
  *
- * @param {module:types~AzureCredentialsAccount|module:types~AzureCredentialsSAS} [config.azure]
- * bring your own [Azure SAS credentials]{@link module:types~AzureCredentialsSAS} or
- * [Azure storage account credentials]{@link module:types~AzureCredentialsAccount}
+ * @param {AzureCredentialsAccount|AzureCredentialsSAS} [config.azure]
+ * bring your own [Azure SAS credentials]{@link AzureCredentialsSAS} or
+ * [Azure storage account credentials]{@link AzureCredentialsAccount}
  *
  * @param {object} [config.tvm] tvm configuration, applies only when passing OpenWhisk credentials
  * @param {string} [config.tvm.apiUrl] alternative tvm api url.
@@ -191,104 +191,112 @@ declare class Files {
  * @returns {Promise<Files>} A Files instance
  */
 declare function init(config?: {
-    ow?: module;
-    azure?: module | module;
+    ow?: OpenWhiskCredentials;
+    azure?: AzureCredentialsAccount | AzureCredentialsSAS;
     tvm?: {
         apiUrl?: string;
         cacheFile?: string;
     };
 }): Promise<Files>;
 
-/** @module types
+/**
+ * An object holding the OpenWhisk credentials
+ *
+ * @typedef OpenWhiskCredentials
+ * @type {object}
+ * @property {string} namespace user namespace
+ * @property {string} auth auth key
  */
-declare module "types" {
-    /**
-     * An object holding the OpenWhisk credentials
-     *
-     * @typedef OpenWhiskCredentials
-     * @type {object}
-     * @property {string} namespace user namespace
-     * @property {string} auth auth key
-     */
-    type OpenWhiskCredentials = {
-        namespace: string;
-        auth: string;
-    };
-    /**
-     * SAS Azure credentials. The sdk needs two SAS credentials to allow access to
-     * two already existing containers, a private and a public one (with access=`blob`).
-     *
-     * @typedef AzureCredentialsSAS
-     * @type {object}
-     * @property {string} sasURLPrivate sas url to existing private azure blob
-     * container
-     * @property {string} sasURLPublic sas url to existing public (with
-     * access=`blob`) azure blob container
-     *
-     */
-    type AzureCredentialsSAS = {
-        sasURLPrivate: string;
-        sasURLPublic: string;
-    };
-    /**
-     * Azure account credentials. Must have the permission to create containers.
-     *
-     * @typedef AzureCredentialsAccount
-     * @type {object}
-     * @property {string} storageAccount name of azure storage account
-     * @property {string} storageAccessKey access key for azure storage account
-     * @property {string} containerName name of container to store files.
-     * Another `${containerName}-public` will also be used for public files.
-     */
-    type AzureCredentialsAccount = {
-        storageAccount: string;
-        storageAccessKey: string;
-        containerName: string;
-    };
-    /**
-     * @typedef RemotePathString
-     * @type {string}
-     * @description a string to the remote path. If the path ends with a `/` it will
-     * be treated as a directory, if not it will be treated as a file.
-     */
-    type RemotePathString = string;
-    /**
-     * @typedef RemoteFileProperties
-     * @type {object}
-     * @property {boolean} isDirectory true if file is a path
-     * @property {boolean} isPublic true if file is public
-     * @property {string} url remote file url
-     */
-    type RemoteFileProperties = {
-        isDirectory: boolean;
-        isPublic: boolean;
-        url: string;
-    };
-    /**
-     * Files lib custom errors.
-     *
-     * `e.sdkDetails` provides additional context for each error (e.g. function parameter)
-     *
-     * @typedef FilesLibErrors
-     * @type {object}
-     * @property {FilesLibError} ERROR_BAD_ARGUMENT this error is thrown when an argument is missing or has invalid type
-     * @property {FilesLibError} ERROR_NOT_IMPLEMENTED this error is thrown when a method is not implemented or when calling
-     * methods directly on the abstract class (Files).
-     * @property {FilesLibError} ERROR_BAD_CREDENTIALS this error is thrown when the supplied init credentials are invalid.
-     * @property {FilesLibError} ERROR_INTERNAL this error is thrown when an unknown error is thrown by the underlying
-     * provider or TVM server for credential exchange. More details can be found in `e.sdkDetails._internal`.
-     * @property {FilesLibError} ERROR_FILE_NOT_EXISTS this error is thrown when the filePath does not exists for operations
-     * that need the file to exists (e.g. read)
-     * @property {FilesLibError} ERROR_BAD_FILE_TYPE this error is thrown when the filePath is not the expected type for
-     * operations that need the file to be of a specific type, e.g. write on a dir would fail
-     */
-    type FilesLibErrors = {
-        ERROR_BAD_ARGUMENT: FilesLibError;
-        ERROR_NOT_IMPLEMENTED: FilesLibError;
-        ERROR_BAD_CREDENTIALS: FilesLibError;
-        ERROR_INTERNAL: FilesLibError;
-        ERROR_FILE_NOT_EXISTS: FilesLibError;
-        ERROR_BAD_FILE_TYPE: FilesLibError;
-    };
-}
+declare type OpenWhiskCredentials = {
+    namespace: string;
+    auth: string;
+};
+
+/**
+ * SAS Azure credentials. The sdk needs two SAS credentials to allow access to
+ * two already existing containers, a private and a public one (with access=`blob`).
+ *
+ * @typedef AzureCredentialsSAS
+ * @type {object}
+ * @property {string} sasURLPrivate sas url to existing private azure blob
+ * container
+ * @property {string} sasURLPublic sas url to existing public (with
+ * access=`blob`) azure blob container
+ *
+ */
+declare type AzureCredentialsSAS = {
+    sasURLPrivate: string;
+    sasURLPublic: string;
+};
+
+/**
+ * Azure account credentials. Must have the permission to create containers.
+ *
+ * @typedef AzureCredentialsAccount
+ * @type {object}
+ * @property {string} storageAccount name of azure storage account
+ * @property {string} storageAccessKey access key for azure storage account
+ * @property {string} containerName name of container to store files.
+ * Another `${containerName}-public` will also be used for public files.
+ */
+declare type AzureCredentialsAccount = {
+    storageAccount: string;
+    storageAccessKey: string;
+    containerName: string;
+};
+
+/**
+ * @typedef RemotePathString
+ * @type {string}
+ * @description a string to the remote path. If the path ends with a `/` it will
+ * be treated as a directory, if not it will be treated as a file.
+ */
+declare type RemotePathString = string;
+
+/**
+ * @typedef RemoteFileProperties
+ * @type {object}
+ * @property {boolean} isDirectory true if file is a path
+ * @property {boolean} isPublic true if file is public
+ * @property {string} url remote file url
+ */
+declare type RemoteFileProperties = {
+    isDirectory: boolean;
+    isPublic: boolean;
+    url: string;
+};
+
+/**
+ * @typedef FilesLibError
+ * @type {Error}
+ *
+ */
+declare type FilesLibError = Error;
+
+/**
+ * Files lib custom errors.
+ *
+ * `e.sdkDetails` provides additional context for each error (e.g. function parameter)
+ *
+ * @typedef FilesLibErrors
+ * @type {object}
+ * @property {FilesLibError} ERROR_BAD_ARGUMENT this error is thrown when an argument is missing or has invalid type
+ * @property {FilesLibError} ERROR_NOT_IMPLEMENTED this error is thrown when a method is not implemented or when calling
+ * methods directly on the abstract class (Files).
+ * @property {FilesLibError} ERROR_BAD_CREDENTIALS this error is thrown when the supplied init credentials are invalid.
+ * @property {FilesLibError} ERROR_INTERNAL this error is thrown when an unknown error is thrown by the underlying
+ * provider or TVM server for credential exchange. More details can be found in `e.sdkDetails._internal`.
+ * @property {FilesLibError} ERROR_FILE_NOT_EXISTS this error is thrown when the filePath does not exists for operations
+ * that need the file to exists (e.g. read)
+ * @property {FilesLibError} ERROR_BAD_FILE_TYPE this error is thrown when the filePath is not the expected type for
+ * operations that need the file to be of a specific type, e.g. write on a dir would fail
+ */
+declare type FilesLibErrors = {
+    ERROR_BAD_ARGUMENT: FilesLibError;
+    ERROR_NOT_IMPLEMENTED: FilesLibError;
+    ERROR_BAD_CREDENTIALS: FilesLibError;
+    ERROR_INTERNAL: FilesLibError;
+    ERROR_FILE_NOT_EXISTS: FilesLibError;
+    ERROR_BAD_FILE_TYPE: FilesLibError;
+};
 
