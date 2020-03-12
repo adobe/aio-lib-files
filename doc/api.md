@@ -297,7 +297,7 @@ be treated as a directory, if not it will be treated as a file.
 | --- | --- | --- |
 | isDirectory | <code>boolean</code> | true if file is a path |
 | isPublic | <code>boolean</code> | true if file is public |
-| url | <code>string</code> | remote file url |
+| url | <code>string</code> | remote file URL with URI encoded path, use decodeURIComponent to decode the URL. |
 
 <a name="FilesLibError"></a>
 

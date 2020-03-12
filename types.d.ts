@@ -258,7 +258,7 @@ declare type RemotePathString = string;
  * @type {object}
  * @property {boolean} isDirectory true if file is a path
  * @property {boolean} isPublic true if file is public
- * @property {string} url remote file url
+ * @property {string} url remote file URL with URI encoded path, use decodeURIComponent to decode the URL.
  */
 declare type RemoteFileProperties = {
     isDirectory: boolean;
