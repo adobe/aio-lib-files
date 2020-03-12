@@ -1,6 +1,6 @@
 {
   "name": "@adobe/aio-lib-files",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "An abstraction on top of blob cloud storage exposing a file like API",
   "main": "index.js",
   "directories": {
