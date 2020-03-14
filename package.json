@@ -50,7 +50,7 @@
     "@adobe/aio-lib-core-logging": "1.1.0",
     "@adobe/aio-lib-core-tvm": "^1.0.1",
     "@azure/storage-blob": "^10.5.0",
-    "@hapi/joi": "^16.1.7",
+    "@hapi/joi": "^17.1.1",
     "@types/hapi__joi": "^16.0.1",
     "fs-extra": "^8.1.0",
     "lodash.clonedeep": "^4.5.0",
