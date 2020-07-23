@@ -4,7 +4,185 @@
  * @classdesc Cloud Files Abstraction
  * @hideconstructor
  */
-declare class Files {
+export class Files {
+    /**
+     * @param {RemotePathString} filePath {@link RemotePathString}
+     * @returns {string} normalized path
+     *
+     * @static
+     * @protected
+     * @memberof Files
+     */
+    protected static _normalizeRemotePath(filePath: RemotePathString): string;
+    /**
+     * @param {RemotePathString} filePath {@link RemotePathString}
+     * @returns {boolean} true if it's the root
+     *
+     * @static
+     * @protected
+     * @memberof Files
+     */
+    protected static _isRemoteRoot(filePath: RemotePathString): boolean;
+    /**
+     * @param {RemotePathString} filePath {@link RemotePathString}
+     * @returns {boolean} true if the file is public
+     *
+     * @static
+     * @protected
+     * @memberof Files
+     */
+    protected static _isRemotePublic(filePath: RemotePathString): boolean;
+    /**
+     * @param {RemotePathString} filePath {@link RemotePathString}
+     * @returns {boolean} true if path is a directory
+     *
+     * @static
+     * @protected
+     * @memberof Files
+     */
+    protected static _isRemoteDirectory(filePath: RemotePathString): boolean;
+    /**
+     * @param {RemotePathString} filePath {@link RemotePathString}
+     * @param {object} details pass details to error for debugging purpose (e.g. calling function params)
+     * @throws {codes.ERROR_BAD_ARGUMENT}
+     *
+     * @static
+     * @protected
+     * @memberof Files
+     */
+    protected static _throwIfRemoteDirectory(filePath: RemotePathString, details: any): void;
+    /**
+     * Reads a stream into a buffer
+     *
+     * @param {NodeJS.ReadableStream} stream readableStream
+     * @returns {Promise<Buffer>} buffer
+     *
+     * @static
+     * @protected
+     * @memberof Files
+     */
+    protected static _readStream(stream: NodeJS.ReadableStream): Promise<Buffer>;
+    /**
+     * Wraps errors for request to the cloud provider
+     *
+     * @param {Promise} requestPromise the promise resolving to the response or error
+     * @param {object} details pass details to error for debugging purpose (e.g. pass function params)
+     * @param {string} filePath path to the file on which the request was made
+     * @returns {Promise} promise resolving to same value as requestPromise
+     * @throws {codes.ERROR_BAD_CREDENTIALS|codes.ERROR_FILE_NOT_EXISTS|codes.ERROR_INTERNAL}
+     * @static
+     * @protected
+     * @memberof Files
+     */
+    protected _wrapProviderRequest(requestPromise: Promise, details: any, filePath: string): Promise;
+    /**
+     * @param {RemotePathString} filePath {@link RemotePathString}
+     * @returns {Promise<Array<string>>} resolves to array of paths
+     *
+     * @memberof Files
+     * @abstract
+     * @protected
+     */
+    protected _listFolder(filePath: RemotePathString): Promise<string[]>;
+    /**
+     * @param {RemotePathString} filePath {@link RemotePathString}
+     * @returns {Promise<boolean>} resolves to array of paths
+     *
+     * @memberof Files
+     * @abstract
+     * @protected
+     */
+    protected _fileExists(filePath: RemotePathString): Promise<boolean>;
+    /**
+     * @param {RemotePathString} filePath {@link RemotePathString}
+     * @memberof Files
+     * @abstract
+     * @protected
+     */
+    protected _deleteFile(filePath: RemotePathString): void;
+    /**
+     * **NODEJS ONLY**
+     *
+     * @param {RemotePathString} filePath {@link RemotePathString}
+     * @param {object} [options={}] createReadStreamOptions
+     * @param {number} [options.position] read start position of the file. By default is set to 0. If set to bigger than
+     * size, throws an ERROR_OUT_OF_RANGE error
+     * @param {number} [options.length] number of bytes to read. By default reads everything since starting position. If
+     * set to bigger than file size, reads until end.
+     * @returns {Promise<NodeJS.ReadableStream>} a readable stream
+     *
+     * @memberof Files
+     * @abstract
+     * @protected
+     */
+    protected _createReadStream(filePath: RemotePathString, options?: {
+        position?: number;
+        length?: number;
+    }): Promise<NodeJS.ReadableStream>;
+    /**
+     * **NODEJS ONLY**
+     *
+     * @param {RemotePathString} filePath {@link RemotePathString}
+     * @returns {Promise<NodeJS.WritableStream>} a writable stream
+     *
+     * @memberof Files
+     * @abstract
+     * @protected
+     */
+    protected _createWriteStream(filePath: RemotePathString): Promise<NodeJS.WritableStream>;
+    /**
+     * **NODEJS ONLY**
+     *
+     * @param {RemotePathString} filePath {@link RemotePathString}
+     * @param {NodeJS.ReadableStream} content to be written
+     * @returns {Promise<number>} resolves to number of bytes written
+     *
+     * @memberof Files
+     * @abstract
+     * @protected
+     */
+    protected _writeStream(filePath: RemotePathString, content: NodeJS.ReadableStream): Promise<number>;
+    /**
+     *
+     * @param {RemotePathString} filePath {@link RemotePathString}
+     * @param {Buffer} content to be written
+     * @returns {Promise<number>} resolves to number of bytes written
+     *
+     * @memberof Files
+     * @abstract
+     * @protected
+     */
+    protected _writeBuffer(filePath: RemotePathString, content: Buffer): Promise<number>;
+    /**
+     * **Does not work for directories.**
+     * copies a file from a remote location to another.
+     *
+     * @param {RemotePathString} srcPath {@link RemotePathString}
+     * @param {RemotePathString} destPath {@link RemotePathString}
+     *
+     * @protected
+     * @memberof Files
+     * @abstract
+     */
+    protected _copyRemoteToRemoteFile(srcPath: RemotePathString, destPath: RemotePathString): void;
+    /**
+     * @param {RemotePathString} filePath {@link RemotePathString}
+     * @returns {string} resolves to url
+     *
+     * @protected
+     * @memberof Files
+     * @abstract
+     */
+    protected _getUrl(filePath: RemotePathString): string;
+    /**
+     * @param {Error} e provider error response
+     * @returns {number} status code
+     *
+     * @protected
+     * @memberof Files
+     * @abstract
+     */
+    protected _statusFromProviderError(e: Error): number;
     /**
      * Lists files in a remote folder. If called on a file returns only this file path.
      * This is comparable to bash's `ls` command
@@ -190,7 +368,7 @@ declare class Files {
  * @param {string} [config.tvm.cacheFile] alternative tvm cache file, set to `false` to disable caching of temporary credentials.
  * @returns {Promise<Files>} A Files instance
  */
-declare function init(config?: {
+export function init(config?: {
     ow?: OpenWhiskCredentials;
     azure?: AzureCredentialsAccount | AzureCredentialsSAS;
     tvm?: {
@@ -207,7 +385,7 @@ declare function init(config?: {
  * @property {string} namespace user namespace
  * @property {string} auth auth key
  */
-declare type OpenWhiskCredentials = {
+export type OpenWhiskCredentials = {
     namespace: string;
     auth: string;
 };
@@ -224,7 +402,7 @@ declare type OpenWhiskCredentials = {
  * access=`blob`) azure blob container
  *
  */
-declare type AzureCredentialsSAS = {
+export type AzureCredentialsSAS = {
     sasURLPrivate: string;
     sasURLPublic: string;
 };
@@ -239,7 +417,7 @@ declare type AzureCredentialsSAS = {
  * @property {string} containerName name of container to store files.
  * Another `${containerName}-public` will also be used for public files.
  */
-declare type AzureCredentialsAccount = {
+export type AzureCredentialsAccount = {
     storageAccount: string;
     storageAccessKey: string;
     containerName: string;
@@ -251,7 +429,7 @@ declare type AzureCredentialsAccount = {
  * @description a string to the remote path. If the path ends with a `/` it will
  * be treated as a directory, if not it will be treated as a file.
  */
-declare type RemotePathString = string;
+export type RemotePathString = string;
 
 /**
  * @typedef RemoteFileProperties
@@ -260,7 +438,7 @@ declare type RemotePathString = string;
  * @property {boolean} isPublic true if file is public
  * @property {string} url remote file URL with URI encoded path, use decodeURIComponent to decode the URL.
  */
-declare type RemoteFileProperties = {
+export type RemoteFileProperties = {
     isDirectory: boolean;
     isPublic: boolean;
     url: string;
@@ -271,7 +449,7 @@ declare type RemoteFileProperties = {
  * @type {Error}
  *
  */
-declare type FilesLibError = Error;
+export type FilesLibError = Error;
 
 /**
  * Files lib custom errors.
@@ -291,7 +469,7 @@ declare type FilesLibError = Error;
  * @property {FilesLibError} ERROR_BAD_FILE_TYPE this error is thrown when the filePath is not the expected type for
  * operations that need the file to be of a specific type, e.g. write on a dir would fail
  */
-declare type FilesLibErrors = {
+export type FilesLibErrors = {
     ERROR_BAD_ARGUMENT: FilesLibError;
     ERROR_NOT_IMPLEMENTED: FilesLibError;
     ERROR_BAD_CREDENTIALS: FilesLibError;

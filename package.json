@@ -6,6 +6,7 @@
   "directories": {
     "lib": "lib"
   },
+  "types": "./types.d.ts",
   "scripts": {
     "lint": "eslint index.js lib test",
     "beautify": "npm run lint -- --fix",
@@ -13,7 +14,7 @@
     "unit": "jest -c ./jest.config.js",
     "e2e": "jest -c ./jest.e2e.config.js",
     "jsdoc": "jsdoc2md -f index.js 'lib/**/*.js' > doc/api.md",
-    "typings": "jsdoc -t node_modules/tsd-jsdoc/dist -r lib -d .",
+    "typings": "jsdoc -t node_modules/tsd-jsdoc/dist -r lib -d . && replace-in-file /declare/g export types.d.ts --isRegex",
     "generate-docs": "npm run jsdoc && npm run typings"
   },
   "author": "Adobe Inc.",
@@ -42,6 +43,7 @@
     "jest": "^24.9.0",
     "jsdoc-to-markdown": "^5.0.2",
     "node-fetch": "^2.6.0",
+    "replace-in-file": "^6.1.0",
     "tsd-jsdoc": "^2.4.0"
   },
   "dependencies": {
