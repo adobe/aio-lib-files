@@ -14,7 +14,7 @@ governing permissions and limitations under the License.
 [![Downloads/week](https://img.shields.io/npm/dw/@adobe/aio-lib-files.svg)](https://npmjs.org/package/@adobe/aio-lib-files)
 [![Build Status](https://travis-ci.com/adobe/aio-lib-files.svg?branch=master)](https://travis-ci.com/adobe/aio-lib-files)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Codecov Coverage](https://img.shields.io/codecov/c/github/adobe/aio-lib-files/master.svg?style=flat-square)](https://codecov.io/gh/adobe/aio-lib-files/) 
+[![Codecov Coverage](https://img.shields.io/codecov/c/github/adobe/aio-lib-files/master.svg?style=flat-square)](https://codecov.io/gh/adobe/aio-lib-files/)
 
 # Adobe I/O Lib Files
 
@@ -88,6 +88,9 @@ npm install @adobe/aio-lib-files
   await files.copy('public/my-static-app/', 'my-static-app-copy', { localDest: true })
   /// copy remote directories around (works for files as well)
   await files.copy('public/my-static-app/', 'my/private/folder')
+
+  // Share private files
+  const presignUrl = await files.generatePresignURL('mydir/myfile.txt', { expiryInSeconds: 60 })
 ```
 
 ## Explore

@@ -33,6 +33,7 @@ describe('init', () => {
   const checkInitDebugLogNoSecrets = (str) => expect(global.mockLogDebug).not.toHaveBeenCalledWith(expect.stringContaining(str))
 
   describe('when passing azure credentials (owned by user)', () => {
+    const azureBlobTvmMock = jest.fn()
     const fakeAzureBlobConfig = {
       fake: 'azureblobconfig',
       // to be hidden
@@ -40,12 +41,22 @@ describe('init', () => {
       sasURLPublic: 'https://fakesaspublic?secret',
       storageAccessKey: 'fakestorageaccesskey'
     }
+    beforeEach(async () => {
+      TvmClient.mockReset()
+      TvmClient.init.mockReset()
+      azureBlobTvmMock.mockReset()
+      TvmClient.init.mockResolvedValue({
+        getAzureBlobCredentials: azureBlobTvmMock
+      })
+    })
 
     test('with azure config', async () => {
       await filesLib.init({ azure: fakeAzureBlobConfig })
       expect(AzureBlobFiles.init).toHaveBeenCalledTimes(1)
-      expect(AzureBlobFiles.init).toHaveBeenCalledWith(fakeAzureBlobConfig)
-      expect(TvmClient.init).toHaveBeenCalledTimes(0)
+      expect(AzureBlobFiles.init).toHaveBeenCalledWith(fakeAzureBlobConfig, {
+        getAzureBlobCredentials: azureBlobTvmMock
+      })
+      expect(TvmClient.init).toHaveBeenCalledTimes(1)
       expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('azure'))
       checkInitDebugLogNoSecrets(fakeAzureBlobConfig.storageAccessKey)
       checkInitDebugLogNoSecrets(fakeAzureBlobConfig.sasURLPrivate)
@@ -81,7 +92,9 @@ describe('init', () => {
       expect(TvmClient.init).toHaveBeenCalledTimes(1)
       expect(TvmClient.init).toHaveBeenCalledWith({ ow: fakeOWCreds, ...fakeTVMOptions })
       expect(AzureBlobFiles.init).toHaveBeenCalledTimes(1)
-      expect(AzureBlobFiles.init).toHaveBeenCalledWith(fakeTVMResponse)
+      expect(AzureBlobFiles.init).toHaveBeenCalledWith(fakeTVMResponse, {
+        getAzureBlobCredentials: azureBlobTvmMock
+      })
       expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('openwhisk'))
       checkInitDebugLogNoSecrets(fakeOWCreds.auth)
     })
@@ -92,7 +105,9 @@ describe('init', () => {
       expect(TvmClient.init).toHaveBeenCalledTimes(1)
       expect(TvmClient.init).toHaveBeenCalledWith({ ow: undefined })
       expect(AzureBlobFiles.init).toHaveBeenCalledTimes(1)
-      expect(AzureBlobFiles.init).toHaveBeenCalledWith(fakeTVMResponse)
+      expect(AzureBlobFiles.init).toHaveBeenCalledWith(fakeTVMResponse, {
+        getAzureBlobCredentials: azureBlobTvmMock
+      })
       expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('openwhisk'))
     })
 

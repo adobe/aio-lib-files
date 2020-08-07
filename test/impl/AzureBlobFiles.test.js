@@ -23,6 +23,8 @@ const fakeSASCredentials = {
 }
 const fakeAborter = 'fakeAborter'
 
+const DEFAULT_CDN_STORAGE_HOST = 'https://files.adobeio-static.net'
+
 beforeEach(async () => {
   expect.hasAssertions()
   jest.resetAllMocks()
@@ -467,7 +469,7 @@ describe('_copyRemoteToRemoteFile', () => {
 
   const src = 'a/dir/file1'
   const dest = 'public/another/dir/file2'
-  const fakeSrcURL = 'https://fakefiles.com/a/dir/file1?secret=xxx'// important to keep secret
+  const fakeSrcURL = 'https://fake.blob.core.windows.net/a/dir/file1?secret=xxx'// important to keep secret
 
   /** @type {AzureBlobFiles} */
   let files
@@ -508,17 +510,56 @@ describe('_getUrl', () => {
   })
 
   test('url with no query args', async () => {
-    const cleanUrl = 'https://fakeFiles.com/fake/fakesub/afile'
+    const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
     setMockBlobUrl(cleanUrl)
+    const expectedUrl = DEFAULT_CDN_STORAGE_HOST + '/fake/fakesub/afile'
     const url = files._getUrl('fakesub/afile')
-    expect(url).toEqual(cleanUrl)
+    expect(url).toEqual(expectedUrl)
   })
 
   test('url with query args', async () => {
-    const cleanUrl = 'https://fakeFiles.com/fake/fakesub/afile'
+    const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
     setMockBlobUrl(cleanUrl + '?password=xxxx&user=username')
+    const expectedUrl = DEFAULT_CDN_STORAGE_HOST + '/fake/fakesub/afile'
     const url = files._getUrl('fakesub/afile')
-    expect(url).toEqual(cleanUrl)
+    expect(url).toEqual(expectedUrl)
+  })
+})
+
+describe('_getPresignUrl', () => {
+  const mockBlockBlob = jest.fn()
+  const setMockBlobUrl = url => {
+    azure.BlockBlobURL.fromContainerURL = mockBlockBlob.mockReturnValue({ url })
+  }
+  /** @type {AzureBlobFiles} */
+  let files
+  beforeEach(async () => {
+    const tvm = jest.fn()
+    tvm.mockReset()
+    tvm.getAzureBlobPresignCredentials = jest.fn()
+    tvm.getAzureBlobPresignCredentials.mockResolvedValue({
+      signature: 'fakesign'
+    })
+
+    mockBlockBlob.mockReset()
+    azure.ContainerURL = jest.fn()
+    files = await AzureBlobFiles.init(fakeSASCredentials)
+    files._azure.aborter = fakeAborter
+    files.tvm = tvm
+  })
+
+  test('_getPresignUrl with no options', async () => {
+    await expect(files._getPresignUrl('fakesub/afile')).rejects.toThrow('[FilesLib:ERROR_MISSING_OPTION] expiryInSeconds')
+  })
+  test('_getPresignUrl with missing options', async () => {
+    await expect(files._getPresignUrl('fakesub/afile', { test: 'fake' })).rejects.toThrow('[FilesLib:ERROR_MISSING_OPTION] expiryInSeconds')
+  })
+  test('_getPresignUrl with correct options', async () => {
+    const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
+    setMockBlobUrl(cleanUrl)
+    const expectedUrl = DEFAULT_CDN_STORAGE_HOST + '/fake/fakesub/afile?fakesign'
+    const url = await files._getPresignUrl('fakesub/afile', { expiryInSeconds: 60 })
+    expect(url).toEqual(expectedUrl)
   })
 })
 
