@@ -390,7 +390,9 @@ Generate pre-sign URLs for a private file
 | Param | Type | Description |
 | --- | --- | --- |
 | filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
-| options | <code>object</code> | Options for presign URL |
+| options | <code>object</code> | Options to generate presign URL |
+| options.blobName | <code>string</code> | file path |
+| options.expiryInSeconds | <code>number</code> | presign URL expiry duration |
 
 <a name="Files._normalizeRemotePath"></a>
 
