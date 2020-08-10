@@ -74,6 +74,7 @@ Cloud Files Abstraction
         * *[.write(filePath, content)](#Files+write) ⇒ <code>Promise.&lt;number&gt;</code>*
         * *[.getProperties(filePath)](#Files+getProperties) ⇒ [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#RemoteFileProperties)*
         * *[.copy(srcPath, destPath, [options])](#Files+copy) ⇒ <code>Promise.&lt;object.&lt;string, string&gt;&gt;</code>*
+        * *[.generatePresignURL(filePath, options)](#Files+generatePresignURL) ⇒ [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#RemoteFileProperties)*
     * _static_
         * *[._normalizeRemotePath(filePath)](#Files._normalizeRemotePath) ⇒ <code>string</code>*
         * *[._isRemoteRoot(filePath)](#Files._isRemoteRoot) ⇒ <code>boolean</code>*
@@ -216,6 +217,8 @@ copies a file from a remote location to another.
 <a name="Files+_statusFromProviderError"></a>
 
 ### **files.\_statusFromProviderError(e) ⇒ <code>number</code>**
+[INTERNAL]
+
 **Kind**: instance abstract method of [<code>Files</code>](#Files)  
 **Returns**: <code>number</code> - status code  
 **Access**: protected  
@@ -375,6 +378,21 @@ from src to dest `{ srcFilePath: destFilePath }`
 | [options.localDest] | <code>boolean</code> | <code>false</code> | Set this option to true to copy files to the local file system. Cannot be combined with localSrc. |
 | [options.noOverwrite] | <code>boolean</code> | <code>false</code> | set to true to overwrite existing files |
 | [options.progressCallback] | <code>function</code> |  | a function that will be called every time the operation completes on a single file,the srcPath and destPath to the copied file are passed as argument to the callback `progressCallback(srcPath, destPath)` |
+
+<a name="Files+generatePresignURL"></a>
+
+### *files.generatePresignURL(filePath, options) ⇒ [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#RemoteFileProperties)*
+Generate pre-sign URLs for a private file
+
+**Kind**: instance method of [<code>Files</code>](#Files)  
+**Returns**: [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#RemoteFileProperties) - resolves [RemoteFileProperties](#RemoteFileProperties)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
+| options | <code>object</code> | Options to generate presign URL |
+| options.blobName | <code>string</code> | file path |
+| options.expiryInSeconds | <code>number</code> | presign URL expiry duration |
 
 <a name="Files._normalizeRemotePath"></a>
 
