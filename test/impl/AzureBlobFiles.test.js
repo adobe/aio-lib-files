@@ -23,7 +23,7 @@ const fakeSASCredentials = {
 }
 const fakeAborter = 'fakeAborter'
 
-const DEFAULT_CDN_STORAGE_HOST = 'https://files.adobeio-static.net'
+const DEFAULT_CDN_STORAGE_HOST = 'https://firefly.azureedge.net'
 
 beforeEach(async () => {
   expect.hasAssertions()
