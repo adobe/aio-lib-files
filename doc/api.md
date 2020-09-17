@@ -22,6 +22,9 @@
 ## Typedefs
 
 <dl>
+<dt><a href="#FilePermissions">FilePermissions</a> : <code>Object</code></dt>
+<dd><p>Read, Write, Delete permission enum</p>
+</dd>
 <dt><a href="#OpenWhiskCredentials">OpenWhiskCredentials</a> : <code>object</code></dt>
 <dd><p>An object holding the OpenWhisk credentials</p>
 </dd>
@@ -74,7 +77,7 @@ Cloud Files Abstraction
         * *[.write(filePath, content)](#Files+write) ⇒ <code>Promise.&lt;number&gt;</code>*
         * *[.getProperties(filePath)](#Files+getProperties) ⇒ [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#RemoteFileProperties)*
         * *[.copy(srcPath, destPath, [options])](#Files+copy) ⇒ <code>Promise.&lt;object.&lt;string, string&gt;&gt;</code>*
-        * *[.generatePresignURL(filePath, options)](#Files+generatePresignURL) ⇒ [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#RemoteFileProperties)*
+        * *[.generatePresignURL(filePath, options)](#Files+generatePresignURL) ⇒ <code>Promise.&lt;string&gt;</code>*
     * _static_
         * *[._normalizeRemotePath(filePath)](#Files._normalizeRemotePath) ⇒ <code>string</code>*
         * *[._isRemoteRoot(filePath)](#Files._isRemoteRoot) ⇒ <code>boolean</code>*
@@ -381,18 +384,18 @@ from src to dest `{ srcFilePath: destFilePath }`
 
 <a name="Files+generatePresignURL"></a>
 
-### *files.generatePresignURL(filePath, options) ⇒ [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#RemoteFileProperties)*
+### *files.generatePresignURL(filePath, options) ⇒ <code>Promise.&lt;string&gt;</code>*
 Generate pre-sign URLs for a private file
 
 **Kind**: instance method of [<code>Files</code>](#Files)  
-**Returns**: [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#RemoteFileProperties) - resolves [RemoteFileProperties](#RemoteFileProperties)  
+**Returns**: <code>Promise.&lt;string&gt;</code> - Presign URL for the given file  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
 | options | <code>object</code> | Options to generate presign URL |
-| options.blobName | <code>string</code> | file path |
 | options.expiryInSeconds | <code>number</code> | presign URL expiry duration |
+| options.permissions | <code>string</code> | premissions for presigned URL |
 
 <a name="Files._normalizeRemotePath"></a>
 
@@ -490,6 +493,12 @@ OpenWhisk credentials can also be read from environment variables (`__OW_NAMESPA
 | [config.tvm.apiUrl] | <code>string</code> |  | alternative tvm api url. |
 | [config.tvm.cacheFile] | <code>string</code> |  | alternative tvm cache file, set to `false` to disable caching of temporary credentials. |
 
+<a name="FilePermissions"></a>
+
+## FilePermissions : <code>Object</code>
+Read, Write, Delete permission enum
+
+**Kind**: global typedef  
 <a name="OpenWhiskCredentials"></a>
 
 ## OpenWhiskCredentials : <code>object</code>
