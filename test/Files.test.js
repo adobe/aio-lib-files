@@ -1,4 +1,4 @@
-const { Files } = require('../lib/Files')
+const { Files, FilePermissions } = require('../lib/Files')
 const upath = require('upath')
 const stream = require('stream')
 const fs = require('fs-extra')
@@ -27,6 +27,18 @@ describe('constructor', () => {
   // eslint-disable-next-line jest/expect-expect
   test('missing implementation', async () => {
     await global.expectToThrowNotImplemented(() => new Files(), 'Files')
+  })
+})
+
+describe('FilePermissions', () => {
+  // eslint-disable-next-line jest/expect-expect
+  test('check available permissions', async () => {
+    const obj = {
+      READ: 'r',
+      WRITE: 'w',
+      DELETE: 'd'
+    }
+    expect(FilePermissions).toEqual(obj)
   })
 })
 
