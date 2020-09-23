@@ -1,7 +1,7 @@
 {
+  "plugins": ["jest"],
+  "extends": ["@adobe/eslint-config-aio-lib-config"],
   "globals": {
     "NodeJS": true
-  },
-  "plugins": ["jest"],
-  "extends": ["standard", "plugin:jest/recommended", "plugin:jsdoc/recommended"]
+  }
 }

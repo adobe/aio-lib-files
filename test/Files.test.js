@@ -1,4 +1,4 @@
-const { Files } = require('../lib/Files')
+const { Files, FilePermissions } = require('../lib/Files')
 const upath = require('upath')
 const stream = require('stream')
 const fs = require('fs-extra')
@@ -27,6 +27,18 @@ describe('constructor', () => {
   // eslint-disable-next-line jest/expect-expect
   test('missing implementation', async () => {
     await global.expectToThrowNotImplemented(() => new Files(), 'Files')
+  })
+})
+
+describe('FilePermissions', () => {
+  // eslint-disable-next-line jest/expect-expect
+  test('check available permissions', async () => {
+    const obj = {
+      READ: 'r',
+      WRITE: 'w',
+      DELETE: 'd'
+    }
+    expect(FilePermissions).toEqual(obj)
   })
 })
 
@@ -958,6 +970,7 @@ describe('generatePresignURL', () => {
 
   describe('_getPresignUrl mock implementation', () => {
     const getPresignUrlMock = jest.spyOn(Files.prototype, '_getPresignUrl')
+    const options = { expiryInSeconds: 30 }
     let files
     const fakeUrl = 'http://fake.com'
 
@@ -982,27 +995,27 @@ describe('generatePresignURL', () => {
     })
 
     test('when filePath is non normalized', async () => {
-      await files.generatePresignURL('hello/../file')
-      expect(getPresignUrlMock).toHaveBeenCalledWith('file', undefined)
+      await files.generatePresignURL('hello/../file', options)
+      expect(getPresignUrlMock).toHaveBeenCalledWith('file', { expiryInSeconds: 30 })
     })
 
     test('when filePath is a private file', async () => {
-      const res = await files.generatePresignURL('a/private/file')
+      const res = await files.generatePresignURL('a/private/file', options)
       expect(res).toEqual('http://fake.com')
     })
 
     test('when filePath is a public file', async () => {
-      const res = await files.generatePresignURL('public/file')
+      const res = await files.generatePresignURL('public/file', options)
       expect(res).toEqual('http://fake.com')
     })
 
     test('when filePath is a private path starting with `public` (publicisnotpublicfile.txt)', async () => {
-      const res = await files.generatePresignURL('publicisnotpublicfile.txt')
+      const res = await files.generatePresignURL('publicisnotpublicfile.txt', options)
       expect(res).toEqual('http://fake.com')
     })
 
     test('when filePath is a public dir', async () => {
-      const res = await files.generatePresignURL('public/dir/')
+      const res = await files.generatePresignURL('public/dir/', options)
       expect(res).toEqual('http://fake.com')
     })
   })

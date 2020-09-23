@@ -91,6 +91,9 @@ npm install @adobe/aio-lib-files
 
   // Share private files
   const presignUrl = await files.generatePresignURL('mydir/myfile.txt', { expiryInSeconds: 60 })
+
+  //Share private files with read, write, delete permissions
+  const rwdPresignUrl = await files.generatePresignURL('mydir/myfile.txt', { expiryInSeconds: 60, permissions: 'rwd' })
 ```
 
 ## Explore
