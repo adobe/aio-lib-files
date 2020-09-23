@@ -12,10 +12,6 @@ governing permissions and limitations under the License.
 
 /* eslint-disable jsdoc/require-jsdoc */
 
-process.on('unhandledRejection', error => {
-  throw error
-})
-
 global.mockLogDebug = jest.fn()
 global.mockLogError = jest.fn()
 // must be mocked before any require that uses aio-lib-core-logging (doMock)

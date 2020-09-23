@@ -10,7 +10,7 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const filesLib = require('../index')
+const filesLib = require('../')
 
 const { AzureBlobFiles } = require('../lib/impl/AzureBlobFiles')
 jest.mock('../lib/impl/AzureBlobFiles.js')
