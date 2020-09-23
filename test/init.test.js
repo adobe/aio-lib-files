@@ -30,6 +30,16 @@ describe('init', () => {
     AzureBlobFiles.init = jest.fn()
   })
 
+  test('exports a function', () => {
+    expect(filesLib).toBeDefined()
+    // init()
+    expect(filesLib.init).toBeDefined()
+    expect(typeof filesLib.init).toBe('function')
+    // FilePermissions
+    expect(filesLib.FilePermissions).toBeDefined()
+    expect(filesLib.FilePermissions).toEqual(expect.objectContaining({ READ: expect.any(String), WRITE: expect.any(String) }))
+  })
+
   const checkInitDebugLogNoSecrets = (str) => expect(global.mockLogDebug).not.toHaveBeenCalledWith(expect.stringContaining(str))
 
   describe('when passing azure credentials (owned by user)', () => {
