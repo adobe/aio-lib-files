@@ -11,6 +11,7 @@ governing permissions and limitations under the License.
 */
 
 const { AzureBlobFiles } = require('../../lib/impl/AzureBlobFiles')
+const { UrlType } = require('../../lib/Files')
 const stream = require('stream')
 const cloneDeep = require('lodash.clonedeep')
 
@@ -524,6 +525,21 @@ describe('_getUrl', () => {
     const url = files._getUrl('fakesub/afile')
     expect(url).toEqual(expectedUrl)
   })
+
+  test('url with public urlType', async () => {
+    const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
+    setMockBlobUrl(cleanUrl)
+    const expectedUrl = DEFAULT_CDN_STORAGE_HOST + '/fake/fakesub/afile'
+    const url = files._getUrl('fakesub/afile', UrlType.public)
+    expect(url).toEqual(expectedUrl)
+  })
+
+  test('url with runtime urlType', async () => {
+    const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
+    setMockBlobUrl(cleanUrl)
+    const url = files._getUrl('fakesub/afile', UrlType.runtime)
+    expect(url).toEqual(cleanUrl)
+  })
 })
 
 describe('_getPresignUrl', () => {
@@ -559,6 +575,20 @@ describe('_getPresignUrl', () => {
     setMockBlobUrl(cleanUrl)
     const expectedUrl = DEFAULT_CDN_STORAGE_HOST + '/fake/fakesub/afile?fakesign'
     const url = await files._getPresignUrl('fakesub/afile', { expiryInSeconds: 60 })
+    expect(url).toEqual(expectedUrl)
+  })
+  test('_getPresignUrl with urlType public', async () => {
+    const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
+    setMockBlobUrl(cleanUrl)
+    const expectedUrl = DEFAULT_CDN_STORAGE_HOST + '/fake/fakesub/afile?fakesign'
+    const url = await files._getPresignUrl('fakesub/afile', { expiryInSeconds: 60, urlType: UrlType.public })
+    expect(url).toEqual(expectedUrl)
+  })
+  test('_getPresignUrl with urlType runtime', async () => {
+    const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
+    setMockBlobUrl(cleanUrl)
+    const expectedUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile?fakesign'
+    const url = await files._getPresignUrl('fakesub/afile', { expiryInSeconds: 60, urlType: UrlType.runtime })
     expect(url).toEqual(expectedUrl)
   })
 })

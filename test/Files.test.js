@@ -461,6 +461,7 @@ describe('getProperties', () => {
       expect(res).toEqual({
         isDirectory: false,
         isPublic: false,
+        runtimeUrl: 'http://fake.com',
         url: fakeUrl
       })
     })
@@ -470,6 +471,7 @@ describe('getProperties', () => {
       expect(res).toEqual({
         isDirectory: false,
         isPublic: true,
+        runtimeUrl: 'http://fake.com',
         url: fakeUrl
       })
     })
@@ -479,6 +481,7 @@ describe('getProperties', () => {
       expect(res).toEqual({
         isDirectory: false,
         isPublic: false,
+        runtimeUrl: 'http://fake.com',
         url: fakeUrl
       })
     })
@@ -488,6 +491,7 @@ describe('getProperties', () => {
       expect(res).toEqual({
         isDirectory: true,
         isPublic: true,
+        runtimeUrl: 'http://fake.com',
         url: fakeUrl
       })
     })
@@ -497,6 +501,7 @@ describe('getProperties', () => {
       expect(res).toEqual({
         isDirectory: true,
         isPublic: false,
+        runtimeUrl: 'http://fake.com',
         url: fakeUrl
       })
     })
@@ -506,6 +511,7 @@ describe('getProperties', () => {
       expect(res).toEqual({
         isDirectory: true,
         isPublic: true,
+        runtimeUrl: 'http://fake.com',
         url: fakeUrl
       })
     })
@@ -514,6 +520,7 @@ describe('getProperties', () => {
       const expectedRes = {
         isDirectory: true,
         isPublic: false,
+        runtimeUrl: 'http://fake.com',
         url: fakeUrl
       }
       let res = await files.getProperties('')
