@@ -10,7 +10,7 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const filesLib = require('../index')
+const filesLib = require('../')
 
 const { AzureBlobFiles } = require('../lib/impl/AzureBlobFiles')
 jest.mock('../lib/impl/AzureBlobFiles.js')
@@ -28,6 +28,16 @@ describe('init', () => {
   beforeEach(async () => {
     AzureBlobFiles.mockRestore()
     AzureBlobFiles.init = jest.fn()
+  })
+
+  test('exports a function', () => {
+    expect(filesLib).toBeDefined()
+    // init()
+    expect(filesLib.init).toBeDefined()
+    expect(typeof filesLib.init).toBe('function')
+    // FilePermissions
+    expect(filesLib.FilePermissions).toBeDefined()
+    expect(filesLib.FilePermissions).toEqual(expect.objectContaining({ READ: expect.any(String), WRITE: expect.any(String) }))
   })
 
   const checkInitDebugLogNoSecrets = (str) => expect(global.mockLogDebug).not.toHaveBeenCalledWith(expect.stringContaining(str))

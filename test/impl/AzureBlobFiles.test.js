@@ -531,10 +531,10 @@ describe('_getPresignUrl', () => {
   const setMockBlobUrl = url => {
     azure.BlockBlobURL.fromContainerURL = mockBlockBlob.mockReturnValue({ url })
   }
+  const tvm = jest.fn()
   /** @type {AzureBlobFiles} */
   let files
   beforeEach(async () => {
-    const tvm = jest.fn()
     tvm.mockReset()
     tvm.getAzureBlobPresignCredentials = jest.fn()
     tvm.getAzureBlobPresignCredentials.mockResolvedValue({
@@ -554,12 +554,22 @@ describe('_getPresignUrl', () => {
   test('_getPresignUrl with missing options', async () => {
     await expect(files._getPresignUrl('fakesub/afile', { test: 'fake' })).rejects.toThrow('[FilesLib:ERROR_MISSING_OPTION] expiryInSeconds')
   })
-  test('_getPresignUrl with correct options', async () => {
+  test('_getPresignUrl with correct options default permission', async () => {
     const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
     setMockBlobUrl(cleanUrl)
     const expectedUrl = DEFAULT_CDN_STORAGE_HOST + '/fake/fakesub/afile?fakesign'
     const url = await files._getPresignUrl('fakesub/afile', { expiryInSeconds: 60 })
     expect(url).toEqual(expectedUrl)
+    expect(tvm.getAzureBlobPresignCredentials).toHaveBeenCalledWith({ blobName: 'fakesub/afile', expiryInSeconds: 60, permissions: 'r' })
+  })
+
+  test('_getPresignUrl with correct options explicit permissions', async () => {
+    const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
+    setMockBlobUrl(cleanUrl)
+    const expectedUrl = DEFAULT_CDN_STORAGE_HOST + '/fake/fakesub/afile?fakesign'
+    const url = await files._getPresignUrl('fakesub/afile', { expiryInSeconds: 60, permissions: 'fake' })
+    expect(url).toEqual(expectedUrl)
+    expect(tvm.getAzureBlobPresignCredentials).toHaveBeenCalledWith({ blobName: 'fakesub/afile', expiryInSeconds: 60, permissions: 'fake' })
   })
 })
 

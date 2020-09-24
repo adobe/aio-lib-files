@@ -31,3 +31,5 @@ playground
 package-lock.json
 
 .e2e
+
+junit.xml
