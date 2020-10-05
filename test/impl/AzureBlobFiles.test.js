@@ -534,7 +534,7 @@ describe('_getUrl', () => {
   })
 
   test('test _getUrl custom host', async () => {
-    files = new AzureBlobFiles({ ...fakeUserCredentials, hostName: 'fakeHost' })
+    files = new AzureBlobFiles({ ...fakeUserCredentials, hostName: 'fakeHost' }, null)
     const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
     setMockBlobUrl(cleanUrl)
     const expectedUrl = 'https://fakeHost/fake/fakesub/afile'
@@ -610,6 +610,7 @@ describe('_getPresignUrl', () => {
   test('_getPresignUrl with correct options default permission own credentials', async () => {
     files.hasOwnCredentials = true
     files.credentials = fakeUserCredentials
+    files._azure.sasCreds = false
     const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
     setMockBlobUrl(cleanUrl)
     const expectedUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile?fakeSAS'
@@ -620,6 +621,7 @@ describe('_getPresignUrl', () => {
   test('_getPresignUrl with correct options explicit permission own credentials', async () => {
     files.hasOwnCredentials = true
     files.credentials = fakeUserCredentials
+    files._azure.sasCreds = false
     const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
     setMockBlobUrl(cleanUrl)
     const expectedUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile?fakeSAS'
@@ -627,9 +629,15 @@ describe('_getPresignUrl', () => {
     expect(url).toEqual(expectedUrl)
   })
 
-  test('_getAzureBlobPresignCredentials with correct options', async () => {
+  test('_getAzureBlobPresignCredentials with sas creds', async () => {
+    files.hasOwnCredentials = true
+    await expect(files._getAzureBlobPresignCredentials('fakesub/afile', { expiryInSeconds: 60 })).rejects.toThrow('[FilesLib:ERROR_UNSUPPORTED_OPERATION] Operation generatePresignURL not supported for SAS credentails')
+  })
+
+  test('_getAzureBlobPresignCredentials with account creds', async () => {
     files.hasOwnCredentials = true
     files.credentials = fakeUserCredentials
+    files._azure.sasCreds = false
     const ret = await files._getAzureBlobPresignCredentials('fakesub/afile', { expiryInSeconds: 60 })
     expect(ret).toEqual({ signature: 'fakeSAS' })
   })
