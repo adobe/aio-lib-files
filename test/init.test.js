@@ -63,10 +63,8 @@ describe('init', () => {
     test('with azure config', async () => {
       await filesLib.init({ azure: fakeAzureBlobConfig })
       expect(AzureBlobFiles.init).toHaveBeenCalledTimes(1)
-      expect(AzureBlobFiles.init).toHaveBeenCalledWith(fakeAzureBlobConfig, {
-        getAzureBlobCredentials: azureBlobTvmMock
-      })
-      expect(TvmClient.init).toHaveBeenCalledTimes(1)
+      expect(AzureBlobFiles.init).toHaveBeenCalledWith(fakeAzureBlobConfig, null)
+      expect(TvmClient.init).toHaveBeenCalledTimes(0)
       expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('azure'))
       checkInitDebugLogNoSecrets(fakeAzureBlobConfig.storageAccessKey)
       checkInitDebugLogNoSecrets(fakeAzureBlobConfig.sasURLPrivate)
