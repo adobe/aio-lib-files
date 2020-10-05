@@ -633,17 +633,9 @@ describe('_getPresignUrl', () => {
     expect(url).toEqual(expectedUrl)
   })
 
-  test('_getAzureBlobPresignCredentials with sas creds', async () => {
-    files.hasOwnCredentials = true
+  test('_getPresignUrl with correct options explicit permission own sas credentials', async () => {
+    files = await AzureBlobFiles.init(fakeSASCredentials)
     await expect(files._getAzureBlobPresignCredentials('fakesub/afile', { expiryInSeconds: 60 })).rejects.toThrow('[FilesLib:ERROR_UNSUPPORTED_OPERATION] generatePresignURL is not supported with Azure Container SAS credentials, please initialize the SDK with Azure storage account credentials instead')
-  })
-
-  test('_getAzureBlobPresignCredentials with account creds', async () => {
-    files.hasOwnCredentials = true
-    files.credentials = fakeUserCredentials
-    files._azure.sasCreds = false
-    const ret = await files._getAzureBlobPresignCredentials('fakesub/afile', { expiryInSeconds: 60 })
-    expect(ret).toEqual({ signature: 'fakeSAS' })
   })
 })
 
