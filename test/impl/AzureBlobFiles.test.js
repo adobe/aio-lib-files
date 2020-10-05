@@ -21,6 +21,11 @@ const fakeSASCredentials = {
   sasURLPrivate: 'https://fake.com/private?secret=abcd',
   sasURLPublic: 'https://fake.com/public?secret=abcd'
 }
+const fakeUserCredentials = {
+  containerName: 'fake',
+  storageAccessKey: 'fakeKey',
+  storageAccount: 'fakeAccount'
+}
 const fakeAborter = 'fakeAborter'
 
 const DEFAULT_CDN_STORAGE_HOST = 'https://firefly.azureedge.net'
@@ -52,11 +57,6 @@ const testWithProviderError = async (boundFunc, providerMock, errorDetails, file
 describe('init', () => {
   const fakeAzureAborter = 'fakeAborter'
   const mockContainerCreate = jest.fn()
-  const fakeUserCredentials = {
-    containerName: 'fake',
-    storageAccessKey: 'fakeKey',
-    storageAccount: 'fakeAccount'
-  }
 
   beforeEach(async () => {
     mockContainerCreate.mockReset()
@@ -128,12 +128,6 @@ describe('init', () => {
       expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, {})
       expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, { access: 'blob' })
       checkInitDebugLogNoSecrets(fakeUserCredentials.storageAccessKey)
-    })
-
-    test('test constructor', async () => {
-      const files = new AzureBlobFiles(fakeUserCredentials)
-      expect(files).toBeInstanceOf(AzureBlobFiles)
-      expect(files.hasOwnCredentials).toBe(true)
     })
 
     // eslint-disable-next-line jest/expect-expect
@@ -501,6 +495,9 @@ describe('_copyRemoteToRemoteFile', () => {
 })
 
 describe('_getUrl', () => {
+  const fakeAzureAborter = 'fakeAborter'
+  const mockContainerCreate = jest.fn()
+
   const mockBlockBlob = jest.fn()
   const setMockBlobUrl = url => {
     azure.BlockBlobURL.fromContainerURL = mockBlockBlob.mockReturnValue({ url })
@@ -513,6 +510,11 @@ describe('_getUrl', () => {
     azure.ContainerURL = jest.fn()
     files = await AzureBlobFiles.init(fakeSASCredentials)
     files._azure.aborter = fakeAborter
+
+    mockContainerCreate.mockReset()
+    azure.ContainerURL = { fromServiceURL: jest.fn() }
+    azure.Aborter = { none: fakeAzureAborter }
+    azure.ContainerURL.fromServiceURL.mockReturnValue({ create: mockContainerCreate })
   })
 
   test('url with no query args', async () => {
@@ -530,9 +532,21 @@ describe('_getUrl', () => {
     const url = files._getUrl('fakesub/afile')
     expect(url).toEqual(expectedUrl)
   })
+
+  test('test _getUrl custom host', async () => {
+    files = new AzureBlobFiles({ ...fakeUserCredentials, hostName: 'fakeHost' })
+    const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
+    setMockBlobUrl(cleanUrl)
+    const expectedUrl = 'https://fakeHost/fake/fakesub/afile'
+    const url = files._getUrl('fakesub/afile')
+    expect(url).toEqual(expectedUrl)
+  })
 })
 
 describe('_getPresignUrl', () => {
+  const fakeAzureAborter = 'fakeAborter'
+  const mockContainerCreate = jest.fn()
+
   const mockBlockBlob = jest.fn()
   const setMockBlobUrl = url => {
     azure.BlockBlobURL.fromContainerURL = mockBlockBlob.mockReturnValue({ url })
@@ -542,16 +556,16 @@ describe('_getPresignUrl', () => {
   let files
   azure.generateBlobSASQueryParameters = jest.fn()
   azure.BlobSASPermissions.parse = jest.fn()
-  const fakeCreds = {
-    storageAccount: 'fakeacc',
-    storageAccessKey: 'fakeKey',
-    containerName: 'fakeContainer'
-  }
 
   beforeEach(async () => {
     tvm.mockReset()
     azure.generateBlobSASQueryParameters.mockReset()
     azure.BlobSASPermissions.parse.mockReset()
+
+    mockContainerCreate.mockReset()
+    azure.ContainerURL = { fromServiceURL: jest.fn() }
+    azure.Aborter = { none: fakeAzureAborter }
+    azure.ContainerURL.fromServiceURL.mockReturnValue({ create: mockContainerCreate })
 
     // defaults that work
     azure.generateBlobSASQueryParameters.mockReturnValue({ toString: () => 'fakeSAS' })
@@ -595,7 +609,7 @@ describe('_getPresignUrl', () => {
 
   test('_getPresignUrl with correct options default permission own credentials', async () => {
     files.hasOwnCredentials = true
-    files.credentials = fakeCreds
+    files.credentials = fakeUserCredentials
     const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
     setMockBlobUrl(cleanUrl)
     const expectedUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile?fakeSAS'
@@ -605,7 +619,7 @@ describe('_getPresignUrl', () => {
 
   test('_getPresignUrl with correct options explicit permission own credentials', async () => {
     files.hasOwnCredentials = true
-    files.credentials = fakeCreds
+    files.credentials = fakeUserCredentials
     const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
     setMockBlobUrl(cleanUrl)
     const expectedUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile?fakeSAS'
@@ -615,7 +629,7 @@ describe('_getPresignUrl', () => {
 
   test('_getAzureBlobPresignCredentials with correct options', async () => {
     files.hasOwnCredentials = true
-    files.credentials = fakeCreds
+    files.credentials = fakeUserCredentials
     const ret = await files._getAzureBlobPresignCredentials('fakesub/afile', { expiryInSeconds: 60 })
     expect(ret).toEqual({ signature: 'fakeSAS' })
   })
