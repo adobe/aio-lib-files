@@ -539,6 +539,7 @@ Azure account credentials. Must have the permission to create containers.
 | storageAccount | <code>string</code> | name of azure storage account |
 | storageAccessKey | <code>string</code> | access key for azure storage account |
 | containerName | <code>string</code> | name of container to store files. Another `${containerName}-public` will also be used for public files. |
+| [hostName] | <code>string</code> | custom domain for returned URLs |
 
 <a name="RemotePathString"></a>
 

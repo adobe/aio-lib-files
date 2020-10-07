@@ -311,11 +311,13 @@ export type AzureCredentialsSAS = {
  * @property storageAccessKey - access key for azure storage account
  * @property containerName - name of container to store files.
  * Another `${containerName}-public` will also be used for public files.
+ * @property [hostName] - custom domain for returned URLs
  */
 export type AzureCredentialsAccount = {
     storageAccount: string;
     storageAccessKey: string;
     containerName: string;
+    hostName?: string;
 };
 
 /**

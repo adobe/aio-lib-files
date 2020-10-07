@@ -21,6 +21,11 @@ const fakeSASCredentials = {
   sasURLPrivate: 'https://fake.com/private?secret=abcd',
   sasURLPublic: 'https://fake.com/public?secret=abcd'
 }
+const fakeUserCredentials = {
+  containerName: 'fake',
+  storageAccessKey: 'fakeKey',
+  storageAccount: 'fakeAccount'
+}
 const fakeAborter = 'fakeAborter'
 
 const DEFAULT_CDN_STORAGE_HOST = 'https://firefly.azureedge.net'
@@ -52,11 +57,6 @@ const testWithProviderError = async (boundFunc, providerMock, errorDetails, file
 describe('init', () => {
   const fakeAzureAborter = 'fakeAborter'
   const mockContainerCreate = jest.fn()
-  const fakeUserCredentials = {
-    containerName: 'fake',
-    storageAccessKey: 'fakeKey',
-    storageAccount: 'fakeAccount'
-  }
 
   beforeEach(async () => {
     mockContainerCreate.mockReset()
@@ -495,18 +495,35 @@ describe('_copyRemoteToRemoteFile', () => {
 })
 
 describe('_getUrl', () => {
+  const fakeAzureAborter = 'fakeAborter'
+  const mockContainerCreate = jest.fn()
+
   const mockBlockBlob = jest.fn()
   const setMockBlobUrl = url => {
     azure.BlockBlobURL.fromContainerURL = mockBlockBlob.mockReturnValue({ url })
   }
+
+  const tvm = jest.fn()
+
   /** @type {AzureBlobFiles} */
   let files
 
   beforeEach(async () => {
     mockBlockBlob.mockReset()
+
+    tvm.getAzureBlobPresignCredentials = jest.fn()
+    tvm.getAzureBlobPresignCredentials.mockResolvedValue({
+      signature: 'fakesign'
+    })
+
     azure.ContainerURL = jest.fn()
-    files = await AzureBlobFiles.init(fakeSASCredentials)
+    files = await AzureBlobFiles.init(fakeSASCredentials, tvm)
     files._azure.aborter = fakeAborter
+
+    mockContainerCreate.mockReset()
+    azure.ContainerURL = { fromServiceURL: jest.fn() }
+    azure.Aborter = { none: fakeAzureAborter }
+    azure.ContainerURL.fromServiceURL.mockReturnValue({ create: mockContainerCreate })
   })
 
   test('url with no query args', async () => {
@@ -524,9 +541,21 @@ describe('_getUrl', () => {
     const url = files._getUrl('fakesub/afile')
     expect(url).toEqual(expectedUrl)
   })
+
+  test('test _getUrl custom host', async () => {
+    files = new AzureBlobFiles({ ...fakeUserCredentials, hostName: 'fakeHost' }, null)
+    const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
+    setMockBlobUrl(cleanUrl)
+    const expectedUrl = 'https://fakeHost/fake/fakesub/afile'
+    const url = files._getUrl('fakesub/afile')
+    expect(url).toEqual(expectedUrl)
+  })
 })
 
 describe('_getPresignUrl', () => {
+  const fakeAzureAborter = 'fakeAborter'
+  const mockContainerCreate = jest.fn()
+
   const mockBlockBlob = jest.fn()
   const setMockBlobUrl = url => {
     azure.BlockBlobURL.fromContainerURL = mockBlockBlob.mockReturnValue({ url })
@@ -534,18 +563,32 @@ describe('_getPresignUrl', () => {
   const tvm = jest.fn()
   /** @type {AzureBlobFiles} */
   let files
+  azure.generateBlobSASQueryParameters = jest.fn()
+  azure.BlobSASPermissions.parse = jest.fn()
+
   beforeEach(async () => {
     tvm.mockReset()
+    azure.generateBlobSASQueryParameters.mockReset()
+    azure.BlobSASPermissions.parse.mockReset()
+
+    mockContainerCreate.mockReset()
+    mockBlockBlob.mockReset()
+    azure.ContainerURL = jest.fn()
+    azure.ContainerURL.fromServiceURL = jest.fn()
+    azure.ContainerURL.fromServiceURL.mockReturnValue({ create: mockContainerCreate })
+    azure.Aborter = { none: fakeAzureAborter }
+
+    // defaults that work
+    azure.generateBlobSASQueryParameters.mockReturnValue({ toString: () => 'fakeSAS' })
+    azure.BlobSASPermissions.parse.mockReturnValue({ toString: () => 'fakePermissionStr' })
+
     tvm.getAzureBlobPresignCredentials = jest.fn()
     tvm.getAzureBlobPresignCredentials.mockResolvedValue({
       signature: 'fakesign'
     })
 
-    mockBlockBlob.mockReset()
-    azure.ContainerURL = jest.fn()
-    files = await AzureBlobFiles.init(fakeSASCredentials)
+    files = await AzureBlobFiles.init(fakeSASCredentials, tvm)
     files._azure.aborter = fakeAborter
-    files.tvm = tvm
   })
 
   test('_getPresignUrl with no options', async () => {
@@ -570,6 +613,29 @@ describe('_getPresignUrl', () => {
     const url = await files._getPresignUrl('fakesub/afile', { expiryInSeconds: 60, permissions: 'fake' })
     expect(url).toEqual(expectedUrl)
     expect(tvm.getAzureBlobPresignCredentials).toHaveBeenCalledWith({ blobName: 'fakesub/afile', expiryInSeconds: 60, permissions: 'fake' })
+  })
+
+  test('_getPresignUrl with correct options default permission own credentials', async () => {
+    files = await AzureBlobFiles.init(fakeUserCredentials)
+    const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
+    setMockBlobUrl(cleanUrl)
+    const expectedUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile?fakeSAS'
+    const url = await files._getPresignUrl('fakesub/afile', { expiryInSeconds: 60 })
+    expect(url).toEqual(expectedUrl)
+  })
+
+  test('_getPresignUrl with correct options explicit permission own credentials', async () => {
+    files = await AzureBlobFiles.init(fakeUserCredentials)
+    const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
+    setMockBlobUrl(cleanUrl)
+    const expectedUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile?fakeSAS'
+    const url = await files._getPresignUrl('fakesub/afile', { expiryInSeconds: 60, permissions: 'fake' })
+    expect(url).toEqual(expectedUrl)
+  })
+
+  test('_getPresignUrl with correct options explicit permission own sas credentials', async () => {
+    files = await AzureBlobFiles.init(fakeSASCredentials)
+    await expect(files._getAzureBlobPresignCredentials('fakesub/afile', { expiryInSeconds: 60 })).rejects.toThrow('[FilesLib:ERROR_UNSUPPORTED_OPERATION] generatePresignURL is not supported with Azure Container SAS credentials, please initialize the SDK with Azure storage account credentials instead')
   })
 })
 
