@@ -43,7 +43,7 @@ const testWithProviderError = async (boundFunc, providerMock, errorDetails, file
   }
   // 403
   providerMock.mockRejectedValue({ response: { status: 403 } })
-  await global.expectToThrowBadCredentials(boundFunc, errorDetails)
+  await global.expectToThrowBadCredentials(boundFunc, errorDetails, 'storage service')
   // unknown status 444
   let error = { response: { status: 444 }, somefield: true }
   providerMock.mockRejectedValue(error)
@@ -457,7 +457,7 @@ describe('_createWriteStream', () => {
     wrStream.write('hi')
     return new Promise(resolve => {
       wrStream.on('error', async e => {
-        await global.expectToThrowBadCredentials(() => { throw e }, { filePath: fakeFile })
+        await global.expectToThrowBadCredentials(() => { throw e }, { filePath: fakeFile }, 'storage service')
         resolve()
       })
     })
