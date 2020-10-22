@@ -395,7 +395,7 @@ Generate pre-sign URLs for a private file
 | filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
 | options | <code>object</code> | Options to generate presign URL |
 | options.expiryInSeconds | <code>number</code> | presign URL expiry duration |
-| options.permissions | <code>string</code> | premissions for presigned URL |
+| options.permissions | <code>string</code> | [permissions](#filepermissions--object) for presigned URL |
 
 <a name="Files._normalizeRemotePath"></a>
 

@@ -57,7 +57,7 @@ global.expectToThrowCustomError = async (func, code, words, expectedErrorDetails
 }
 
 global.expectToThrowBadArg = async (received, words, expectedErrorDetails) => global.expectToThrowCustomError(received, 'ERROR_BAD_ARGUMENT', words, expectedErrorDetails)
-global.expectToThrowBadCredentials = async (received, expectedErrorDetails) => global.expectToThrowCustomError(received, 'ERROR_BAD_CREDENTIALS', ['cannot', 'access', 'credentials'], expectedErrorDetails)
+global.expectToThrowBadCredentials = async (received, expectedErrorDetails, where) => global.expectToThrowCustomError(received, 'ERROR_BAD_CREDENTIALS', [`unauthorized access to the ${where}`], expectedErrorDetails)
 global.expectToThrowInternalWithStatus = async (received, status, expectedErrorDetails) => global.expectToThrowCustomError(received, 'ERROR_INTERNAL', ['' + status], expectedErrorDetails)
 global.expectToThrowInternal = async (received, expectedErrorDetails) => global.expectToThrowCustomError(received, 'ERROR_INTERNAL', ['unknown'], expectedErrorDetails)
 global.expectToThrowNotImplemented = async (received, methodName) => global.expectToThrowCustomError(received, 'ERROR_NOT_IMPLEMENTED', ['not', 'implemented', methodName], {})

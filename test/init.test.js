@@ -124,7 +124,7 @@ describe('init', () => {
       const e = new Error('tvm error')
       e.sdkDetails = { fake: 'details', status: 401 }
       azureBlobTvmMock.mockRejectedValue(e)
-      await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), e.sdkDetails)
+      await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), e.sdkDetails, 'TVM')
     })
 
     // eslint-disable-next-line jest/expect-expect
@@ -132,7 +132,7 @@ describe('init', () => {
       const e = new Error('tvm error')
       e.sdkDetails = { fake: 'details', status: 403 }
       azureBlobTvmMock.mockRejectedValue(e)
-      await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), e.sdkDetails)
+      await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), e.sdkDetails, 'TVM')
     })
 
     test('when tvm rejects with another status code (throws tvm error)', async () => {
