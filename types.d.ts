@@ -48,18 +48,23 @@ export class Files {
     protected _wrapProviderRequest(requestPromise: Promise, details: any, filePath: string): Promise;
     /**
      * @param filePath - {@link RemotePathString}
-     * @returns resolves to array of paths
+     * @returns resolves to array of {@link RemoteFileProperties}
      */
-    protected _listFolder(filePath: RemotePathString): Promise<string[]>;
+    protected _listFolder(filePath: RemotePathString): Promise<RemoteFileProperties[]>;
     /**
      * @param filePath - {@link RemotePathString}
-     * @returns resolves to array of paths
+     * @returns resolves to boolean
      */
     protected _fileExists(filePath: RemotePathString): Promise<boolean>;
     /**
      * @param filePath - {@link RemotePathString}
      */
     protected _deleteFile(filePath: RemotePathString): void;
+    /**
+     * @param filePath - {@link RemotePathString}
+     * @returns resolve to {@link RemoteFileProperties}
+     */
+    protected getFileInfo(filePath: RemotePathString): Promise<RemoteFileProperties>;
     /**
      * **NODEJS ONLY**
      * @param filePath - {@link RemotePathString}
@@ -116,9 +121,9 @@ export class Files {
      * This is comparable to bash's `ls` command
      * @param [filePath] - {@link RemotePathString} if not
      * specified list all files
-     * @returns resolves to array of paths
+     * @returns resolves to array of {@link RemoteFileProperties}
      */
-    public list(filePath?: RemotePathString): Promise<string[]>;
+    public list(filePath?: RemotePathString): Promise<RemoteFileProperties[]>;
     /**
      * Deletes a remote file or directory
      * @param filePath - {@link RemotePathString}
@@ -327,11 +332,24 @@ export type AzureCredentialsAccount = {
 export type RemotePathString = string;
 
 /**
- * @property isDirectory - true if file is a path
+ * File properties
+ * @property name - unique name of this file, it is the full path
+ * @property creationTime - utc datetime string when file was created
+ * @property lastModified - utc datetime string when file last modified
+ * @property etag - unique ( per modification ) etag for the asset
+ * @property contentLength - size, in bytes
+ * @property contentType - mime/type
+ * @property isDirectory - true if file is a directory
  * @property isPublic - true if file is public
  * @property url - remote file URL with URI encoded path, use decodeURIComponent to decode the URL.
  */
 export type RemoteFileProperties = {
+    name: string;
+    creationTime: string;
+    lastModified: string;
+    etag: string;
+    contentLength: number;
+    contentType: string;
     isDirectory: boolean;
     isPublic: boolean;
     url: string;
