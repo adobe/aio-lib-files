@@ -1020,3 +1020,33 @@ describe('generatePresignURL', () => {
     })
   })
 })
+
+describe('revokeAllPresignURLs', () => {
+  // eslint-disable-next-line jest/expect-expect
+  test('missing _revokeAllPresignUrls implementation', async () => {
+    const files = new Files(true)
+    await global.expectToThrowNotImplemented(files._revokeAllPresignUrls.bind(files, fakeFile), '_revokeAllPresignUrls')
+  })
+
+  describe('_revokeAllPresignUrls mock implementation', () => {
+    const revokePresignUrlMock = jest.spyOn(Files.prototype, '_revokeAllPresignUrls')
+    let files
+    const fakeRes = {}
+
+    beforeEach(() => {
+      files = new Files(true)
+      revokePresignUrlMock.mockReset()
+      revokePresignUrlMock.mockReturnValue(fakeRes)
+    })
+
+    afterAll(() => {
+      revokePresignUrlMock.mockRestore()
+    })
+
+    test('call revoke', async () => {
+      const res = await files.revokeAllPresignURLs()
+      expect(revokePresignUrlMock).toHaveBeenCalled()
+      expect(res).toEqual(fakeRes)
+    })
+  })
+})
