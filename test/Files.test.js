@@ -1023,13 +1023,13 @@ describe('generatePresignURL', () => {
 
 describe('revokeAllPresignURLs', () => {
   // eslint-disable-next-line jest/expect-expect
-  test('missing _revokeAllPresignUrls implementation', async () => {
+  test('missing _revokeAllPresignURLs implementation', async () => {
     const files = new Files(true)
-    await global.expectToThrowNotImplemented(files._revokeAllPresignUrls.bind(files, fakeFile), '_revokeAllPresignUrls')
+    await global.expectToThrowNotImplemented(files._revokeAllPresignURLs.bind(files, fakeFile), '_revokeAllPresignURLs')
   })
 
-  describe('_revokeAllPresignUrls mock implementation', () => {
-    const revokePresignUrlMock = jest.spyOn(Files.prototype, '_revokeAllPresignUrls')
+  describe('_revokeAllPresignURLs mock implementation', () => {
+    const revokePresignUrlMock = jest.spyOn(Files.prototype, '_revokeAllPresignURLs')
     let files
     const fakeRes = {}
 

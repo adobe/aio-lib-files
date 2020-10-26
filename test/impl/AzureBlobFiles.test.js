@@ -680,7 +680,7 @@ describe('_getPresignUrl', () => {
   })
 })
 
-describe('_revokeAllPresignUrls', () => {
+describe('_revokeAllPresignURLs', () => {
   const fakeAzureAborter = 'fakeAborter'
   const mockContainerCreate = jest.fn()
   const mockSetAccessPolicy = jest.fn()
@@ -728,20 +728,20 @@ describe('_revokeAllPresignUrls', () => {
     fakeResponse.mockResolvedValue(fakeAccessPolicy)
   })
 
-  test('_revokeAllPresignUrls via tvm', async () => {
-    await files._revokeAllPresignUrls()
+  test('_revokeAllPresignURLs via tvm', async () => {
+    await files._revokeAllPresignURLs()
     expect(tvm.revokePresignURLs).toHaveBeenCalled()
   })
 
-  test('_revokeAllPresignUrls with own credentials', async () => {
+  test('_revokeAllPresignURLs with own credentials', async () => {
     files = await AzureBlobFiles.init(fakeUserCredentials)
-    await files._revokeAllPresignUrls()
+    await files._revokeAllPresignURLs()
     expect(mockSetAccessPolicy).toHaveBeenCalled()
   })
 
-  test('_revokeAllPresignUrls with own sas credentials', async () => {
+  test('_revokeAllPresignURLs with own sas credentials', async () => {
     files = await AzureBlobFiles.init(fakeSASCredentials)
-    await expect(files._revokeAllPresignUrls()).rejects.toThrow('[FilesLib:ERROR_UNSUPPORTED_OPERATION] revokeAllPresignURLs is not supported with Azure Container SAS credentials, please initialize the SDK with Azure storage account credentials instead')
+    await expect(files._revokeAllPresignURLs()).rejects.toThrow('[FilesLib:ERROR_UNSUPPORTED_OPERATION] revokeAllPresignURLs is not supported with Azure Container SAS credentials, please initialize the SDK with Azure storage account credentials instead')
   })
 })
 
