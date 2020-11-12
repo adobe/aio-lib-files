@@ -26,6 +26,8 @@ credentials.
 Alternatively, you can bring your own cloud storage keys. Note however, that as
 of now we only support Azure Blob Storage.
 
+Please note that currently you must be a customer of [Project Firefly](https://www.adobe.io/apis/experienceplatform/project-firefly.html) to use this library. Project Firefly is a complete framework that enables enterprise developers to build and deploy custom web applications that extend Adobe Experience Cloud solutions and run on Adobe infrastructure.
+
 ## Install
 
 ```bash
