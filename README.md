@@ -12,7 +12,7 @@ governing permissions and limitations under the License.
 
 [![Version](https://img.shields.io/npm/v/@adobe/aio-lib-files.svg)](https://npmjs.org/package/@adobe/aio-lib-files)
 [![Downloads/week](https://img.shields.io/npm/dw/@adobe/aio-lib-files.svg)](https://npmjs.org/package/@adobe/aio-lib-files)
-[![Build Status](https://travis-ci.com/adobe/aio-lib-files.svg?branch=master)](https://travis-ci.com/adobe/aio-lib-files)
+![Node.js CI](https://github.com/adobe/aio-lib-files/workflows/Node.js%20CI/badge.svg)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Codecov Coverage](https://img.shields.io/codecov/c/github/adobe/aio-lib-files/master.svg?style=flat-square)](https://codecov.io/gh/adobe/aio-lib-files/)
 
@@ -25,6 +25,8 @@ credentials.
 
 Alternatively, you can bring your own cloud storage keys. Note however, that as
 of now we only support Azure Blob Storage.
+
+Please note that currently you must be a customer of [Project Firefly](https://www.adobe.io/apis/experienceplatform/project-firefly.html) to use this library. Project Firefly is a complete framework that enables enterprise developers to build and deploy custom web applications that extend Adobe Experience Cloud solutions and run on Adobe infrastructure.
 
 ## Install
 

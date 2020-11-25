@@ -9,6 +9,9 @@ the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTA
 OF ANY KIND, either express or implied. See the License for the specific language
 governing permissions and limitations under the License.
 */
+const fetch = require('node-fetch')
+jest.mock('node-fetch', () => jest.fn())
+const fakeResponse = jest.fn()
 
 const { AzureBlobFiles } = require('../../lib/impl/AzureBlobFiles')
 const stream = require('stream')
@@ -26,6 +29,10 @@ const fakeUserCredentials = {
   storageAccessKey: 'fakeKey',
   storageAccount: 'fakeAccount'
 }
+
+const fakeAccessPolicy = '<?xml version="1.0" encoding="utf-8"?><SignedIdentifiers><SignedIdentifier><Id>fakepolicy</Id><permissions></permissions></SignedIdentifier></SignedIdentifiers>'
+const fakeEmptyAccessPolicy = '<?xml version="1.0" encoding="utf-8"?><SignedIdentifiers></SignedIdentifiers>'
+const fakeEmptyAccessPolicy1 = '<?xml version="1.0" encoding="utf-8"?>'
 const fakeAborter = 'fakeAborter'
 
 const DEFAULT_CDN_STORAGE_HOST = 'https://firefly.azureedge.net'
@@ -57,12 +64,17 @@ const testWithProviderError = async (boundFunc, providerMock, errorDetails, file
 describe('init', () => {
   const fakeAzureAborter = 'fakeAborter'
   const mockContainerCreate = jest.fn()
+  const mockSetAccessPolicy = jest.fn()
 
   beforeEach(async () => {
     mockContainerCreate.mockReset()
     azure.ContainerURL = { fromServiceURL: jest.fn() }
     azure.Aborter = { none: fakeAzureAborter }
-    azure.ContainerURL.fromServiceURL.mockReturnValue({ create: mockContainerCreate })
+    azure.ContainerURL.fromServiceURL.mockReturnValue({
+      setAccessPolicy: mockSetAccessPolicy,
+      create: mockContainerCreate,
+      url: fakeSASCredentials.sasURLPrivate
+    })
   })
 
   const checkInitDebugLogNoSecrets = (str) => expect(global.mockLogDebug).not.toHaveBeenCalledWith(expect.stringContaining(str))
@@ -101,6 +113,12 @@ describe('init', () => {
   })
 
   describe('with azure storage account credentials', () => {
+    beforeEach(async () => {
+      fetch.mockResolvedValue({
+        text: fakeResponse
+      })
+      fakeResponse.mockResolvedValue(fakeAccessPolicy)
+    })
     test('when public/private blob containers do not exist', async () => {
       const files = await AzureBlobFiles.init(fakeUserCredentials)
       expect(files).toBeInstanceOf(AzureBlobFiles)
@@ -120,7 +138,6 @@ describe('init', () => {
       expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, { access: 'blob' })
 
       mockContainerCreate.mockReset()
-
       mockContainerCreate.mockRejectedValue({ body: { code: 'ContainerAlreadyExists' } })
       const files2 = await AzureBlobFiles.init(fakeUserCredentials)
       expect(files2).toBeInstanceOf(AzureBlobFiles)
@@ -128,6 +145,23 @@ describe('init', () => {
       expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, {})
       expect(mockContainerCreate).toHaveBeenCalledWith(fakeAzureAborter, { access: 'blob' })
       checkInitDebugLogNoSecrets(fakeUserCredentials.storageAccessKey)
+    })
+
+    test('when blob containers already exist but no access policy', async () => {
+      // here we make sure that no error is thrown (ignore if already exist)
+      mockContainerCreate.mockRejectedValue({ body: { Code: 'ContainerAlreadyExists' } })
+      fakeResponse.mockResolvedValueOnce(fakeEmptyAccessPolicy)
+      const files = await AzureBlobFiles.init(fakeUserCredentials)
+      expect(files).toBeInstanceOf(AzureBlobFiles)
+      expect(mockSetAccessPolicy).toHaveBeenCalledTimes(1)
+    })
+
+    test('when blob containers already exist but no access policy xml response 1', async () => {
+      // here we make sure that no error is thrown (ignore if already exist)
+      mockContainerCreate.mockRejectedValue({ body: { Code: 'ContainerAlreadyExists' } })
+      fakeResponse.mockResolvedValueOnce(fakeEmptyAccessPolicy1)
+      const files = await AzureBlobFiles.init(fakeUserCredentials)
+      expect(files).toBeInstanceOf(AzureBlobFiles)
     })
 
     // eslint-disable-next-line jest/expect-expect
@@ -624,7 +658,10 @@ describe('_getPresignUrl', () => {
     mockBlockBlob.mockReset()
     azure.ContainerURL = jest.fn()
     azure.ContainerURL.fromServiceURL = jest.fn()
-    azure.ContainerURL.fromServiceURL.mockReturnValue({ create: mockContainerCreate })
+    azure.ContainerURL.fromServiceURL.mockReturnValue({
+      create: mockContainerCreate,
+      url: fakeSASCredentials.sasURLPrivate
+    })
     azure.Aborter = { none: fakeAzureAborter }
 
     // defaults that work
@@ -636,6 +673,10 @@ describe('_getPresignUrl', () => {
       signature: 'fakesign'
     })
 
+    fetch.mockResolvedValue({
+      text: fakeResponse
+    })
+    fakeResponse.mockResolvedValue(fakeAccessPolicy)
     files = await AzureBlobFiles.init(fakeSASCredentials, tvm)
     files._azure.aborter = fakeAborter
   })
@@ -685,6 +726,71 @@ describe('_getPresignUrl', () => {
   test('_getPresignUrl with correct options explicit permission own sas credentials', async () => {
     files = await AzureBlobFiles.init(fakeSASCredentials)
     await expect(files._getAzureBlobPresignCredentials('fakesub/afile', { expiryInSeconds: 60 })).rejects.toThrow('[FilesLib:ERROR_UNSUPPORTED_OPERATION] generatePresignURL is not supported with Azure Container SAS credentials, please initialize the SDK with Azure storage account credentials instead')
+  })
+})
+
+describe('_revokeAllPresignURLs', () => {
+  const fakeAzureAborter = 'fakeAborter'
+  const mockContainerCreate = jest.fn()
+  const mockSetAccessPolicy = jest.fn()
+
+  const mockBlockBlob = jest.fn()
+  const tvm = jest.fn()
+  /** @type {AzureBlobFiles} */
+  let files
+  azure.generateBlobSASQueryParameters = jest.fn()
+  azure.BlobSASPermissions.parse = jest.fn()
+
+  beforeEach(async () => {
+    tvm.mockReset()
+    azure.generateBlobSASQueryParameters.mockReset()
+    azure.BlobSASPermissions.parse.mockReset()
+
+    mockContainerCreate.mockReset()
+    mockSetAccessPolicy.mockReset()
+    mockBlockBlob.mockReset()
+    azure.ContainerURL = jest.fn()
+    azure.ContainerURL.fromServiceURL = jest.fn()
+    azure.ContainerURL.fromServiceURL.mockReturnValue({
+      create: mockContainerCreate,
+      setAccessPolicy: mockSetAccessPolicy,
+      url: fakeSASCredentials.sasURLPrivate
+    })
+    azure.Aborter = { none: fakeAzureAborter }
+
+    // defaults that work
+    azure.generateBlobSASQueryParameters.mockReturnValue({ toString: () => 'fakeSAS' })
+    azure.BlobSASPermissions.parse.mockReturnValue({ toString: () => 'fakePermissionStr' })
+
+    tvm.revokeAzureBlobPresignCredentials = jest.fn()
+    tvm.revokeAzureBlobPresignCredentials.mockResolvedValue({})
+
+    tvm.revokePresignURLs = jest.fn()
+    tvm.revokePresignURLs.mockResolvedValue({})
+
+    files = await AzureBlobFiles.init(fakeSASCredentials, tvm)
+    files._azure.aborter = fakeAborter
+
+    fetch.mockResolvedValue({
+      text: fakeResponse
+    })
+    fakeResponse.mockResolvedValue(fakeAccessPolicy)
+  })
+
+  test('_revokeAllPresignURLs via tvm', async () => {
+    await files._revokeAllPresignURLs()
+    expect(tvm.revokePresignURLs).toHaveBeenCalled()
+  })
+
+  test('_revokeAllPresignURLs with own credentials', async () => {
+    files = await AzureBlobFiles.init(fakeUserCredentials)
+    await files._revokeAllPresignURLs()
+    expect(mockSetAccessPolicy).toHaveBeenCalled()
+  })
+
+  test('_revokeAllPresignURLs with own sas credentials', async () => {
+    files = await AzureBlobFiles.init(fakeSASCredentials)
+    await expect(files._revokeAllPresignURLs()).rejects.toThrow('[FilesLib:ERROR_UNSUPPORTED_OPERATION] revokeAllPresignURLs is not supported with Azure Container SAS credentials, please initialize the SDK with Azure storage account credentials instead')
   })
 })
 
