@@ -227,6 +227,39 @@ describe('_fileExists', () => {
   )
 })
 
+describe('getFileInfo', () => {
+  let files
+  const fileName = 'path.html'
+  const fakeFileInfo = {
+    creationTime: Date.now(),
+    lastModified: Date.now(),
+    etag: 'asdasd',
+    contentLength: 100,
+    contentType: 'test/junk'
+  }
+  const fakeAzureGetPropertiesResponse = async () => {
+    return fakeFileInfo
+  }
+  beforeEach(async () => {
+    azure.ContainerURL = jest.fn()
+    files = await AzureBlobFiles.init(fakeSASCredentials)
+    files._azure.containerURLPrivate = { getProperties: fakeAzureGetPropertiesResponse }
+    files._azure.containerURLPublic = { getProperties: fakeAzureGetPropertiesResponse }
+    files._azure.aborter = fakeAborter
+    azure.BlockBlobURL.fromContainerURL = () => {
+      return { getProperties: fakeAzureGetPropertiesResponse }
+    }
+    files._getUrl = () => {
+      return 'duke of url'
+    }
+  })
+
+  test('when it does not exist', async () => {
+    const fileInfo = await files.getFileInfo(fileName)
+    expect(fileInfo).toStrictEqual({ isDirectory: false, isPublic: false, url: 'duke of url', name: fileName, ...fakeFileInfo })
+  })
+})
+
 describe('_listFolder', () => {
   const privateDir = 'some/private/dir/'
   const publicDir = 'public/some/dir/'
@@ -242,13 +275,15 @@ describe('_listFolder', () => {
               lastModified: Date.now(),
               etag: 'asdasd',
               contentLength: 100,
-              contentType: 'test/junk'
+              contentType: 'test/junk',
+              url: 'some/url?asdklk'
             }
           }
         })
       }
     }
   }
+
   const mockContainerPublicList = jest.fn()
   const mockContainerPrivateList = jest.fn()
   const fakeListArguments = (prefix, marker) => {
@@ -271,6 +306,12 @@ describe('_listFolder', () => {
     files._azure.containerURLPrivate = { listBlobFlatSegment: mockContainerPrivateList }
     files._azure.containerURLPublic = { listBlobFlatSegment: mockContainerPublicList }
     files._azure.aborter = fakeAborter
+    azure.BlockBlobURL.fromContainerURL = () => {
+      return { url: 'some/url?asdklk' }
+    }
+    // azure.BlockBlobURL.fromContainerURL = jest.fn().mockReturnValue(() => {
+    //   return { url: 'some/url?asdklk' }
+    // })
   })
 
   // eslint-disable-next-line jsdoc/require-jsdoc
@@ -322,12 +363,13 @@ describe('_listFolder', () => {
       return fakeAzureListResponse(publicFiles[count++], count < publicFiles.length)
     })
     const fileList = await files._listFolder(publicDir)
-    expect(fileList).toStrictEqual(expect.arrayContaining([expect.objectContaining({
+    expect(fileList).toEqual(expect.arrayContaining([expect.objectContaining({
       name: expect.any(String),
       contentLength: expect.any(Number),
       etag: expect.any(String),
       lastModified: expect.any(Number),
       creationTime: expect.any(Number),
+      url: 'some/url',
       contentType: 'test/junk'
     })]))
 
