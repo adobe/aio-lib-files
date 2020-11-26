@@ -8,7 +8,6 @@
   },
   "types": "./types.d.ts",
   "scripts": {
-    "j": "node jtest.js",
     "lint": "eslint lib test",
     "beautify": "npm run lint -- --fix",
     "test": "npm run unit && npm run lint",
