@@ -227,10 +227,63 @@ describe('_fileExists', () => {
   )
 })
 
+describe('getFileInfo', () => {
+  let files
+  const fileName = 'path.html'
+  const fakeFileInfo = {
+    creationTime: Date.now(),
+    lastModified: Date.now(),
+    etag: 'asdasd',
+    contentLength: 100,
+    contentType: 'test/junk'
+  }
+  const fakeAzureGetPropertiesResponse = async () => {
+    return fakeFileInfo
+  }
+  beforeEach(async () => {
+    azure.ContainerURL = jest.fn()
+    files = await AzureBlobFiles.init(fakeSASCredentials)
+    files._azure.containerURLPrivate = { getProperties: fakeAzureGetPropertiesResponse }
+    files._azure.containerURLPublic = { getProperties: fakeAzureGetPropertiesResponse }
+    files._azure.aborter = fakeAborter
+    azure.BlockBlobURL.fromContainerURL = () => {
+      return { getProperties: fakeAzureGetPropertiesResponse }
+    }
+    files._getUrl = () => {
+      return 'duke of url'
+    }
+  })
+
+  test('when it does not exist', async () => {
+    const fileInfo = await files.getFileInfo(fileName)
+    expect(fileInfo).toStrictEqual({ isDirectory: false, isPublic: false, url: 'duke of url', name: fileName, ...fakeFileInfo })
+  })
+})
+
 describe('_listFolder', () => {
   const privateDir = 'some/private/dir/'
   const publicDir = 'public/some/dir/'
-  const fakeAzureListResponse = (files, marker) => { return { marker: marker, segment: { blobItems: files.map(name => { return { name } }) } } }
+  const fakeAzureListResponse = (files, marker) => {
+    return {
+      marker: marker,
+      segment: {
+        blobItems: files.map(name => {
+          return {
+            name,
+            properties: {
+              creationTime: Date.now(),
+              lastModified: Date.now(),
+              etag: 'asdasd',
+              contentLength: 100,
+              contentType: 'test/junk',
+              url: 'some/url?asdklk'
+            }
+          }
+        })
+      }
+    }
+  }
+
   const mockContainerPublicList = jest.fn()
   const mockContainerPrivateList = jest.fn()
   const fakeListArguments = (prefix, marker) => {
@@ -253,6 +306,12 @@ describe('_listFolder', () => {
     files._azure.containerURLPrivate = { listBlobFlatSegment: mockContainerPrivateList }
     files._azure.containerURLPublic = { listBlobFlatSegment: mockContainerPublicList }
     files._azure.aborter = fakeAborter
+    azure.BlockBlobURL.fromContainerURL = () => {
+      return { url: 'some/url?asdklk' }
+    }
+    // azure.BlockBlobURL.fromContainerURL = jest.fn().mockReturnValue(() => {
+    //   return { url: 'some/url?asdklk' }
+    // })
   })
 
   // eslint-disable-next-line jsdoc/require-jsdoc
@@ -262,27 +321,59 @@ describe('_listFolder', () => {
       const privateFiles = fakeFiles2.map(f => privateDir + f)
       mockContainerPublicList.mockResolvedValue(fakeAzureListResponse(publicFiles))
       mockContainerPrivateList.mockResolvedValue(fakeAzureListResponse(privateFiles))
-      expect((await files._listFolder(filePath)).sort()).toEqual(((listsPublic ? publicFiles : []).concat((listsPrivate ? privateFiles : []))).sort())
+
+      const fileList = await files._listFolder(filePath)
+      expect(fileList).toStrictEqual(expect.arrayContaining([expect.objectContaining({ name: expect.any(String) })]))
+      // expect length of returned list to equal sum
+      expect(fileList.length).toBe((listsPublic ? publicFiles.length : 0) + (listsPrivate ? privateFiles.length : 0))
+
       expect(mockContainerPublicList).toHaveBeenCalledTimes(listsPublic ? 1 : 0)
-      if (listsPublic) expect(mockContainerPublicList).toHaveBeenCalledWith(...fakeListArguments(isRoot ? 'public' : filePath))
       expect(mockContainerPrivateList).toHaveBeenCalledTimes(listsPrivate ? 1 : 0)
-      if (listsPrivate) expect(mockContainerPrivateList).toHaveBeenCalledWith(...fakeListArguments(isRoot ? '' : filePath))
+
+      if (listsPublic) {
+        expect(mockContainerPublicList).toHaveBeenCalledWith(...fakeListArguments(isRoot ? 'public' : filePath))
+      }
+
+      if (listsPrivate) {
+        expect(mockContainerPrivateList).toHaveBeenCalledWith(...fakeListArguments(isRoot ? '' : filePath))
+      }
     }
   }
 
   // eslint-disable-next-line jest/no-commented-out-tests
   // test('when it is the root (`/`)', testListFolder('/', true, true, true)) // => this test is not valid as we assume
   // that only normalized path should be passed azure blob files functions
-  test('when it is the root (empty string)', testListFolder('', true, true, true)) // eslint-disable-line jest/expect-expect
 
-  test('when it is a private', testListFolder(privateDir, false, true)) // eslint-disable-line jest/expect-expect
-  test('when it is a public', testListFolder(publicDir, true, false)) // eslint-disable-line jest/expect-expect
+  test('when it is the root (empty string)', () => {
+    expect(testListFolder('', true, true, true)).not.toThrow()
+  })
+
+  test('when it is a private', () => {
+    expect(testListFolder(privateDir, false, true)).not.toThrow()
+  })
+
+  test('when it is a public', () => {
+    expect(testListFolder(publicDir, true, false)).not.toThrow()
+  })
 
   test('when multiple calls are needed to list all files', async () => {
     const publicFiles = multiFakeFiles.map(arr => arr.map(f => publicDir + f))
     let count = 0
-    mockContainerPublicList.mockImplementation(async () => { return fakeAzureListResponse(publicFiles[count++], count < publicFiles.length) })
-    expect(await files._listFolder(publicDir)).toEqual(publicFiles.reduce((prev, curr) => prev.concat(curr), []))
+    mockContainerPublicList.mockImplementation(async () => {
+      return fakeAzureListResponse(publicFiles[count++], count < publicFiles.length)
+    })
+    const fileList = await files._listFolder(publicDir)
+    expect(fileList).toEqual(expect.arrayContaining([expect.objectContaining({
+      name: expect.any(String),
+      contentLength: expect.any(Number),
+      etag: expect.any(String),
+      lastModified: expect.any(Number),
+      creationTime: expect.any(Number),
+      url: 'some/url',
+      contentType: 'test/junk'
+    })]))
+
+    expect(fileList.length).toEqual(7)
     expect(mockContainerPublicList).toHaveBeenCalledTimes(3)
     expect(mockContainerPrivateList).toHaveBeenCalledTimes(0)
     expect(mockContainerPublicList).toHaveBeenCalledWith(...fakeListArguments(publicDir))

@@ -42,83 +42,126 @@ describe('FilePermissions', () => {
   })
 })
 
-describe('list', () => {
-  // eslint-disable-next-line jest/expect-expect
-  test('missing _fileExists implementation', async () => {
-    const files = new Files(true)
-    await global.expectToThrowNotImplemented(files.list.bind(files, fakeFile), '_fileExists')
+describe('missing implementation', () => {
+  const files = new Files(true)
+  test('list', async () => {
+    await expect(files.list('anything')).rejects.toThrow('not implemented')
+    await expect(files.list('/')).rejects.toThrow('not implemented')
+  })
+  test('getFileInfo', async () => {
+    await expect(files.getFileInfo('hello/../afile.txt')).rejects.toThrow('not implemented')
+  })
+  test('delete', async () => {
+    await expect(files.delete('anything')).rejects.toThrow('not implemented')
+  })
+  test('createReadStream', async () => {
+    await expect(files.createReadStream('anything')).rejects.toThrow('not implemented')
+  })
+  test('createWriteStream', async () => {
+    await expect(files.createWriteStream('anything')).rejects.toThrow('not implemented')
+  })
+  test('getProperties', async () => {
+    await expect(files.getProperties('anything')).rejects.toThrow('not implemented')
+  })
+  test('read', async () => {
+    await expect(files.read('anything')).rejects.toThrow('not implemented')
+  })
+  test('write', async () => {
+    await expect(files.write('anything', 'else')).rejects.toThrow('not implemented')
+  })
+  test('copy', async () => {
+    await expect(files.copy('anything', 'somewheres')).rejects.toThrow('not implemented')
+  })
+  test('generatePresignURL', async () => {
+    await expect(files.generatePresignURL('anything', {
+      // Why call them options if they are required?
+      expiryInSeconds: 100
+    })).rejects.toThrow('not implemented')
+  })
+  test('_getPresignUrl', async () => {
+    await expect(files._getPresignUrl('anything')).rejects.toThrow('not implemented')
+  })
+})
+
+describe('list :: _fileExists and _listFolder mock implementations', () => {
+  const fileExistsMock = jest.spyOn(Files.prototype, '_fileExists')
+  const listFolderMock = jest.spyOn(Files.prototype, '_listFolder')
+  const getFileInfo = jest.spyOn(Files.prototype, 'getFileInfo')
+
+  const fakeFiles = (dir) => ujoinFiles(dir, ['a/b/c/d.txt', 'e.jpg', 'f/g/h.html'])
+  let files
+
+  beforeEach(() => {
+    files = new Files(true)
+    fileExistsMock.mockReset()
+    listFolderMock.mockReset()
+    getFileInfo.mockReset()
+    // defaults that work
+    listFolderMock.mockImplementation(async (...args) => fakeFiles(...args))
+    getFileInfo.mockImplementation(async (...args) => { return { path: args[0] } })
+  })
+
+  afterAll(() => {
+    fileExistsMock.mockRestore()
+    listFolderMock.mockRestore()
   })
 
   // eslint-disable-next-line jest/expect-expect
-  test('missing _listFolder implementation', async () => {
-    const files = new Files(true)
-    await global.expectToThrowNotImplemented(files.list.bind(files, '/'), '_listFolder')
+  test('when path is not a valid string', async () => {
+    await global.expectToThrowBadArg(files.list.bind(files, 123), ['filePath', 'string'], { filePath: 123 })
   })
 
-  describe('_fileExists and _listFolder mock implementations', () => {
-    const fileExistsMock = jest.spyOn(Files.prototype, '_fileExists')
-    const listFolderMock = jest.spyOn(Files.prototype, '_listFolder')
+  test('when list(path) is an existing file', async () => {
+    fileExistsMock.mockImplementation(async () => true)
+    getFileInfo.mockImplementation(async () => { return { a: 9 } })
+    let res = await files.list('hey.txt')
+    expect(res).toEqual([{ a: 9 }])
 
-    const fakeFiles = (dir) => ujoinFiles(dir, ['a/b/c/d.txt', 'e.jpg', 'f/g/h.html'])
-    let files
+    getFileInfo.mockImplementation(async () => null)
+    res = await files.list('hey.txt')
+    expect(res).toEqual([])
+  })
 
-    beforeEach(() => {
-      files = new Files(true)
-      fileExistsMock.mockReset()
-      listFolderMock.mockReset()
-      // defaults that work
-      listFolderMock.mockImplementation(async (...args) => fakeFiles(...args))
-    })
+  test('when path is an existing file with a non normalized path', async () => {
+    fileExistsMock.mockResolvedValue(true)
+    const res = await files.list('hello/../afile.txt')
+    expect(res).toEqual([expect.objectContaining({ path: 'afile.txt' })])
+    expect(getFileInfo).toHaveBeenCalledWith('afile.txt')
+    expect(listFolderMock).toHaveBeenCalledTimes(0)
+  })
 
-    afterAll(() => {
-      fileExistsMock.mockRestore()
-      listFolderMock.mockRestore()
-    })
+  test('when path is a non existing file', async () => {
+    fileExistsMock.mockResolvedValue(false)
+    getFileInfo.mockImplementation(async (...args) => { return null })
+    const res = await files.list('afile.txt')
+    expect(res).toEqual([])
+    expect(fileExistsMock).toHaveBeenCalledTimes(1)
+    expect(listFolderMock).toHaveBeenCalledTimes(0)
+  })
 
-    // eslint-disable-next-line jest/expect-expect
-    test('when path is not a valid string', async () => {
-      await global.expectToThrowBadArg(files.list.bind(files, 123), ['filePath', 'string'], { filePath: 123 })
-    })
+  const testRootFolder = async (dir) => {
+    const res = await files.list(dir)
+    expect(res).toEqual(fakeFiles(''))
+    expect(fileExistsMock).toHaveBeenCalledTimes(0)
+    expect(listFolderMock).toHaveBeenCalledTimes(1)
+  }
 
-    test('when path is an existing file with a non normalized path', async () => {
-      fileExistsMock.mockResolvedValue(true)
-      const res = await files.list('hello/../afile.txt')
-      expect(res).toEqual(['afile.txt'])
-      expect(fileExistsMock).toHaveBeenCalledWith('afile.txt')
-      expect(listFolderMock).toHaveBeenCalledTimes(0)
-    })
+  test('when path is undefined (root folder)', async () => testRootFolder()) // eslint-disable-line jest/expect-expect
+  test('when path is / (root folder)', async () => testRootFolder('/')) // eslint-disable-line jest/expect-expect
+  test('when path is \'\' (root folder)', async () => testRootFolder('')) // eslint-disable-line jest/expect-expect
+  test('when path is \'.\' (root folder)', async () => testRootFolder('.')) // eslint-disable-line jest/expect-expect
 
-    test('when path is a non existing file', async () => {
-      fileExistsMock.mockResolvedValue(false)
-      const res = await files.list('afile.txt')
-      expect(res).toEqual([])
-      expect(fileExistsMock).toHaveBeenCalledTimes(1)
-      expect(listFolderMock).toHaveBeenCalledTimes(0)
-    })
-    const testRootFolder = async (dir) => {
-      const res = await files.list(dir)
-      expect(res).toEqual(fakeFiles(''))
-      expect(fileExistsMock).toHaveBeenCalledTimes(0)
-      expect(listFolderMock).toHaveBeenCalledTimes(1)
-    }
+  test('when path is a non normalized directory', async () => {
+    const res = await files.list('hello/../hi/')
+    expect(res).toEqual(fakeFiles('hi/'))
+    expect(fileExistsMock).toHaveBeenCalledTimes(0)
+    expect(listFolderMock).toHaveBeenCalledWith('hi/')
+  })
 
-    test('when path is undefined (root folder)', async () => testRootFolder()) // eslint-disable-line jest/expect-expect
-    test('when path is / (root folder)', async () => testRootFolder('/')) // eslint-disable-line jest/expect-expect
-    test('when path is \'\' (root folder)', async () => testRootFolder('')) // eslint-disable-line jest/expect-expect
-    test('when path is \'.\' (root folder)', async () => testRootFolder('.')) // eslint-disable-line jest/expect-expect
-
-    test('when path is a non normalized directory', async () => {
-      const res = await files.list('hello/../hi/')
-      expect(res).toEqual(fakeFiles('hi/'))
-      expect(fileExistsMock).toHaveBeenCalledTimes(0)
-      expect(listFolderMock).toHaveBeenCalledWith('hi/')
-    })
-
-    test('when path is an empty directory', async () => {
-      listFolderMock.mockResolvedValue([])
-      const res = await files.list('hello/../hi/')
-      expect(res).toEqual([])
-    })
+  test('when path is an empty directory', async () => {
+    listFolderMock.mockResolvedValue([])
+    const res = await files.list('hello/../hi/')
+    expect(res).toEqual([])
   })
 })
 
@@ -437,109 +480,76 @@ describe('getProperties', () => {
     const files = new Files(true)
     await global.expectToThrowNotImplemented(files._getUrl.bind(files, fakeFile), '_getUrl')
   })
+})
 
-  describe('_getUrl mock implementation', () => {
-    const getUrlMock = jest.spyOn(Files.prototype, '_getUrl')
-    let files
-    const fakeUrl = 'http://fake.com'
+describe('_getUrl mock implementation', () => {
+  const getUrlMock = jest.spyOn(Files.prototype, '_getUrl')
+  const getFileInfoMock = jest.spyOn(Files.prototype, 'getFileInfo')
+  let files
+  const fakeUrl = 'http://fake.com'
 
-    beforeEach(() => {
-      files = new Files(true)
-      getUrlMock.mockReset()
-      getUrlMock.mockReturnValue(fakeUrl)
+  beforeEach(() => {
+    files = new Files(true)
+    getUrlMock.mockReset()
+    getUrlMock.mockReturnValue(fakeUrl)
+    getFileInfoMock.mockReset()
+  })
+
+  afterAll(() => {
+    getUrlMock.mockRestore()
+    getFileInfoMock.mockRestore()
+  })
+
+  // eslint-disable-next-line jest/expect-expect
+  test('when path is not a valid string', async () => {
+    await global.expectToThrowBadArg(files.write.bind(files, 123), ['filePath', 'string'], { filePath: 123 })
+  })
+
+  // eslint-disable-next-line jest/expect-expect
+  test('when path undefined', async () => {
+    await global.expectToThrowBadArg(files.write.bind(files, undefined), ['filePath', 'required'], { filePath: undefined })
+  })
+
+  test('when filePath is non normalized', async () => {
+    await files.getProperties('hello/../file')
+    expect(getFileInfoMock).toHaveBeenCalledWith('file')
+  })
+
+  test('when filePath is a private file', async () => {
+    getFileInfoMock.mockReturnValue({
+      isDirectory: false,
+      isPublic: false,
+      url: fakeUrl
     })
-
-    afterAll(() => {
-      getUrlMock.mockRestore()
+    const res = await files.getProperties('a/private/file')
+    expect(res).toEqual({
+      isDirectory: false,
+      isPublic: false,
+      url: fakeUrl
     })
+  })
 
-    // eslint-disable-next-line jest/expect-expect
-    test('when path is not a valid string', async () => {
-      await global.expectToThrowBadArg(files.write.bind(files, 123), ['filePath', 'string'], { filePath: 123 })
+  test('when filePath is a public file', async () => {
+    getFileInfoMock.mockReturnValue({
+      isDirectory: false,
+      isPublic: true,
+      url: fakeUrl
     })
-
-    // eslint-disable-next-line jest/expect-expect
-    test('when path undefined', async () => {
-      await global.expectToThrowBadArg(files.write.bind(files, undefined), ['filePath', 'required'], { filePath: undefined })
-    })
-
-    test('when filePath is non normalized', async () => {
-      await files.getProperties('hello/../file')
-      expect(getUrlMock).toHaveBeenCalledWith('file')
-    })
-
-    test('when filePath is a private file', async () => {
-      const res = await files.getProperties('a/private/file')
-      expect(res).toEqual({
-        isDirectory: false,
-        isPublic: false,
-        url: fakeUrl
-      })
-    })
-
-    test('when filePath is a public file', async () => {
-      const res = await files.getProperties('public/file')
-      expect(res).toEqual({
-        isDirectory: false,
-        isPublic: true,
-        url: fakeUrl
-      })
-    })
-
-    test('when filePath is a private path starting with `public` (publicisnotpublicfile.txt)', async () => {
-      const res = await files.getProperties('publicisnotpublicfile.txt')
-      expect(res).toEqual({
-        isDirectory: false,
-        isPublic: false,
-        url: fakeUrl
-      })
-    })
-
-    test('when filePath is a public dir', async () => {
-      const res = await files.getProperties('public/dir/')
-      expect(res).toEqual({
-        isDirectory: true,
-        isPublic: true,
-        url: fakeUrl
-      })
-    })
-
-    test('when filePath is a private dir', async () => {
-      const res = await files.getProperties('a/private/dir/')
-      expect(res).toEqual({
-        isDirectory: true,
-        isPublic: false,
-        url: fakeUrl
-      })
-    })
-
-    test('when filePath is public root (public)', async () => {
-      const res = await files.getProperties('public')
-      expect(res).toEqual({
-        isDirectory: true,
-        isPublic: true,
-        url: fakeUrl
-      })
-    })
-
-    test('when filePath is root ("" or /)', async () => {
-      const expectedRes = {
-        isDirectory: true,
-        isPublic: false,
-        url: fakeUrl
-      }
-      let res = await files.getProperties('')
-      expect(res).toEqual(expectedRes)
-      res = await files.getProperties('/')
-      expect(res).toEqual(expectedRes)
+    const res = await files.getProperties('public/file')
+    expect(res).toEqual({
+      isDirectory: false,
+      isPublic: true,
+      url: fakeUrl
     })
   })
 })
 
-// eslint-disable-next-line jest/expect-expect
-test('missing _statusFromProviderError implementation', async () => {
-  const files = new Files(true)
-  await global.expectToThrowNotImplemented(files._statusFromProviderError.bind(files, 'error'), '_statusFromProviderError')
+describe('_statusFromProviderError', () => {
+  // eslint-disable-next-line jest/expect-expect
+  test('missing implementation', async () => {
+    const files = new Files(true)
+    await global.expectToThrowNotImplemented(files._statusFromProviderError.bind(files, 'error'), '_statusFromProviderError')
+  })
 })
 
 describe('copy', () => {
@@ -762,7 +772,7 @@ describe('copy', () => {
       test('when src and dest are files and noOverwrite set to true and progressCallback is set', async () => {
         addFiles([fakeSrcFile], { local: localSrc })
         addFiles([fakeDestFile], { local: localDest })
-        await testCopyOk(fakeSrcFile, fakeDestFile, { ...localOptions, noOverwrite: true, progressCallback: jest.fn() }, { })
+        await testCopyOk(fakeSrcFile, fakeDestFile, { ...localOptions, noOverwrite: true, progressCallback: jest.fn() }, {})
       })
 
       // eslint-disable-next-line jest/expect-expect
