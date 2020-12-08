@@ -122,6 +122,19 @@ Wraps errors for request to the cloud provider
 
 ### **files.\_deleteFile(filePath)**
 **Kind**: instance abstract method of [<code>Files</code>](#Files)  
+**Returns**: <code>Promise.&lt;boolean&gt;</code> - resolves to boolean  
+
+**Access**: protected  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
+
+<a name="Files+getFileInfo"></a>
+
+### **files.getFileInfo(filePath) ⇒ [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#RemoteFileProperties)**
+**Kind**: instance abstract method of [<code>Files</code>](#Files)  
+**Returns**: [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#RemoteFileProperties) - resolve to [RemoteFileProperties](#RemoteFileProperties)  
 **Access**: protected  
 
 | Param | Type | Description |
@@ -237,6 +250,7 @@ copies a file from a remote location to another.
 ### *files.list([filePath]) ⇒ <code>Promise.&lt;Array.&lt;RemoteFileProperties&gt;&gt;</code>*
 Lists files in a remote folder. If called on a file returns the file info if the file exists.
 If the file or folder does not exist returns an empty array.
+
 
 **Kind**: instance method of [<code>Files</code>](#Files)  
 **Returns**: <code>Promise.&lt;Array.&lt;RemoteFileProperties&gt;&gt;</code> - resolves to array of [RemoteFileProperties](#RemoteFileProperties)  

@@ -53,8 +53,14 @@ export class Files {
     protected _listFolder(filePath: RemotePathString): Promise<RemoteFileProperties[]>;
     /**
      * @param filePath - {@link RemotePathString}
+     * @returns resolves to boolean
      */
     protected _deleteFile(filePath: RemotePathString): void;
+    /**
+     * @param filePath - {@link RemotePathString}
+     * @returns resolve to {@link RemoteFileProperties}
+     */
+    protected getFileInfo(filePath: RemotePathString): Promise<RemoteFileProperties>;
     /**
      * @param filePath - {@link RemotePathString}
      * @returns resolve to {@link RemoteFileProperties}

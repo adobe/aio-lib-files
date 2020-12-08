@@ -188,7 +188,6 @@ describe('list :: _fileExists and _listFolder mock implementations', () => {
     expect(res).toEqual(fakeFiles('hi/'))
     expect(listFolderMock).toHaveBeenCalledWith('hi/')
   })
-
   test('when path is an empty directory', async () => {
     listFolderMock.mockResolvedValue([])
     const res = await files.list('hello/../hi/')
