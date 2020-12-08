@@ -83,8 +83,47 @@ describe('missing implementation', () => {
   })
 })
 
+describe('_isRemoteRoot + _isRemotePublic protected static base class methods', () => {
+  test('return expected booleans', () => {
+    class Implementor extends Files {
+      isRemotePublic (usePath) {
+        return Files._isRemotePublic(usePath)
+      }
+
+      isRemoteRoot (usePath) {
+        return Files._isRemoteRoot(usePath)
+      }
+    }
+    const instance = new Implementor()
+
+    expect(instance.isRemotePublic).toBeDefined()
+    expect(instance.isRemotePublic('')).toBe(false)
+    expect(instance.isRemotePublic('/')).toBe(false)
+    expect(instance.isRemotePublic(Files.publicPrefix)).toBe(true)
+    expect(instance.isRemotePublic('not public')).toBe(false)
+
+    expect(instance.isRemoteRoot).toBeDefined()
+    expect(instance.isRemoteRoot('/')).toBe(false)
+    expect(instance.isRemoteRoot('')).toBe(true)
+    expect(instance.isRemoteRoot('not the root')).toBe(false)
+  })
+})
+
+describe('_wrapProviderRequest', () => {
+  test('return expected results', async () => {
+    class Implementor extends Files {
+      async wrapProviderRequest (requestPromise, details, filePathToThrowOn404) {
+        return this._wrapProviderRequest(requestPromise, details, filePathToThrowOn404)
+      }
+    }
+    const instance = new Implementor()
+    expect(instance.wrapProviderRequest).toBeDefined()
+    await expect(instance.wrapProviderRequest(Promise.resolve('ok'), 'details', true)).resolves.toBe('ok')
+    await expect(instance.wrapProviderRequest(Promise.reject(new Error('just because')), 'details', true)).rejects.toThrow('ERROR_NOT_IMPLEMENTED')
+  })
+})
+
 describe('list :: _fileExists and _listFolder mock implementations', () => {
-  const fileExistsMock = jest.spyOn(Files.prototype, '_fileExists')
   const listFolderMock = jest.spyOn(Files.prototype, '_listFolder')
   const getFileInfo = jest.spyOn(Files.prototype, 'getFileInfo')
 
@@ -93,7 +132,6 @@ describe('list :: _fileExists and _listFolder mock implementations', () => {
 
   beforeEach(() => {
     files = new Files(true)
-    fileExistsMock.mockReset()
     listFolderMock.mockReset()
     getFileInfo.mockReset()
     // defaults that work
@@ -102,7 +140,6 @@ describe('list :: _fileExists and _listFolder mock implementations', () => {
   })
 
   afterAll(() => {
-    fileExistsMock.mockRestore()
     listFolderMock.mockRestore()
   })
 
@@ -112,7 +149,6 @@ describe('list :: _fileExists and _listFolder mock implementations', () => {
   })
 
   test('when list(path) is an existing file', async () => {
-    fileExistsMock.mockImplementation(async () => true)
     getFileInfo.mockImplementation(async () => { return { a: 9 } })
     let res = await files.list('hey.txt')
     expect(res).toEqual([{ a: 9 }])
@@ -123,7 +159,6 @@ describe('list :: _fileExists and _listFolder mock implementations', () => {
   })
 
   test('when path is an existing file with a non normalized path', async () => {
-    fileExistsMock.mockResolvedValue(true)
     const res = await files.list('hello/../afile.txt')
     expect(res).toEqual([expect.objectContaining({ path: 'afile.txt' })])
     expect(getFileInfo).toHaveBeenCalledWith('afile.txt')
@@ -131,18 +166,15 @@ describe('list :: _fileExists and _listFolder mock implementations', () => {
   })
 
   test('when path is a non existing file', async () => {
-    fileExistsMock.mockResolvedValue(false)
     getFileInfo.mockImplementation(async (...args) => { return null })
     const res = await files.list('afile.txt')
     expect(res).toEqual([])
-    expect(fileExistsMock).toHaveBeenCalledTimes(1)
     expect(listFolderMock).toHaveBeenCalledTimes(0)
   })
 
   const testRootFolder = async (dir) => {
     const res = await files.list(dir)
     expect(res).toEqual(fakeFiles(''))
-    expect(fileExistsMock).toHaveBeenCalledTimes(0)
     expect(listFolderMock).toHaveBeenCalledTimes(1)
   }
 
@@ -154,7 +186,6 @@ describe('list :: _fileExists and _listFolder mock implementations', () => {
   test('when path is a non normalized directory', async () => {
     const res = await files.list('hello/../hi/')
     expect(res).toEqual(fakeFiles('hi/'))
-    expect(fileExistsMock).toHaveBeenCalledTimes(0)
     expect(listFolderMock).toHaveBeenCalledWith('hi/')
   })
 
@@ -570,47 +601,65 @@ describe('copy', () => {
 
     // eslint-disable-next-line jest/expect-expect
     test('when srcPath is not a valid string', async () => {
-      await global.expectToThrowBadArg(files.copy.bind(files, 123, 'dest'), ['srcPath', 'string'], { srcPath: 123, destPath: 'dest', options: {} })
+      await global.expectToThrowBadArg(files.copy.bind(files, 123, 'dest'),
+        ['srcPath', 'string'],
+        { srcPath: 123, destPath: 'dest', options: {} })
     })
 
     // eslint-disable-next-line jest/expect-expect
     test('when destPath is not a valid string', async () => {
-      await global.expectToThrowBadArg(files.copy.bind(files, 'src', 123), ['destPath', 'string'], { srcPath: 'src', destPath: 123, options: {} })
+      await global.expectToThrowBadArg(files.copy.bind(files, 'src', 123),
+        ['destPath', 'string'],
+        { srcPath: 'src', destPath: 123, options: {} })
     })
 
     // eslint-disable-next-line jest/expect-expect
     test('when srcPath is undefined', async () => {
-      await global.expectToThrowBadArg(files.copy.bind(files, undefined, 'dest'), ['srcPath', 'required'], { srcPath: undefined, destPath: 'dest', options: {} })
+      await global.expectToThrowBadArg(files.copy.bind(files, undefined, 'dest'),
+        ['srcPath', 'required'],
+        { srcPath: undefined, destPath: 'dest', options: {} })
     })
 
     // eslint-disable-next-line jest/expect-expect
     test('when destPath undefined', async () => {
-      await global.expectToThrowBadArg(files.copy.bind(files, 'src', undefined), ['destPath', 'required'], { srcPath: 'src', destPath: undefined, options: {} })
+      await global.expectToThrowBadArg(files.copy.bind(files, 'src', undefined),
+        ['destPath', 'required'],
+        { srcPath: 'src', destPath: undefined, options: {} })
     })
 
     // eslint-disable-next-line jest/expect-expect
     test('when options.noOverwrite is not a boolean', async () => {
-      await global.expectToThrowBadArg(files.copy.bind(files, 'src', 'dest', { noOverwrite: 1234 }), ['noOverwrite', 'boolean'], { srcPath: 'src', destPath: 'dest', options: { noOverwrite: 1234 } })
+      await global.expectToThrowBadArg(files.copy.bind(files, 'src', 'dest', { noOverwrite: 1234 }),
+        ['noOverwrite', 'boolean'],
+        { srcPath: 'src', destPath: 'dest', options: { noOverwrite: 1234 } })
     })
 
     // eslint-disable-next-line jest/expect-expect
     test('when options.localSrc is not a boolean', async () => {
-      await global.expectToThrowBadArg(files.copy.bind(files, 'src', 'dest', { localSrc: 1234 }), ['localSrc', 'boolean'], { srcPath: 'src', destPath: 'dest', options: { localSrc: 1234 } })
+      await global.expectToThrowBadArg(files.copy.bind(files, 'src', 'dest', { localSrc: 1234 }),
+        ['localSrc', 'boolean'],
+        { srcPath: 'src', destPath: 'dest', options: { localSrc: 1234 } })
     })
 
     // eslint-disable-next-line jest/expect-expect
     test('when options.localDest is not a boolean', async () => {
-      await global.expectToThrowBadArg(files.copy.bind(files, 'src', 'dest', { localDest: 1234 }), ['localDest', 'boolean'], { srcPath: 'src', destPath: 'dest', options: { localDest: 1234 } })
+      await global.expectToThrowBadArg(files.copy.bind(files, 'src', 'dest', { localDest: 1234 }),
+        ['localDest', 'boolean'],
+        { srcPath: 'src', destPath: 'dest', options: { localDest: 1234 } })
     })
 
     // eslint-disable-next-line jest/expect-expect
     test('when options.progressCallback is not a function', async () => {
-      await global.expectToThrowBadArg(files.copy.bind(files, 'src', 'dest', { progressCallback: 1234 }), ['progressCallback', 'function'], { srcPath: 'src', destPath: 'dest', options: { progressCallback: 1234 } })
+      await global.expectToThrowBadArg(files.copy.bind(files, 'src', 'dest', { progressCallback: 1234 }),
+        ['progressCallback', 'function'],
+        { srcPath: 'src', destPath: 'dest', options: { progressCallback: 1234 } })
     })
 
     // eslint-disable-next-line jest/expect-expect
     test('when both options.localSrc and options.localDest are specified', async () => {
-      await global.expectToThrowBadArg(files.copy.bind(files, 'src', 'dest', { localDest: true, localSrc: true }), ['localDest', 'localSrc'], { srcPath: 'src', destPath: 'dest', options: { localDest: true, localSrc: true } })
+      await global.expectToThrowBadArg(files.copy.bind(files, 'src', 'dest', { localDest: true, localSrc: true }),
+        ['localDest', 'localSrc'],
+        { srcPath: 'src', destPath: 'dest', options: { localDest: true, localSrc: true } })
     })
   })
 
@@ -699,8 +748,19 @@ describe('copy', () => {
     const testCopyOk = async (src, dest, options, expected) => {
       // transform expected to absolute path if local
       const uResolve = p => upath.toUnix(upath.resolve(p))
-      if (options.localDest) expected = Object.keys(expected).reduce((obj, k) => { obj[k] = uResolve(expected[k]); return obj }, {})
-      if (options.localSrc) expected = Object.keys(expected).reduce((obj, k) => { obj[uResolve(k)] = expected[k]; return obj }, {})
+      if (options.localDest) {
+        expected = Object.keys(expected).reduce((obj, k) => {
+          obj[k] = uResolve(expected[k])
+          return obj
+        }, {})
+      }
+
+      if (options.localSrc) {
+        expected = Object.keys(expected).reduce((obj, k) => {
+          obj[uResolve(k)] = expected[k]
+          return obj
+        }, {})
+      }
 
       const expectedEntries = Object.entries(expected)
       const numberOfFiles = expectedEntries.length
