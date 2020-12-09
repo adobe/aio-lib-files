@@ -6,7 +6,7 @@ const codes = {
 }
 
 const logAndThrow = jest.fn(() => {
-  console.log('log and Throw was called') 
+  console.log('log and Throw was called')
 })
 
 module.exports = {
