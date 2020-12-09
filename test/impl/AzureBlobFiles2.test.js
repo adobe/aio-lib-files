@@ -82,7 +82,7 @@ describe('create', () => {
     })
   })
 
-  describe('consructor', () => {
+  describe('constructor', () => {
     test('logAndThrows when called without credentials (null)', async () => {
       expect(new AzureBlobFiles()).toStrictEqual(expect.objectContaining({ _azure: {} }))
       expect(codes.ERROR_BAD_ARGUMENT).toHaveBeenCalled()
