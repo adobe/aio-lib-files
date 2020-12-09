@@ -42,10 +42,10 @@ export class Files {
      * Wraps errors for request to the cloud provider
      * @param requestPromise - the promise resolving to the response or error
      * @param details - pass details to error for debugging purpose (e.g. pass function params)
-     * @param filePath - path to the file on which the request was made
+     * @param filePathToThrowOn404 - path to the file on which the request was made, if specified will throw on 404
      * @returns promise resolving to same value as requestPromise
      */
-    protected _wrapProviderRequest(requestPromise: Promise, details: any, filePath: string): Promise;
+    protected _wrapProviderRequest(requestPromise: Promise, details: any, filePathToThrowOn404: string): Promise;
     /**
      * @param filePath - {@link RemotePathString}
      * @returns resolves to array of {@link RemoteFileProperties}
@@ -55,11 +55,12 @@ export class Files {
      * @param filePath - {@link RemotePathString}
      * @returns resolves to boolean
      */
-    protected _fileExists(filePath: RemotePathString): Promise<boolean>;
+    protected _deleteFile(filePath: RemotePathString): void;
     /**
      * @param filePath - {@link RemotePathString}
+     * @returns resolve to {@link RemoteFileProperties}
      */
-    protected _deleteFile(filePath: RemotePathString): void;
+    protected getFileInfo(filePath: RemotePathString): Promise<RemoteFileProperties>;
     /**
      * @param filePath - {@link RemotePathString}
      * @returns resolve to {@link RemoteFileProperties}
@@ -117,8 +118,8 @@ export class Files {
      */
     protected _statusFromProviderError(e: Error): number;
     /**
-     * Lists files in a remote folder. If called on a file returns only this file path.
-     * This is comparable to bash's `ls` command
+     * Lists files in a remote folder. If called on a file returns the file info if the file exists.
+     * If the file or folder does not exist returns an empty array.
      * @param [filePath] - {@link RemotePathString} if not
      * specified list all files
      * @returns resolves to array of {@link RemoteFileProperties}
@@ -248,13 +249,17 @@ export class Files {
      * @param filePath - {@link RemotePathString}
      * @param options - Options to generate presign URL
      * @param options.expiryInSeconds - presign URL expiry duration
-     * @param options.permissions - premissions for presigned URL
+     * @param options.permissions - permissions for presigned URL (any combination of rwd)
      * @returns Presign URL for the given file
      */
     generatePresignURL(filePath: RemotePathString, options: {
         expiryInSeconds: number;
         permissions: string;
     }): Promise<string>;
+    /**
+     * Revoke all generated pre-sign URLs
+     */
+    revokeAllPresignURLs(): void;
 }
 
 /**

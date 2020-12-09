@@ -59,9 +59,8 @@ Cloud Files Abstraction
 
 * *[Files](#Files)*
     * _instance_
-        * *[._wrapProviderRequest(requestPromise, details, filePath)](#Files+_wrapProviderRequest) ⇒ <code>Promise</code>*
+        * *[._wrapProviderRequest(requestPromise, details, filePathToThrowOn404)](#Files+_wrapProviderRequest) ⇒ <code>Promise</code>*
         * **[._listFolder(filePath)](#Files+_listFolder) ⇒ <code>Promise.&lt;Array.&lt;RemoteFileProperties&gt;&gt;</code>**
-        * **[._fileExists(filePath)](#Files+_fileExists) ⇒ <code>Promise.&lt;boolean&gt;</code>**
         * **[._deleteFile(filePath)](#Files+_deleteFile)**
         * **[.getFileInfo(filePath)](#Files+getFileInfo) ⇒ [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#RemoteFileProperties)**
         * **[._createReadStream(filePath, [options])](#Files+_createReadStream) ⇒ <code>Promise.&lt;NodeJS.ReadableStream&gt;</code>**
@@ -80,6 +79,7 @@ Cloud Files Abstraction
         * *[.getProperties(filePath)](#Files+getProperties) ⇒ [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#RemoteFileProperties)*
         * *[.copy(srcPath, destPath, [options])](#Files+copy) ⇒ <code>Promise.&lt;object.&lt;string, string&gt;&gt;</code>*
         * *[.generatePresignURL(filePath, options)](#Files+generatePresignURL) ⇒ <code>Promise.&lt;string&gt;</code>*
+        * *[.revokeAllPresignURLs()](#Files+revokeAllPresignURLs) ⇒ <code>void</code>*
     * _static_
         * *[._normalizeRemotePath(filePath)](#Files._normalizeRemotePath) ⇒ <code>string</code>*
         * *[._isRemoteRoot(filePath)](#Files._isRemoteRoot) ⇒ <code>boolean</code>*
@@ -90,7 +90,7 @@ Cloud Files Abstraction
 
 <a name="Files+_wrapProviderRequest"></a>
 
-### *files.\_wrapProviderRequest(requestPromise, details, filePath) ⇒ <code>Promise</code>*
+### *files.\_wrapProviderRequest(requestPromise, details, filePathToThrowOn404) ⇒ <code>Promise</code>*
 Wraps errors for request to the cloud provider
 
 **Kind**: instance method of [<code>Files</code>](#Files)  
@@ -101,11 +101,11 @@ Wraps errors for request to the cloud provider
 
 **Access**: protected  
 
-| Param | Type | Description |
-| --- | --- | --- |
-| requestPromise | <code>Promise</code> | the promise resolving to the response or error |
-| details | <code>object</code> | pass details to error for debugging purpose (e.g. pass function params) |
-| filePath | <code>string</code> | path to the file on which the request was made |
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| requestPromise | <code>Promise</code> |  | the promise resolving to the response or error |
+| details | <code>object</code> |  | pass details to error for debugging purpose (e.g. pass function params) |
+| filePathToThrowOn404 | <code>string</code> | <code>null</code> | path to the file on which the request was made, if specified will throw on 404 |
 
 <a name="Files+_listFolder"></a>
 
@@ -118,21 +118,23 @@ Wraps errors for request to the cloud provider
 | --- | --- | --- |
 | filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
 
-<a name="Files+_fileExists"></a>
+<a name="Files+_deleteFile"></a>
 
-### **files.\_fileExists(filePath) ⇒ <code>Promise.&lt;boolean&gt;</code>**
+### **files.\_deleteFile(filePath)**
 **Kind**: instance abstract method of [<code>Files</code>](#Files)  
 **Returns**: <code>Promise.&lt;boolean&gt;</code> - resolves to boolean  
+
 **Access**: protected  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
 
-<a name="Files+_deleteFile"></a>
+<a name="Files+getFileInfo"></a>
 
-### **files.\_deleteFile(filePath)**
+### **files.getFileInfo(filePath) ⇒ [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#RemoteFileProperties)**
 **Kind**: instance abstract method of [<code>Files</code>](#Files)  
+**Returns**: [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#RemoteFileProperties) - resolve to [RemoteFileProperties](#RemoteFileProperties)  
 **Access**: protected  
 
 | Param | Type | Description |
@@ -246,8 +248,9 @@ copies a file from a remote location to another.
 <a name="Files+list"></a>
 
 ### *files.list([filePath]) ⇒ <code>Promise.&lt;Array.&lt;RemoteFileProperties&gt;&gt;</code>*
-Lists files in a remote folder. If called on a file returns only this file path.
-This is comparable to bash's `ls` command
+Lists files in a remote folder. If called on a file returns the file info if the file exists.
+If the file or folder does not exist returns an empty array.
+
 
 **Kind**: instance method of [<code>Files</code>](#Files)  
 **Returns**: <code>Promise.&lt;Array.&lt;RemoteFileProperties&gt;&gt;</code> - resolves to array of [RemoteFileProperties](#RemoteFileProperties)  
@@ -408,8 +411,14 @@ Generate pre-sign URLs for a private file
 | filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
 | options | <code>object</code> | Options to generate presign URL |
 | options.expiryInSeconds | <code>number</code> | presign URL expiry duration |
-| options.permissions | <code>string</code> | premissions for presigned URL |
+| options.permissions | <code>string</code> | permissions for presigned URL (any combination of rwd) |
 
+<a name="Files+revokeAllPresignURLs"></a>
+
+### *files.revokeAllPresignURLs() ⇒ <code>void</code>*
+Revoke all generated pre-sign URLs
+
+**Kind**: instance method of [<code>Files</code>](#Files)  
 <a name="Files._normalizeRemotePath"></a>
 
 ### *Files.\_normalizeRemotePath(filePath) ⇒ <code>string</code>*
