@@ -55,12 +55,12 @@ export class Files {
      * @param filePath - {@link RemotePathString}
      * @returns resolves to boolean
      */
-    protected _deleteFile(filePath: RemotePathString): void;
+    protected _fileExists(filePath: RemotePathString): Promise<boolean>;
     /**
      * @param filePath - {@link RemotePathString}
-     * @returns resolve to {@link RemoteFileProperties}
+     * @returns resolves to boolean
      */
-    protected getFileInfo(filePath: RemotePathString): Promise<RemoteFileProperties>;
+    protected _deleteFile(filePath: RemotePathString): Promise<boolean>;
     /**
      * @param filePath - {@link RemotePathString}
      * @returns resolve to {@link RemoteFileProperties}

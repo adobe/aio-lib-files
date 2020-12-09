@@ -13,7 +13,9 @@
     "test": "npm run unit && npm run lint",
     "unit": "jest -c ./jest.config.js",
     "e2e": "jest -c ./jest.e2e.config.js",
-    "jsdoc": "jsdoc2md -f 'lib/**/*.js' > doc/api.md",
+    "hide-protected": "replace-in-file /@protected/g '@private hidden' lib/Files.js --isRegex",
+    "show-protected": "replace-in-file /@private\\\\shidden/g @protected lib/Files.js --isRegex",
+    "jsdoc": "npm run hide-protected && jsdoc2md --example-lang js -f 'lib/**/*.js' > doc/api.md && npm run show-protected",
     "typings": "jsdoc -t node_modules/tsd-jsdoc/dist -r lib -d . && replace-in-file /declare/g export types.d.ts --isRegex",
     "generate-docs": "npm run jsdoc && npm run typings"
   },
