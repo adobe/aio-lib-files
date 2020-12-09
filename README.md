@@ -53,12 +53,46 @@ npm install @adobe/aio-lib-files
   // write publicly accessible file
   await files.write('public/index.html', '<h1>Hello World!</h1>')
 
-  // get file url
+   // get file url
   const props = await files.getProperties('public/index.html')
-  props.url
+  console.log('props = ', props)
+  /*
+  props =  { name: 'public/index.html',
+    creationTime: 2020-12-09T19:49:58.000Z,
+    lastModified: 2020-12-09T19:49:58.000Z,
+    etag: '"0x8D89C7B9BB75A6F"',
+    contentLength: 21,
+    contentType: 'text/html',
+    isDirectory: false,
+    isPublic: true,
+    url:
+    'https://jestaiotest.blob.core.windows.net/readme-public/public%2Findex.html' }
+  */
 
   // list all files
   await files.list('/') // ['mydir/myfile.txt', 'public/index.html']
+  /*
+  list =  [ { name: 'mydir/myfile.txt',
+    creationTime: 2020-12-09T19:49:57.000Z,
+    lastModified: 2020-12-09T19:49:57.000Z,
+    etag: '0x8D89C7B9BB165F8',
+    contentLength: 20,
+    contentType: 'text/plain',
+    isDirectory: false,
+    isPublic: false,
+    url:
+     'https://jestaiotest.blob.core.windows.net/readme/mydir%2Fmyfile.txt' },
+  { name: 'public/index.html',
+    creationTime: 2020-12-09T19:49:58.000Z,
+    lastModified: 2020-12-09T19:49:58.000Z,
+    etag: '0x8D89C7B9BB75A6F',
+    contentLength: 21,
+    contentType: 'text/html',
+    isDirectory: false,
+    isPublic: true,
+    url:
+     'https://jestaiotest.blob.core.windows.net/readme-public/public%2Findex.html' } ]
+  */
 
   // read
   const buffer = await files.read('mydir/myfile.txt')
