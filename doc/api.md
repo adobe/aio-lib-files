@@ -185,8 +185,8 @@ Reads properties of a file or directory
 ### *files.copy(srcPath, destPath, [options]) ⇒ <code>Promise.&lt;object.&lt;string, string&gt;&gt;</code>*
 ***NodeJS only (streams + fs).***
 
-A utility function to copy files and directories across remote and local Files.
-This is comparable to the `scp` command
+A utility function to copy files and directories across remote and local Files. This
+is comparable to the `scp` command
 
 Rules for copy files are:
  1. Remote => Remote
@@ -198,7 +198,8 @@ Rules for copy files are:
    - a/ => b/: b/a/
    - a  => b/: b/a *does nothing if b/a exists and noOverwrite=true*
    - a  => b : b   *does nothing if b exists and noOverwrite=true*
-   - a/ => b : b/  *throws an error if b exists and is a file: cannot copy a remote dir to a local file*
+   - a/ => b : b/  *throws an error if b exists and is a file: cannot copy a remote
+     dir to a local file*
  3. Local => Remote
    - a/ => b/: b/a/
    - a  => b/: b/a  *does nothing if b/a exists and noOverwrite=true*
@@ -208,8 +209,8 @@ Rules for copy files are:
    - not supported
 
 **Kind**: instance method of [<code>Files</code>](#Files)  
-**Returns**: <code>Promise.&lt;object.&lt;string, string&gt;&gt;</code> - returns a promise resolving to an object containing all copied files
-from src to dest `{ srcFilePath: destFilePath }`  
+**Returns**: <code>Promise.&lt;object.&lt;string, string&gt;&gt;</code> - returns a promise resolving to an object
+containing all copied files from src to dest `{ srcFilePath: destFilePath }`  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -218,7 +219,7 @@ from src to dest `{ srcFilePath: destFilePath }`
 | [options] | <code>object</code> | <code>{}</code> | remoteCopyOptions |
 | [options.localSrc] | <code>boolean</code> | <code>false</code> | Set this option to true to copy files from the local file system. Cannot be combined with localDest. |
 | [options.localDest] | <code>boolean</code> | <code>false</code> | Set this option to true to copy files to the local file system. Cannot be combined with localSrc. |
-| [options.noOverwrite] | <code>boolean</code> | <code>false</code> | set to true to overwrite existing files |
+| [options.noOverwrite] | <code>boolean</code> | <code>false</code> | set to true to not overwrite existing dest files |
 | [options.progressCallback] | <code>function</code> |  | a function that will be called every time the operation completes on a single file,the srcPath and destPath to the copied file are passed as argument to the callback `progressCallback(srcPath, destPath)` |
 
 <a name="Files+generatePresignURL"></a>
