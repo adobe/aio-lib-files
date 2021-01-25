@@ -19,10 +19,6 @@ beforeEach(() => {
   initWithNewCredsMock.mockReset()
 })
 
-afterAll(() => {
-  initWithNewCredsMock.mockRestore()
-})
-
 describe('init', () => {
   test('missing implementation', async () => {
     await global.expectToThrowNotImplemented(Files.init.bind(Files), 'init')
