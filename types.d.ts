@@ -42,24 +42,30 @@ export class Files {
      * Wraps errors for request to the cloud provider
      * @param requestPromise - the promise resolving to the response or error
      * @param details - pass details to error for debugging purpose (e.g. pass function params)
-     * @param filePath - path to the file on which the request was made
+     * @param filePathToThrowOn404 - path to the file on which the request was made, if specified will throw on 404
      * @returns promise resolving to same value as requestPromise
      */
-    protected _wrapProviderRequest(requestPromise: Promise, details: any, filePath: string): Promise;
+    protected _wrapProviderRequest(requestPromise: Promise, details: any, filePathToThrowOn404: string): Promise;
     /**
      * @param filePath - {@link RemotePathString}
-     * @returns resolves to array of paths
+     * @returns resolves to array of {@link RemoteFileProperties}
      */
-    protected _listFolder(filePath: RemotePathString): Promise<string[]>;
+    protected _listFolder(filePath: RemotePathString): Promise<RemoteFileProperties[]>;
     /**
      * @param filePath - {@link RemotePathString}
-     * @returns resolves to array of paths
+     * @returns resolves to boolean
      */
     protected _fileExists(filePath: RemotePathString): Promise<boolean>;
     /**
      * @param filePath - {@link RemotePathString}
+     * @returns resolves to boolean
      */
-    protected _deleteFile(filePath: RemotePathString): void;
+    protected _deleteFile(filePath: RemotePathString): Promise<boolean>;
+    /**
+     * @param filePath - {@link RemotePathString}
+     * @returns resolve to {@link RemoteFileProperties}
+     */
+    protected getFileInfo(filePath: RemotePathString): Promise<RemoteFileProperties>;
     /**
      * **NODEJS ONLY**
      * @param filePath - {@link RemotePathString}
@@ -112,13 +118,13 @@ export class Files {
      */
     protected _statusFromProviderError(e: Error): number;
     /**
-     * Lists files in a remote folder. If called on a file returns only this file path.
-     * This is comparable to bash's `ls` command
+     * Lists files in a remote folder. If called on a file returns the file info if the file exists.
+     * If the file or folder does not exist returns an empty array.
      * @param [filePath] - {@link RemotePathString} if not
      * specified list all files
-     * @returns resolves to array of paths
+     * @returns resolves to array of {@link RemoteFileProperties}
      */
-    public list(filePath?: RemotePathString): Promise<string[]>;
+    public list(filePath?: RemotePathString): Promise<RemoteFileProperties[]>;
     /**
      * Deletes a remote file or directory
      * @param filePath - {@link RemotePathString}
@@ -192,8 +198,8 @@ export class Files {
     /**
      * ***NodeJS only (streams + fs).***
      *
-     * A utility function to copy files and directories across remote and local Files.
-     * This is comparable to the `scp` command
+     * A utility function to copy files and directories across remote and local Files. This
+     * is comparable to the `scp` command
      *
      * Rules for copy files are:
      *  1. Remote => Remote
@@ -205,7 +211,8 @@ export class Files {
      *    - a/ => b/: b/a/
      *    - a  => b/: b/a *does nothing if b/a exists and noOverwrite=true*
      *    - a  => b : b   *does nothing if b exists and noOverwrite=true*
-     *    - a/ => b : b/  *throws an error if b exists and is a file: cannot copy a remote dir to a local file*
+     *    - a/ => b : b/  *throws an error if b exists and is a file: cannot copy a remote
+     *      dir to a local file*
      *  3. Local => Remote
      *    - a/ => b/: b/a/
      *    - a  => b/: b/a  *does nothing if b/a exists and noOverwrite=true*
@@ -213,22 +220,22 @@ export class Files {
      *    - a/ => b: b/    *always allowed: in remote Files we can have both b and b/*
      *  4. Local => Local
      *    - not supported
-     * @param srcPath - copy source path to a file or directory. If
-     * srcPath points to a local file set `options.localSrc` to true
+     * @param srcPath - copy source path to a file or directory. If srcPath
+     * points to a local file set `options.localSrc` to true
      * @param destPath - copy destination path to a file or directory. If
      * destPath points to a local file set `options.localDest` to true
      * @param [options = {}] - remoteCopyOptions
-     * @param [options.localSrc = false] - Set this option to true to copy
-     * files from the local file system. Cannot be combined with localDest.
-     * @param [options.localDest = false] - Set this option to true to
-     * copy files to the local file system. Cannot be combined with localSrc.
-     * @param [options.noOverwrite = false] - set to true to overwrite
-     * existing files
-     * @param [options.progressCallback] - a function that will be called
-     * every time the operation completes on a single file,the srcPath and destPath to the copied file
-     * are passed as argument to the callback `progressCallback(srcPath, destPath)`
-     * @returns returns a promise resolving to an object containing all copied files
-     * from src to dest `{ srcFilePath: destFilePath }`
+     * @param [options.localSrc = false] - Set this option to true to copy files
+     * from the local file system. Cannot be combined with localDest.
+     * @param [options.localDest = false] - Set this option to true to copy files to
+     * the local file system. Cannot be combined with localSrc.
+     * @param [options.noOverwrite = false] - set to true to not overwrite existing
+     * dest files
+     * @param [options.progressCallback] - a function that will be called every
+     * time the operation completes on a single file,the srcPath and destPath to the copied
+     * file are passed as argument to the callback `progressCallback(srcPath, destPath)`
+     * @returns returns a promise resolving to an object
+     * containing all copied files from src to dest `{ srcFilePath: destFilePath }`
      */
     copy(srcPath: RemotePathString, destPath: RemotePathString, options?: {
         localSrc?: boolean;
@@ -243,13 +250,17 @@ export class Files {
      * @param filePath - {@link RemotePathString}
      * @param options - Options to generate presign URL
      * @param options.expiryInSeconds - presign URL expiry duration
-     * @param options.permissions - premissions for presigned URL
+     * @param options.permissions - permissions for presigned URL (any combination of rwd)
      * @returns Presign URL for the given file
      */
     generatePresignURL(filePath: RemotePathString, options: {
         expiryInSeconds: number;
         permissions: string;
     }): Promise<string>;
+    /**
+     * Revoke all generated pre-sign URLs
+     */
+    revokeAllPresignURLs(): void;
 }
 
 /**
@@ -311,11 +322,13 @@ export type AzureCredentialsSAS = {
  * @property storageAccessKey - access key for azure storage account
  * @property containerName - name of container to store files.
  * Another `${containerName}-public` will also be used for public files.
+ * @property [hostName] - custom domain for returned URLs
  */
 export type AzureCredentialsAccount = {
     storageAccount: string;
     storageAccessKey: string;
     containerName: string;
+    hostName?: string;
 };
 
 /**
@@ -325,11 +338,24 @@ export type AzureCredentialsAccount = {
 export type RemotePathString = string;
 
 /**
- * @property isDirectory - true if file is a path
+ * File properties
+ * @property name - unique name of this file, it is the full path
+ * @property creationTime - utc datetime string when file was created
+ * @property lastModified - utc datetime string when file last modified
+ * @property etag - unique ( per modification ) etag for the asset
+ * @property contentLength - size, in bytes
+ * @property contentType - mime/type
+ * @property isDirectory - true if file is a directory
  * @property isPublic - true if file is public
  * @property url - remote file URL with URI encoded path, use decodeURIComponent to decode the URL.
  */
 export type RemoteFileProperties = {
+    name: string;
+    creationTime: string;
+    lastModified: string;
+    etag: string;
+    contentLength: number;
+    contentType: string;
     isDirectory: boolean;
     isPublic: boolean;
     url: string;

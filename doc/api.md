@@ -40,7 +40,8 @@ two already existing containers, a private and a public one (with access=<code>b
 be treated as a directory, if not it will be treated as a file.</p>
 </dd>
 <dt><a href="#RemoteFileProperties">RemoteFileProperties</a> : <code>object</code></dt>
-<dd></dd>
+<dd><p>File properties</p>
+</dd>
 <dt><a href="#FilesLibError">FilesLibError</a> : <code>Error</code></dt>
 <dd></dd>
 <dt><a href="#FilesLibErrors">FilesLibErrors</a> : <code>object</code></dt>
@@ -57,187 +58,25 @@ Cloud Files Abstraction
 **Kind**: global abstract class  
 
 * *[Files](#Files)*
-    * _instance_
-        * *[._wrapProviderRequest(requestPromise, details, filePath)](#Files+_wrapProviderRequest) ⇒ <code>Promise</code>*
-        * **[._listFolder(filePath)](#Files+_listFolder) ⇒ <code>Promise.&lt;Array.&lt;string&gt;&gt;</code>**
-        * **[._fileExists(filePath)](#Files+_fileExists) ⇒ <code>Promise.&lt;boolean&gt;</code>**
-        * **[._deleteFile(filePath)](#Files+_deleteFile)**
-        * **[._createReadStream(filePath, [options])](#Files+_createReadStream) ⇒ <code>Promise.&lt;NodeJS.ReadableStream&gt;</code>**
-        * **[._createWriteStream(filePath)](#Files+_createWriteStream) ⇒ <code>Promise.&lt;NodeJS.WritableStream&gt;</code>**
-        * **[._writeStream(filePath, content)](#Files+_writeStream) ⇒ <code>Promise.&lt;number&gt;</code>**
-        * **[._writeBuffer(filePath, content)](#Files+_writeBuffer) ⇒ <code>Promise.&lt;number&gt;</code>**
-        * **[._copyRemoteToRemoteFile(srcPath, destPath)](#Files+_copyRemoteToRemoteFile)**
-        * **[._getUrl(filePath)](#Files+_getUrl) ⇒ <code>string</code>**
-        * **[._statusFromProviderError(e)](#Files+_statusFromProviderError) ⇒ <code>number</code>**
-        * *[.list([filePath])](#Files+list) ⇒ <code>Promise.&lt;Array.&lt;string&gt;&gt;</code>*
-        * *[.delete(filePath, [options])](#Files+delete) ⇒ <code>Promise.&lt;Array.&lt;string&gt;&gt;</code>*
-        * *[.createReadStream(filePath, [options])](#Files+createReadStream) ⇒ <code>Promise.&lt;NodeJS.ReadableStream&gt;</code>*
-        * *[.createWriteStream(filePath)](#Files+createWriteStream) ⇒ <code>Promise.&lt;NodeJS.WritableStream&gt;</code>*
-        * *[.read(filePath, [options])](#Files+read) ⇒ <code>Promise.&lt;Buffer&gt;</code>*
-        * *[.write(filePath, content)](#Files+write) ⇒ <code>Promise.&lt;number&gt;</code>*
-        * *[.getProperties(filePath)](#Files+getProperties) ⇒ [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#RemoteFileProperties)*
-        * *[.copy(srcPath, destPath, [options])](#Files+copy) ⇒ <code>Promise.&lt;object.&lt;string, string&gt;&gt;</code>*
-        * *[.generatePresignURL(filePath, options)](#Files+generatePresignURL) ⇒ <code>Promise.&lt;string&gt;</code>*
-    * _static_
-        * *[._normalizeRemotePath(filePath)](#Files._normalizeRemotePath) ⇒ <code>string</code>*
-        * *[._isRemoteRoot(filePath)](#Files._isRemoteRoot) ⇒ <code>boolean</code>*
-        * *[._isRemotePublic(filePath)](#Files._isRemotePublic) ⇒ <code>boolean</code>*
-        * *[._isRemoteDirectory(filePath)](#Files._isRemoteDirectory) ⇒ <code>boolean</code>*
-        * *[._throwIfRemoteDirectory(filePath, details)](#Files._throwIfRemoteDirectory)*
-        * *[._readStream(stream)](#Files._readStream) ⇒ <code>Promise.&lt;Buffer&gt;</code>*
-
-<a name="Files+_wrapProviderRequest"></a>
-
-### *files.\_wrapProviderRequest(requestPromise, details, filePath) ⇒ <code>Promise</code>*
-Wraps errors for request to the cloud provider
-
-**Kind**: instance method of [<code>Files</code>](#Files)  
-**Returns**: <code>Promise</code> - promise resolving to same value as requestPromise  
-**Throws**:
-
-- <code>codes.ERROR\_BAD\_CREDENTIALS</code><code>codes.ERROR\_FILE\_NOT\_EXISTS</code><code>codes.ERROR\_INTERNAL</code> 
-
-**Access**: protected  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| requestPromise | <code>Promise</code> | the promise resolving to the response or error |
-| details | <code>object</code> | pass details to error for debugging purpose (e.g. pass function params) |
-| filePath | <code>string</code> | path to the file on which the request was made |
-
-<a name="Files+_listFolder"></a>
-
-### **files.\_listFolder(filePath) ⇒ <code>Promise.&lt;Array.&lt;string&gt;&gt;</code>**
-**Kind**: instance abstract method of [<code>Files</code>](#Files)  
-**Returns**: <code>Promise.&lt;Array.&lt;string&gt;&gt;</code> - resolves to array of paths  
-**Access**: protected  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
-
-<a name="Files+_fileExists"></a>
-
-### **files.\_fileExists(filePath) ⇒ <code>Promise.&lt;boolean&gt;</code>**
-**Kind**: instance abstract method of [<code>Files</code>](#Files)  
-**Returns**: <code>Promise.&lt;boolean&gt;</code> - resolves to array of paths  
-**Access**: protected  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
-
-<a name="Files+_deleteFile"></a>
-
-### **files.\_deleteFile(filePath)**
-**Kind**: instance abstract method of [<code>Files</code>](#Files)  
-**Access**: protected  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
-
-<a name="Files+_createReadStream"></a>
-
-### **files.\_createReadStream(filePath, [options]) ⇒ <code>Promise.&lt;NodeJS.ReadableStream&gt;</code>**
-**NODEJS ONLY**
-
-**Kind**: instance abstract method of [<code>Files</code>](#Files)  
-**Returns**: <code>Promise.&lt;NodeJS.ReadableStream&gt;</code> - a readable stream  
-**Access**: protected  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| filePath | [<code>RemotePathString</code>](#RemotePathString) |  | [RemotePathString](#RemotePathString) |
-| [options] | <code>object</code> | <code>{}</code> | createReadStreamOptions |
-| [options.position] | <code>number</code> |  | read start position of the file. By default is set to 0. If set to bigger than size, throws an ERROR_OUT_OF_RANGE error |
-| [options.length] | <code>number</code> |  | number of bytes to read. By default reads everything since starting position. If set to bigger than file size, reads until end. |
-
-<a name="Files+_createWriteStream"></a>
-
-### **files.\_createWriteStream(filePath) ⇒ <code>Promise.&lt;NodeJS.WritableStream&gt;</code>**
-**NODEJS ONLY**
-
-**Kind**: instance abstract method of [<code>Files</code>](#Files)  
-**Returns**: <code>Promise.&lt;NodeJS.WritableStream&gt;</code> - a writable stream  
-**Access**: protected  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
-
-<a name="Files+_writeStream"></a>
-
-### **files.\_writeStream(filePath, content) ⇒ <code>Promise.&lt;number&gt;</code>**
-**NODEJS ONLY**
-
-**Kind**: instance abstract method of [<code>Files</code>](#Files)  
-**Returns**: <code>Promise.&lt;number&gt;</code> - resolves to number of bytes written  
-**Access**: protected  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
-| content | <code>NodeJS.ReadableStream</code> | to be written |
-
-<a name="Files+_writeBuffer"></a>
-
-### **files.\_writeBuffer(filePath, content) ⇒ <code>Promise.&lt;number&gt;</code>**
-**Kind**: instance abstract method of [<code>Files</code>](#Files)  
-**Returns**: <code>Promise.&lt;number&gt;</code> - resolves to number of bytes written  
-**Access**: protected  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
-| content | <code>Buffer</code> | to be written |
-
-<a name="Files+_copyRemoteToRemoteFile"></a>
-
-### **files.\_copyRemoteToRemoteFile(srcPath, destPath)**
-**Does not work for directories.**
-copies a file from a remote location to another.
-
-**Kind**: instance abstract method of [<code>Files</code>](#Files)  
-**Access**: protected  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| srcPath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
-| destPath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
-
-<a name="Files+_getUrl"></a>
-
-### **files.\_getUrl(filePath) ⇒ <code>string</code>**
-**Kind**: instance abstract method of [<code>Files</code>](#Files)  
-**Returns**: <code>string</code> - resolves to url  
-**Access**: protected  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
-
-<a name="Files+_statusFromProviderError"></a>
-
-### **files.\_statusFromProviderError(e) ⇒ <code>number</code>**
-[INTERNAL]
-
-**Kind**: instance abstract method of [<code>Files</code>](#Files)  
-**Returns**: <code>number</code> - status code  
-**Access**: protected  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| e | <code>Error</code> | provider error response |
+    * *[.list([filePath])](#Files+list) ⇒ <code>Promise.&lt;Array.&lt;RemoteFileProperties&gt;&gt;</code>*
+    * *[.delete(filePath, [options])](#Files+delete) ⇒ <code>Promise.&lt;Array.&lt;string&gt;&gt;</code>*
+    * *[.createReadStream(filePath, [options])](#Files+createReadStream) ⇒ <code>Promise.&lt;NodeJS.ReadableStream&gt;</code>*
+    * *[.createWriteStream(filePath)](#Files+createWriteStream) ⇒ <code>Promise.&lt;NodeJS.WritableStream&gt;</code>*
+    * *[.read(filePath, [options])](#Files+read) ⇒ <code>Promise.&lt;Buffer&gt;</code>*
+    * *[.write(filePath, content)](#Files+write) ⇒ <code>Promise.&lt;number&gt;</code>*
+    * *[.getProperties(filePath)](#Files+getProperties) ⇒ [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#RemoteFileProperties)*
+    * *[.copy(srcPath, destPath, [options])](#Files+copy) ⇒ <code>Promise.&lt;object.&lt;string, string&gt;&gt;</code>*
+    * *[.generatePresignURL(filePath, options)](#Files+generatePresignURL) ⇒ <code>Promise.&lt;string&gt;</code>*
+    * *[.revokeAllPresignURLs()](#Files+revokeAllPresignURLs) ⇒ <code>void</code>*
 
 <a name="Files+list"></a>
 
-### *files.list([filePath]) ⇒ <code>Promise.&lt;Array.&lt;string&gt;&gt;</code>*
-Lists files in a remote folder. If called on a file returns only this file path.
-This is comparable to bash's `ls` command
+### *files.list([filePath]) ⇒ <code>Promise.&lt;Array.&lt;RemoteFileProperties&gt;&gt;</code>*
+Lists files in a remote folder. If called on a file returns the file info if the file exists.
+If the file or folder does not exist returns an empty array.
 
 **Kind**: instance method of [<code>Files</code>](#Files)  
-**Returns**: <code>Promise.&lt;Array.&lt;string&gt;&gt;</code> - resolves to array of paths  
+**Returns**: <code>Promise.&lt;Array.&lt;RemoteFileProperties&gt;&gt;</code> - resolves to array of [RemoteFileProperties](#RemoteFileProperties)  
 **Access**: public  
 
 | Param | Type | Description |
@@ -346,8 +185,8 @@ Reads properties of a file or directory
 ### *files.copy(srcPath, destPath, [options]) ⇒ <code>Promise.&lt;object.&lt;string, string&gt;&gt;</code>*
 ***NodeJS only (streams + fs).***
 
-A utility function to copy files and directories across remote and local Files.
-This is comparable to the `scp` command
+A utility function to copy files and directories across remote and local Files. This
+is comparable to the `scp` command
 
 Rules for copy files are:
  1. Remote => Remote
@@ -359,7 +198,8 @@ Rules for copy files are:
    - a/ => b/: b/a/
    - a  => b/: b/a *does nothing if b/a exists and noOverwrite=true*
    - a  => b : b   *does nothing if b exists and noOverwrite=true*
-   - a/ => b : b/  *throws an error if b exists and is a file: cannot copy a remote dir to a local file*
+   - a/ => b : b/  *throws an error if b exists and is a file: cannot copy a remote
+     dir to a local file*
  3. Local => Remote
    - a/ => b/: b/a/
    - a  => b/: b/a  *does nothing if b/a exists and noOverwrite=true*
@@ -369,8 +209,8 @@ Rules for copy files are:
    - not supported
 
 **Kind**: instance method of [<code>Files</code>](#Files)  
-**Returns**: <code>Promise.&lt;object.&lt;string, string&gt;&gt;</code> - returns a promise resolving to an object containing all copied files
-from src to dest `{ srcFilePath: destFilePath }`  
+**Returns**: <code>Promise.&lt;object.&lt;string, string&gt;&gt;</code> - returns a promise resolving to an object
+containing all copied files from src to dest `{ srcFilePath: destFilePath }`  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -379,7 +219,7 @@ from src to dest `{ srcFilePath: destFilePath }`
 | [options] | <code>object</code> | <code>{}</code> | remoteCopyOptions |
 | [options.localSrc] | <code>boolean</code> | <code>false</code> | Set this option to true to copy files from the local file system. Cannot be combined with localDest. |
 | [options.localDest] | <code>boolean</code> | <code>false</code> | Set this option to true to copy files to the local file system. Cannot be combined with localSrc. |
-| [options.noOverwrite] | <code>boolean</code> | <code>false</code> | set to true to overwrite existing files |
+| [options.noOverwrite] | <code>boolean</code> | <code>false</code> | set to true to not overwrite existing dest files |
 | [options.progressCallback] | <code>function</code> |  | a function that will be called every time the operation completes on a single file,the srcPath and destPath to the copied file are passed as argument to the callback `progressCallback(srcPath, destPath)` |
 
 <a name="Files+generatePresignURL"></a>
@@ -395,80 +235,14 @@ Generate pre-sign URLs for a private file
 | filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
 | options | <code>object</code> | Options to generate presign URL |
 | options.expiryInSeconds | <code>number</code> | presign URL expiry duration |
-| options.permissions | <code>string</code> | premissions for presigned URL |
+| options.permissions | <code>string</code> | permissions for presigned URL (any combination of rwd) |
 
-<a name="Files._normalizeRemotePath"></a>
+<a name="Files+revokeAllPresignURLs"></a>
 
-### *Files.\_normalizeRemotePath(filePath) ⇒ <code>string</code>*
-**Kind**: static method of [<code>Files</code>](#Files)  
-**Returns**: <code>string</code> - normalized path  
-**Access**: protected  
+### *files.revokeAllPresignURLs() ⇒ <code>void</code>*
+Revoke all generated pre-sign URLs
 
-| Param | Type | Description |
-| --- | --- | --- |
-| filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
-
-<a name="Files._isRemoteRoot"></a>
-
-### *Files.\_isRemoteRoot(filePath) ⇒ <code>boolean</code>*
-**Kind**: static method of [<code>Files</code>](#Files)  
-**Returns**: <code>boolean</code> - true if it's the root  
-**Access**: protected  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
-
-<a name="Files._isRemotePublic"></a>
-
-### *Files.\_isRemotePublic(filePath) ⇒ <code>boolean</code>*
-**Kind**: static method of [<code>Files</code>](#Files)  
-**Returns**: <code>boolean</code> - true if the file is public  
-**Access**: protected  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
-
-<a name="Files._isRemoteDirectory"></a>
-
-### *Files.\_isRemoteDirectory(filePath) ⇒ <code>boolean</code>*
-**Kind**: static method of [<code>Files</code>](#Files)  
-**Returns**: <code>boolean</code> - true if path is a directory  
-**Access**: protected  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
-
-<a name="Files._throwIfRemoteDirectory"></a>
-
-### *Files.\_throwIfRemoteDirectory(filePath, details)*
-**Kind**: static method of [<code>Files</code>](#Files)  
-**Throws**:
-
-- <code>codes.ERROR\_BAD\_ARGUMENT</code> 
-
-**Access**: protected  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
-| details | <code>object</code> | pass details to error for debugging purpose (e.g. calling function params) |
-
-<a name="Files._readStream"></a>
-
-### *Files.\_readStream(stream) ⇒ <code>Promise.&lt;Buffer&gt;</code>*
-Reads a stream into a buffer
-
-**Kind**: static method of [<code>Files</code>](#Files)  
-**Returns**: <code>Promise.&lt;Buffer&gt;</code> - buffer  
-**Access**: protected  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| stream | <code>NodeJS.ReadableStream</code> | readableStream |
-
+**Kind**: instance method of [<code>Files</code>](#Files)  
 <a name="init"></a>
 
 ## init([config]) ⇒ [<code>Promise.&lt;Files&gt;</code>](#Files)
@@ -539,6 +313,7 @@ Azure account credentials. Must have the permission to create containers.
 | storageAccount | <code>string</code> | name of azure storage account |
 | storageAccessKey | <code>string</code> | access key for azure storage account |
 | containerName | <code>string</code> | name of container to store files. Another `${containerName}-public` will also be used for public files. |
+| [hostName] | <code>string</code> | custom domain for returned URLs |
 
 <a name="RemotePathString"></a>
 
@@ -550,12 +325,20 @@ be treated as a directory, if not it will be treated as a file.
 <a name="RemoteFileProperties"></a>
 
 ## RemoteFileProperties : <code>object</code>
+File properties
+
 **Kind**: global typedef  
 **Properties**
 
 | Name | Type | Description |
 | --- | --- | --- |
-| isDirectory | <code>boolean</code> | true if file is a path |
+| name | <code>string</code> | unique name of this file, it is the full path |
+| creationTime | <code>string</code> | utc datetime string when file was created |
+| lastModified | <code>string</code> | utc datetime string when file last modified |
+| etag | <code>string</code> | unique ( per modification ) etag for the asset |
+| contentLength | <code>number</code> | size, in bytes |
+| contentType | <code>string</code> | mime/type |
+| isDirectory | <code>boolean</code> | true if file is a directory |
 | isPublic | <code>boolean</code> | true if file is public |
 | url | <code>string</code> | remote file URL with URI encoded path, use decodeURIComponent to decode the URL. |
 

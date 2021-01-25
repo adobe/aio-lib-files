@@ -38,6 +38,10 @@ describe('init', () => {
     // FilePermissions
     expect(filesLib.FilePermissions).toBeDefined()
     expect(filesLib.FilePermissions).toEqual(expect.objectContaining({ READ: expect.any(String), WRITE: expect.any(String) }))
+
+    // UrlType
+    expect(filesLib.UrlType).toBeDefined()
+    expect(filesLib.UrlType).toEqual(expect.objectContaining({ internal: expect.any(String), external: expect.any(String) }))
   })
 
   const checkInitDebugLogNoSecrets = (str) => expect(global.mockLogDebug).not.toHaveBeenCalledWith(expect.stringContaining(str))
@@ -63,10 +67,8 @@ describe('init', () => {
     test('with azure config', async () => {
       await filesLib.init({ azure: fakeAzureBlobConfig })
       expect(AzureBlobFiles.init).toHaveBeenCalledTimes(1)
-      expect(AzureBlobFiles.init).toHaveBeenCalledWith(fakeAzureBlobConfig, {
-        getAzureBlobCredentials: azureBlobTvmMock
-      })
-      expect(TvmClient.init).toHaveBeenCalledTimes(1)
+      expect(AzureBlobFiles.init).toHaveBeenCalledWith(fakeAzureBlobConfig, null)
+      expect(TvmClient.init).toHaveBeenCalledTimes(0)
       expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('azure'))
       checkInitDebugLogNoSecrets(fakeAzureBlobConfig.storageAccessKey)
       checkInitDebugLogNoSecrets(fakeAzureBlobConfig.sasURLPrivate)
@@ -126,7 +128,7 @@ describe('init', () => {
       const e = new Error('tvm error')
       e.sdkDetails = { fake: 'details', status: 401 }
       azureBlobTvmMock.mockRejectedValue(e)
-      await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), e.sdkDetails)
+      await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), e.sdkDetails, 'TVM')
     })
 
     // eslint-disable-next-line jest/expect-expect
@@ -134,7 +136,7 @@ describe('init', () => {
       const e = new Error('tvm error')
       e.sdkDetails = { fake: 'details', status: 403 }
       azureBlobTvmMock.mockRejectedValue(e)
-      await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), e.sdkDetails)
+      await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), e.sdkDetails, 'TVM')
     })
 
     test('when tvm rejects with another status code (throws tvm error)', async () => {
