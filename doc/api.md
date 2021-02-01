@@ -25,6 +25,9 @@
 <dt><a href="#FilePermissions">FilePermissions</a> : <code>Object</code></dt>
 <dd><p>Read, Write, Delete permission enum</p>
 </dd>
+<dt><a href="#UrlType">UrlType</a> : <code>Object</code></dt>
+<dd><p>external, internal URL type enum</p>
+</dd>
 <dt><a href="#OpenWhiskCredentials">OpenWhiskCredentials</a> : <code>object</code></dt>
 <dd><p>An object holding the OpenWhisk credentials</p>
 </dd>
@@ -236,6 +239,7 @@ Generate pre-sign URLs for a private file
 | options | <code>object</code> | Options to generate presign URL |
 | options.expiryInSeconds | <code>number</code> | presign URL expiry duration |
 | options.permissions | <code>string</code> | permissions for presigned URL (any combination of rwd) |
+| options.urlType | <code>string</code> | type of URL to return internal|external, default external |
 
 <a name="Files+revokeAllPresignURLs"></a>
 
@@ -271,6 +275,12 @@ OpenWhisk credentials can also be read from environment variables (`__OW_NAMESPA
 
 ## FilePermissions : <code>Object</code>
 Read, Write, Delete permission enum
+
+**Kind**: global typedef  
+<a name="UrlType"></a>
+
+## UrlType : <code>Object</code>
+external, internal URL type enum
 
 **Kind**: global typedef  
 <a name="OpenWhiskCredentials"></a>
@@ -341,6 +351,7 @@ File properties
 | isDirectory | <code>boolean</code> | true if file is a directory |
 | isPublic | <code>boolean</code> | true if file is public |
 | url | <code>string</code> | remote file URL with URI encoded path, use decodeURIComponent to decode the URL. |
+| internalUrl | <code>string</code> | remote file URL which allows file access only from Adobe I/O Runtime actions. |
 
 <a name="FilesLibError"></a>
 
