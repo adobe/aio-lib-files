@@ -239,7 +239,7 @@ Generate pre-sign URLs for a private file
 | options | <code>object</code> | Options to generate presign URL |
 | options.expiryInSeconds | <code>number</code> | presign URL expiry duration |
 | options.permissions | <code>string</code> | permissions for presigned URL (any combination of rwd) |
-| options.urlType | <code>string</code> | type of URL to return internal|external, default external |
+| options.urlType | <code>string</code> | default 'external', type of URL to return 'internal' or 'external' |
 
 <a name="Files+revokeAllPresignURLs"></a>
 

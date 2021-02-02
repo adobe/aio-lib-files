@@ -257,7 +257,7 @@ export class Files {
      * @param options - Options to generate presign URL
      * @param options.expiryInSeconds - presign URL expiry duration
      * @param options.permissions - permissions for presigned URL (any combination of rwd)
-     * @param options.urlType - type of URL to return internal|external, default external
+     * @param options.urlType - default 'external', type of URL to return 'internal' or 'external'
      * @returns Presign URL for the given file
      */
     generatePresignURL(filePath: RemotePathString, options: {

@@ -132,6 +132,28 @@ npm install @adobe/aio-lib-files
   const rwdPresignUrl = await files.generatePresignURL('mydir/myfile.txt', { expiryInSeconds: 60, permissions: 'rwd' })
 ```
 
+## URL types and usage
+File SDK supports two types of file URL
+1) External - CDN based URLs which can be accessed from anywhere (assuming right pre-sign permissions for private files).
+2) Internal - Direct URLs to file storage. These URLs work only if used within Adobe I/O Runtime actions. These URLs bypass CDN and provide direct access to file storage.
+
+[Files.getProperties](doc/api.md#Files+getProperties) returns both URL types (external as url, and internal as internalUrl) for a given file path
+[Files.generatePresignURL](doc/api.md#Files+generatePresignURL) supports UrlType as option to generate presign URL of given type
+
+See usage example below
+
+```js
+  const  { init, UrlType }  = require('@adobe/aio-lib-files')
+  const files = await init()
+
+  // getProperties will return both internal and external URLs in return Object
+  const props = files.getProperties('public/my-static-app/index.html')
+
+  //generate presign URL with internal URLType
+  const internalPresignUrl = await files.generatePresignURL('mydir/myfile.txt', { expiryInSeconds: 60, permissions: 'rwd', urltype: UrlType.internal })
+
+```
+
 ## Explore
 
 `goto` [API](doc/api.md)
