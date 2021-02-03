@@ -12,9 +12,11 @@ const ujoinFiles = (dirs, fakeFiles) => {
   return fakeFiles.map(f => ujoin(...dirs, f))
 }
 const fakeFile = 'fake/file.txt'
+let initWithNewCredsMock = jest.spyOn(Files.prototype, '_initWithNewCreds')
 
 beforeEach(() => {
   expect.hasAssertions()
+  initWithNewCredsMock.mockReset()
 })
 
 describe('init', () => {
@@ -82,6 +84,11 @@ describe('missing implementation', () => {
   })
   test('_getPresignUrl', async () => {
     await expect(files._getPresignUrl('anything')).rejects.toThrow('not implemented')
+  })
+  test('_initWithNewCreds', async () => {
+    initWithNewCredsMock.mockRestore()
+    await expect(files._initWithNewCreds()).rejects.toThrow('not implemented')
+    initWithNewCredsMock = jest.spyOn(Files.prototype, '_initWithNewCreds')
   })
 })
 
@@ -157,6 +164,7 @@ describe('list :: getInfo and _listFolder mock implementations', () => {
     getFileInfo.mockImplementation(async () => null)
     res = await files.list('hey.txt')
     expect(res).toEqual([])
+    expect(initWithNewCredsMock).toHaveBeenCalled()
   })
 
   test('when path is an existing file with a non normalized path', async () => {
@@ -164,6 +172,7 @@ describe('list :: getInfo and _listFolder mock implementations', () => {
     expect(res).toEqual([expect.objectContaining({ path: 'afile.txt' })])
     expect(getFileInfo).toHaveBeenCalledWith('afile.txt')
     expect(listFolderMock).toHaveBeenCalledTimes(0)
+    expect(initWithNewCredsMock).toHaveBeenCalled()
   })
 
   test('when path is a non existing file', async () => {
@@ -172,6 +181,7 @@ describe('list :: getInfo and _listFolder mock implementations', () => {
     const res = await files.list('afile.txt')
     expect(res).toEqual([])
     expect(listFolderMock).toHaveBeenCalledTimes(0)
+    expect(initWithNewCredsMock).toHaveBeenCalled()
   })
 
   test('when path is a non existing file (2)', async () => {
@@ -179,12 +189,14 @@ describe('list :: getInfo and _listFolder mock implementations', () => {
     const res = await files.list('afile.txt')
     expect(res).toEqual([])
     expect(listFolderMock).toHaveBeenCalledTimes(0)
+    expect(initWithNewCredsMock).toHaveBeenCalled()
   })
 
   const testRootFolder = async (dir) => {
     const res = await files.list(dir)
     expect(res).toEqual(fakeFiles(''))
     expect(listFolderMock).toHaveBeenCalledTimes(1)
+    expect(initWithNewCredsMock).toHaveBeenCalled()
   }
 
   test('when path is undefined (root folder)', async () => testRootFolder()) // eslint-disable-line jest/expect-expect
@@ -324,6 +336,7 @@ describe('createReadStream', () => {
       if (!options) options = {}
       options.position = options.position || 0
       expect(createReadStreamMock).toHaveBeenCalledWith('file', options)
+      expect(initWithNewCredsMock).toHaveBeenCalled()
     }
 
     test('when options are undefined and path is non normalized', async () => testCreateReadStream()) // eslint-disable-line jest/expect-expect
@@ -370,6 +383,7 @@ describe('createWriteStream', () => {
       const res = await files.createWriteStream('hello/../file')
       expect(res).toEqual(fakeWriteStream)
       expect(createWriteStreamMock).toHaveBeenCalledWith('file')
+      expect(initWithNewCredsMock).toHaveBeenCalled()
     })
   })
 })
@@ -478,6 +492,7 @@ describe('write', () => {
         expect(writeBufferMock).toHaveBeenCalledWith('file', content)
         expect(global.mockLogDebug).toHaveBeenCalledWith(expect.stringContaining('' + content.length))
       }
+      expect(initWithNewCredsMock).toHaveBeenCalled()
     }
 
     test('when file is a non normalized path and content is a string', async () => testWrite('hello')) // eslint-disable-line jest/expect-expect
@@ -759,6 +774,8 @@ describe('copy', () => {
       // remote <-> remote
       expect(files._copyRemoteToRemoteFile).toHaveBeenCalledTimes(numberOfFiles)
       if (numberOfFiles) expect(files._copyRemoteToRemoteFile).toHaveBeenCalledWith(expectedEntries[0][0], expectedEntries[0][1])
+
+      expect(initWithNewCredsMock).toHaveBeenCalled()
     }
     const allGenericCopyTests = (localSrc = undefined, localDest = undefined) => {
       const localOptions = { localSrc, localDest }
@@ -1013,26 +1030,31 @@ describe('generatePresignURL', () => {
 
     test('when filePath is non normalized', async () => {
       await files.generatePresignURL('hello/../file', options)
+      expect(initWithNewCredsMock).toHaveBeenCalled()
       expect(getPresignUrlMock).toHaveBeenCalledWith('file', { expiryInSeconds: 30 })
     })
 
     test('when filePath is a private file', async () => {
       const res = await files.generatePresignURL('a/private/file', options)
+      expect(initWithNewCredsMock).toHaveBeenCalled()
       expect(res).toEqual('http://fake.com')
     })
 
     test('when filePath is a public file', async () => {
       const res = await files.generatePresignURL('public/file', options)
+      expect(initWithNewCredsMock).toHaveBeenCalled()
       expect(res).toEqual('http://fake.com')
     })
 
     test('when filePath is a private path starting with `public` (publicisnotpublicfile.txt)', async () => {
       const res = await files.generatePresignURL('publicisnotpublicfile.txt', options)
+      expect(initWithNewCredsMock).toHaveBeenCalled()
       expect(res).toEqual('http://fake.com')
     })
 
     test('when filePath is a public dir', async () => {
       const res = await files.generatePresignURL('public/dir/', options)
+      expect(initWithNewCredsMock).toHaveBeenCalled()
       expect(res).toEqual('http://fake.com')
     })
   })
@@ -1046,6 +1068,7 @@ describe('revokeAllPresignURLs', () => {
 
   describe('_revokeAllPresignURLs mock implementation', () => {
     const revokePresignUrlMock = jest.spyOn(Files.prototype, '_revokeAllPresignURLs')
+
     let files
     const fakeRes = {}
 
@@ -1057,10 +1080,12 @@ describe('revokeAllPresignURLs', () => {
 
     afterAll(() => {
       revokePresignUrlMock.mockRestore()
+      // initWithNewCredsMock.mockRestore()
     })
 
     test('call revoke', async () => {
       const res = await files.revokeAllPresignURLs()
+      expect(initWithNewCredsMock).toHaveBeenCalled()
       expect(revokePresignUrlMock).toHaveBeenCalled()
       expect(res).toEqual(fakeRes)
     })

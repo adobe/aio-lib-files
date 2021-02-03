@@ -887,6 +887,33 @@ describe('_revokeAllPresignURLs', () => {
   })
 })
 
+describe('_initWithNewCreds', () => {
+  const tvm = jest.fn()
+  let files
+
+  beforeEach(async () => {
+    tvm.mockReset()
+    tvm.getAzureBlobCredentials = jest.fn()
+    tvm.getAzureBlobCredentials.mockResolvedValue(fakeSASCredentials)
+
+    files = await AzureBlobFiles.init(fakeSASCredentials, tvm)
+  })
+
+  test('_initWithNewCreds pass valid new creds', async () => {
+    await files._initWithNewCreds(fakeSASCredentials)
+    expect(tvm.getAzureBlobCredentials).not.toHaveBeenCalled()
+  })
+  test('_initWithNewCreds no creds hasOwnCredentials = false', async () => {
+    await files._initWithNewCreds()
+    expect(tvm.getAzureBlobCredentials).toHaveBeenCalled()
+  })
+  test('_initWithNewCreds no creds hasOwnCredentials = true', async () => {
+    files = await AzureBlobFiles.init(fakeUserCredentials)
+    await files._initWithNewCreds()
+    expect(tvm.getAzureBlobCredentials).not.toHaveBeenCalled()
+  })
+})
+
 describe('_statusFromProviderError', () => {
   /** @type {AzureBlobFiles} */
   let files
