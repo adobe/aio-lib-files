@@ -17,7 +17,8 @@
     "show-protected": "replace-in-file /@private\\\\shidden/g @protected lib/Files.js --isRegex",
     "jsdoc": "npm run hide-protected && jsdoc2md --example-lang js -f 'lib/**/*.js' > doc/api.md && npm run show-protected",
     "typings": "jsdoc -t node_modules/tsd-jsdoc/dist -r lib -d . && replace-in-file /declare/g export types.d.ts --isRegex",
-    "generate-docs": "npm run jsdoc && npm run typings"
+    "generate-docs": "npm run jsdoc && npm run typings",
+    "version": "npm run generate-docs && git add ./doc/api.md"
   },
   "author": "Adobe Inc.",
   "license": "Apache-2.0",
