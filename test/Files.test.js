@@ -1,5 +1,5 @@
 /* eslint-disable jest/expect-expect */
-const { Files, FilePermissions } = require('../lib/Files')
+const { Files, FilePermissions, UrlType } = require('../lib/Files')
 const upath = require('upath')
 const stream = require('stream')
 const fs = require('fs-extra')
@@ -33,6 +33,16 @@ describe('FilePermissions', () => {
       DELETE: 'd'
     }
     expect(FilePermissions).toEqual(obj)
+  })
+})
+
+describe('UrlType', () => {
+  test('check available UrlType', async () => {
+    const obj = {
+      internal: 'internal',
+      external: 'external'
+    }
+    expect(UrlType).toEqual(obj)
   })
 })
 
@@ -216,7 +226,6 @@ describe('delete', () => {
   describe('list and _deleteFile mock implementations', () => {
     const listMock = jest.spyOn(Files.prototype, 'list')
     const deleteFileMock = jest.spyOn(Files.prototype, '_deleteFile')
-
     let files
 
     beforeEach(() => {
@@ -534,13 +543,15 @@ describe('_getUrl mock implementation', () => {
     getFileInfoMock.mockReturnValue({
       isDirectory: false,
       isPublic: false,
-      url: fakeUrl
+      url: fakeUrl,
+      internalUrl: 'http://fake.com'
     })
     const res = await files.getProperties('a/private/file')
     expect(res).toEqual({
       isDirectory: false,
       isPublic: false,
-      url: fakeUrl
+      url: fakeUrl,
+      internalUrl: 'http://fake.com'
     })
   })
 

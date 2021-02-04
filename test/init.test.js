@@ -38,6 +38,10 @@ describe('init', () => {
     // FilePermissions
     expect(filesLib.FilePermissions).toBeDefined()
     expect(filesLib.FilePermissions).toEqual(expect.objectContaining({ READ: expect.any(String), WRITE: expect.any(String) }))
+
+    // UrlType
+    expect(filesLib.UrlType).toBeDefined()
+    expect(filesLib.UrlType).toEqual(expect.objectContaining({ internal: expect.any(String), external: expect.any(String) }))
   })
 
   const checkInitDebugLogNoSecrets = (str) => expect(global.mockLogDebug).not.toHaveBeenCalledWith(expect.stringContaining(str))

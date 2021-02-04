@@ -214,7 +214,14 @@ describe('getFileInfo', () => {
 
   test('when the file exists', async () => {
     const fileInfo = await files.getFileInfo(fileName)
-    expect(fileInfo).toEqual({ isDirectory: false, isPublic: false, url: 'duke of url', name: fileName, ...fakeFileInfo })
+    expect(fileInfo).toEqual({
+      isDirectory: false,
+      isPublic: false,
+      url: 'duke of url',
+      name: fileName,
+      internalUrl: 'duke of url',
+      ...fakeFileInfo
+    })
   })
 
   test('when the file does not exist', async () => {
@@ -750,7 +757,23 @@ describe('_getPresignUrl', () => {
     const files = await AzureBlobFiles.init(fakeSASCredentials, tvm)
 
     const expectedUrl = DEFAULT_CDN_STORAGE_HOST + '/fake/fakesub/afile?defaultSign'
-    const url = await files._getPresignUrl('fakesub/afile', { expiryInSeconds: 60 })
+    let url = await files._getPresignUrl('fakesub/afile', { expiryInSeconds: 60 })
+    expect(url).toEqual(expectedUrl)
+    expect(tvm.getAzureBlobPresignCredentials).toHaveBeenCalledWith({ blobName: 'fakesub/afile', expiryInSeconds: 60, permissions: 'r' })
+
+    // urlType = 'external'
+    url = await files._getPresignUrl('fakesub/afile', { expiryInSeconds: 60, urlType: 'external' })
+    expect(url).toEqual(expectedUrl)
+    expect(tvm.getAzureBlobPresignCredentials).toHaveBeenCalledWith({ blobName: 'fakesub/afile', expiryInSeconds: 60, permissions: 'r' })
+  })
+
+  test('_getPresignUrl with correct options and urlType = internal', async () => {
+    const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
+    setMockBlobUrl(cleanUrl) // to set before files init
+    const files = await AzureBlobFiles.init(fakeSASCredentials, tvm)
+
+    const expectedUrl = cleanUrl + '?defaultSign'
+    const url = await files._getPresignUrl('fakesub/afile', { expiryInSeconds: 60, urlType: 'internal' })
     expect(url).toEqual(expectedUrl)
     expect(tvm.getAzureBlobPresignCredentials).toHaveBeenCalledWith({ blobName: 'fakesub/afile', expiryInSeconds: 60, permissions: 'r' })
   })

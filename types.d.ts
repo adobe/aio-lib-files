@@ -4,6 +4,11 @@
 export type FilePermissions = any;
 
 /**
+ * external, internal URL type enum
+ */
+export type UrlType = any;
+
+/**
  * Cloud Files Abstraction
  */
 export class Files {
@@ -108,9 +113,10 @@ export class Files {
     protected _copyRemoteToRemoteFile(srcPath: RemotePathString, destPath: RemotePathString): void;
     /**
      * @param filePath - {@link RemotePathString}
+     * @param urlType - type of URL to return public | runtime, defaults to external
      * @returns resolves to url
      */
-    protected _getUrl(filePath: RemotePathString): string;
+    protected _getUrl(filePath: RemotePathString, urlType: string): string;
     /**
      * [INTERNAL]
      * @param e - provider error response
@@ -251,11 +257,13 @@ export class Files {
      * @param options - Options to generate presign URL
      * @param options.expiryInSeconds - presign URL expiry duration
      * @param options.permissions - permissions for presigned URL (any combination of rwd)
+     * @param options.urlType - default 'external', type of URL to return 'internal' or 'external'
      * @returns Presign URL for the given file
      */
     generatePresignURL(filePath: RemotePathString, options: {
         expiryInSeconds: number;
         permissions: string;
+        urlType: string;
     }): Promise<string>;
     /**
      * Revoke all generated pre-sign URLs
@@ -348,6 +356,7 @@ export type RemotePathString = string;
  * @property isDirectory - true if file is a directory
  * @property isPublic - true if file is public
  * @property url - remote file URL with URI encoded path, use decodeURIComponent to decode the URL.
+ * @property internalUrl - remote file URL which allows file access only from Adobe I/O Runtime actions.
  */
 export type RemoteFileProperties = {
     name: string;
@@ -359,6 +368,7 @@ export type RemoteFileProperties = {
     isDirectory: boolean;
     isPublic: boolean;
     url: string;
+    internalUrl: string;
 };
 
 export type FilesLibError = Error;
