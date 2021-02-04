@@ -140,7 +140,7 @@ File SDK supports two types of presigned URLs to access a file
 [Files.getProperties](doc/api.md#Files+getProperties) returns both URL types (external as url, and internal as internalUrl) for a given file path
 [Files.generatePresignURL](doc/api.md#Files+generatePresignURL) supports UrlType as option to generate presign URL of given type
 
-See usage example below
+See usage example below -
 
 ```js
   const  { init, UrlType }  = require('@adobe/aio-lib-files')
