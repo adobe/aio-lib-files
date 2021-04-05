@@ -16,6 +16,9 @@ const fakeResponse = jest.fn()
 
 jest.mock('uuid', () => ({ v4: () => 'fake-uuid' }))
 
+const libEnv = require('@adobe/aio-lib-env')
+jest.mock('@adobe/aio-lib-env')
+
 const { AzureBlobFiles } = require('../../lib/impl/AzureBlobFiles')
 const stream = require('stream')
 const cloneDeep = require('lodash.clonedeep')
@@ -692,6 +695,24 @@ describe('_getUrl', () => {
     const files = await AzureBlobFiles.init({ ...fakeUserCredentials, hostName: 'fakeHost' }, null)
 
     const expectedUrl = 'https://fakeHost/fake/fakesub/afile'
+    const url = files._getUrl('fakepath')
+    expect(url).toEqual(expectedUrl)
+  })
+
+  test('url for stage', async () => {
+    libEnv.getCliEnv.mockReturnValue('stage')
+    const files = await AzureBlobFiles.init({ ...fakeUserCredentials }, tvm)
+
+    const expectedUrl = 'https://firefly-stage.azureedge.net/fake/fakesub/afile'
+    const url = files._getUrl('fakepath')
+    expect(url).toEqual(expectedUrl)
+  })
+
+  test('url for invalid env should default to prod', async () => {
+    libEnv.getCliEnv.mockReturnValue('stage1')
+    const files = await AzureBlobFiles.init({ ...fakeUserCredentials }, tvm)
+
+    const expectedUrl = 'https://firefly.azureedge.net/fake/fakesub/afile'
     const url = files._getUrl('fakepath')
     expect(url).toEqual(expectedUrl)
   })
