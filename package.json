@@ -52,8 +52,8 @@
   "dependencies": {
     "@adobe/aio-lib-core-errors": "^3.0.0",
     "@adobe/aio-lib-core-logging": "^1.1.2",
-    "@adobe/aio-lib-core-tvm": "^2.1.0",
-    "@adobe/aio-lib-env": "^1.0.0",
+    "@adobe/aio-lib-core-tvm": "^2.2.1",
+    "@adobe/aio-lib-env": "^1.1.0",
     "@azure/storage-blob": "^12.3.0",
     "@hapi/joi": "^16.1.7",
     "@types/hapi__joi": "^16.0.1",
