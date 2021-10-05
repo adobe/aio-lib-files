@@ -318,11 +318,11 @@ describe('createReadStream', () => {
     })
 
     test('when options.position is smaller than 0', async () => {
-      await global.expectToThrowBadArg(files.createReadStream.bind(files, fakeFile, { position: -1 }), ['position', 'larger', '0'], { filePath: fakeFile, options: { position: -1 } })
+      await global.expectToThrowBadArg(files.createReadStream.bind(files, fakeFile, { position: -1 }), ['position', 'greater', '0'], { filePath: fakeFile, options: { position: -1 } })
     })
 
     test('when options.length is smaller than 0', async () => {
-      await global.expectToThrowBadArg(files.createReadStream.bind(files, fakeFile, { length: -1 }), ['length', 'larger', '0'], { filePath: fakeFile, options: { length: -1 } })
+      await global.expectToThrowBadArg(files.createReadStream.bind(files, fakeFile, { length: -1 }), ['length', 'greater', '0'], { filePath: fakeFile, options: { length: -1 } })
     })
 
     test('with a bad option', async () => {
