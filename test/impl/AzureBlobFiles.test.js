@@ -36,9 +36,11 @@ const fakeUserCredentials = {
   storageAccount: 'fakeAccount'
 }
 
-const fakeAccessPolicy = '<?xml version="1.0" encoding="utf-8"?><SignedIdentifiers><SignedIdentifier><Id>fakepolicy</Id><permissions></permissions></SignedIdentifier></SignedIdentifiers>'
+const fakeAccessPolicy = '<?xml version="1.0" encoding="utf-8"?><SignedIdentifiers><SignedIdentifier><Id>12345678-868e-1234-1234-123456789abc</Id><permissions></permissions></SignedIdentifier></SignedIdentifiers>'
 const fakeEmptyAccessPolicy = '<?xml version="1.0" encoding="utf-8"?><SignedIdentifiers></SignedIdentifiers>'
 const fakeEmptyAccessPolicy1 = '<?xml version="1.0" encoding="utf-8"?>'
+const fakeMultipleAccessPolicy = '<?xml version="1.0" encoding="utf-8"?><SignedIdentifiers><SignedIdentifier><Id>12345678-868e-1234-1234-123456789abc</Id><permissions></permissions></SignedIdentifier><SignedIdentifier><Id>FakeCustomPolicy</Id><permissions></permissions></SignedIdentifier></SignedIdentifiers>'
+const fakeCustomAccessPolicy = '<?xml version="1.0" encoding="utf-8"?><SignedIdentifiers><SignedIdentifier><Id>FakeCustomPolicy</Id><permissions></permissions></SignedIdentifier></SignedIdentifiers>'
 
 const DEFAULT_CDN_STORAGE_HOST = 'https://firefly.azureedge.net'
 
@@ -174,6 +176,18 @@ describe('init', () => {
       const files = await AzureBlobFiles.init(fakeUserCredentials)
       expect(files).toBeInstanceOf(AzureBlobFiles)
       expect(mockSetAccessPolicy).toHaveBeenCalledTimes(0)
+    })
+
+    test('when multiple custom access policies are defined', async () => {
+      fakeResponse.mockResolvedValueOnce(fakeMultipleAccessPolicy)
+      const errorMsg = '[FilesLib:ERROR_INIT_FAILURE] Container has one or more custom policies defined. Either remove all custom policies or use another container.'
+      await expect(AzureBlobFiles.init(fakeUserCredentials)).rejects.toThrow(errorMsg)
+    })
+
+    test('when custom access policy is defined', async () => {
+      fakeResponse.mockResolvedValueOnce(fakeCustomAccessPolicy)
+      const errorMsg = '[FilesLib:ERROR_INIT_FAILURE] Container has one or more custom policies defined. Either remove all custom policies or use another container.'
+      await expect(AzureBlobFiles.init(fakeUserCredentials)).rejects.toThrow(errorMsg)
     })
   })
 
@@ -912,11 +926,28 @@ describe('_initWithNewCreds', () => {
   const tvm = jest.fn()
   let files
 
+  const mockContainerCreateIfNotExists = jest.fn()
+  const mockSetAccessPolicy = jest.fn()
+  const mockContainerClientInstance = {
+    createIfNotExists: mockContainerCreateIfNotExists,
+    setAccessPolicy: mockSetAccessPolicy,
+    url: fakeSASCredentials.sasURLPrivate
+  }
+
   beforeEach(async () => {
     tvm.mockReset()
     tvm.getAzureBlobCredentials = jest.fn()
     tvm.getAzureBlobCredentials.mockResolvedValue(fakeSASCredentials)
 
+    mockContainerCreateIfNotExists.mockReset()
+    mockSetAccessPolicy.mockReset()
+    // mock needed for byo master keys init
+    azure.BlobServiceClient.mockImplementation(() => {
+      return {
+        getContainerClient: jest.fn(() => mockContainerClientInstance)
+      }
+    })
+    mockContainerCreateIfNotExists.mockResolvedValue('all good')
     files = await AzureBlobFiles.init(fakeSASCredentials, tvm)
   })
 
