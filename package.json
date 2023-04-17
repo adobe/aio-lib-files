@@ -44,7 +44,7 @@
     "eslint-plugin-promise": "^5.2.0",
     "eslint-plugin-standard": "^4.0.1",
     "jest": "^28",
-    "jest-junit": "^11.1.0",
+    "jest-junit": "^16.0.0",
     "jsdoc-to-markdown": "^5.0.2",
     "replace-in-file": "^6.1.0",
     "tsd-jsdoc": "^2.4.0",
