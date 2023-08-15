@@ -15,7 +15,10 @@ const fakeFile = 'fake/file.txt'
 let initWithNewCredsMock = jest.spyOn(Files.prototype, '_initWithNewCreds')
 
 beforeEach(() => {
-  expect.hasAssertions()
+  initWithNewCredsMock.mockImplementation(() => {})
+})
+
+afterEach(() => {
   initWithNewCredsMock.mockReset()
 })
 
@@ -144,6 +147,7 @@ describe('list :: getInfo and _listFolder mock implementations', () => {
     listFolderMock.mockReset()
     getFileInfo.mockReset()
     // defaults that work
+    initWithNewCredsMock.mockImplementation(() => {})
     listFolderMock.mockImplementation(async (...args) => fakeFiles(...args))
     getFileInfo.mockImplementation(async (...args) => { return { path: args[0] } })
   })
@@ -516,9 +520,13 @@ describe('_getUrl mock implementation', () => {
 
   beforeEach(() => {
     files = new Files()
-    getUrlMock.mockReset()
+    getFileInfoMock.mockImplementation(() => {})
     getUrlMock.mockReturnValue(fakeUrl)
+  })
+
+  afterEach(() => {
     getFileInfoMock.mockReset()
+    getUrlMock.mockReset()
   })
 
   afterAll(() => {
