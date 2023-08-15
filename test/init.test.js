@@ -19,7 +19,6 @@ const TvmClient = require('@adobe/aio-lib-core-tvm')
 jest.mock('@adobe/aio-lib-core-tvm')
 
 beforeEach(async () => {
-  expect.hasAssertions()
   jest.restoreAllMocks()
 })
 
@@ -146,7 +145,7 @@ describe('init', () => {
       try {
         await filesLib.init({ ow: fakeOWCreds })
       } catch (e) {
-        // eslint-disable-next-line jest/no-try-expect
+        // eslint-disable-next-line jest/no-conditional-expect
         expect(e).toBe(tvmError)
       }
     })
