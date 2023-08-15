@@ -974,7 +974,7 @@ describe('copy', () => {
         try {
           await files.copy(fakeSrcFile, fakeDestFile, { localSrc: true })
         } catch (e) {
-          // eslint-disable-next-line jest/no-try-expect
+          // eslint-disable-next-line jest/no-conditional-expect
           expect(e).toEqual(fakeError)
         }
       })
@@ -998,7 +998,7 @@ describe('copy', () => {
         try {
           await files.copy(fakeSrcFile, fakeDestFile, { localDest: true })
         } catch (e) {
-          // eslint-disable-next-line jest/no-try-expect
+          // eslint-disable-next-line jest/no-conditional-expect
           expect(e).toEqual(fakeError)
         }
       })
@@ -1088,7 +1088,6 @@ describe('revokeAllPresignURLs', () => {
 
     afterAll(() => {
       revokePresignUrlMock.mockRestore()
-      // initWithNewCredsMock.mockRestore()
     })
 
     test('call revoke', async () => {
