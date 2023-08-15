@@ -3,5 +3,14 @@
   "extends": ["@adobe/eslint-config-aio-lib-config"],
   "globals": {
     "NodeJS": true
+  },
+  "rules": {
+    "jsdoc/tag-lines": [
+        "error",
+        "never",
+        {
+          "startLines": null
+        }
+    ]
   }
 }

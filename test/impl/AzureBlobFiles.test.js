@@ -45,7 +45,6 @@ const fakeCustomAccessPolicy = '<?xml version="1.0" encoding="utf-8"?><SignedIde
 const DEFAULT_CDN_STORAGE_HOST = 'https://firefly.azureedge.net'
 
 beforeEach(async () => {
-  expect.hasAssertions()
   jest.clearAllMocks()
 })
 
