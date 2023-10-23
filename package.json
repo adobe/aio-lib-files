@@ -57,7 +57,7 @@
     "@adobe/aio-lib-core-tvm": "^3.0.0",
     "@adobe/aio-lib-env": "^2.0.0",
     "@azure/storage-blob": "^12.3.0",
-    "@types/hapi__joi": "^16.0.1",
+    "@types/hapi__joi": "^17.1.12",
     "fs-extra": "^11.1.1",
     "joi": "^17.4.2",
     "lodash.clonedeep": "^4.5.0",
