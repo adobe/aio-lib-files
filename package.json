@@ -23,7 +23,7 @@
   "author": "Adobe Inc.",
   "license": "Apache-2.0",
   "engines": {
-    "node": "^14.16 || ^16.13 || >=18"
+    "node": ">=18"
   },
   "repository": "adobe/aio-lib-files",
   "keywords": [
