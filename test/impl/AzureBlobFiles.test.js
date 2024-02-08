@@ -269,7 +269,7 @@ describe('_listFolder', () => {
         etag: 'asdasd',
         contentLength: 100,
         contentType: 'test/junk',
-        url: 'some/url?asdklk'
+        url: 'https://some/url?asdklk'
       }
     }))
     asyncIterable[Symbol.asyncIterator] = async function * () {
@@ -296,7 +296,7 @@ describe('_listFolder', () => {
       return {
         listBlobsFlat: containerMockList,
         getBlockBlobClient: () => ({
-          url: 'some/url?asdklk'
+          url: 'https://some/url?asdklk'
         })
       }
     })
@@ -702,12 +702,23 @@ describe('_getUrl', () => {
     expect(url).toEqual(expectedUrl)
   })
 
+  // this test should hit 551-552 in AzureBlobFiles.js
+  test('url with custom host', async () => {
+    const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
+    setMockBlobUrl(cleanUrl)
+    const files = await AzureBlobFiles.init({ ...fakeUserCredentials }, null)
+    console.log('files is ', files)
+    const expectedUrl = DEFAULT_CDN_STORAGE_HOST + '/fake/fakesub/afile'
+    const url = files._getUrl('fakepath')
+    expect(url).toEqual(expectedUrl)
+  })
+
   test('url for custom host and byo', async () => {
     const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
     setMockBlobUrl(cleanUrl)
     const files = await AzureBlobFiles.init({ ...fakeUserCredentials, hostName: 'fakeHost' }, null)
 
-    const expectedUrl = 'https://fakeHost/fake/fakesub/afile'
+    const expectedUrl = 'https://fakehost/fake/fakesub/afile'
     const url = files._getUrl('fakepath')
     expect(url).toEqual(expectedUrl)
   })
@@ -801,11 +812,13 @@ describe('_getPresignUrl', () => {
     expect(tvm.getAzureBlobPresignCredentials).toHaveBeenCalledWith({ blobName: 'fakesub/afile', expiryInSeconds: 60, permissions: 'r' })
   })
 
+  /// here
   test('_getPresignUrl with correct options and urlType = internal', async () => {
     const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
     setMockBlobUrl(cleanUrl) // to set before files init
-    const files = await AzureBlobFiles.init(fakeSASCredentials, tvm)
 
+    const files = await AzureBlobFiles.init(fakeSASCredentials, tvm)
+    files.credentials.storageAccount = 'fake'
     const expectedUrl = cleanUrl + '?defaultSign'
     const url = await files._getPresignUrl('fakesub/afile', { expiryInSeconds: 60, urlType: 'internal' })
     expect(url).toEqual(expectedUrl)
@@ -827,8 +840,8 @@ describe('_getPresignUrl', () => {
     const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
     setMockBlobUrl(cleanUrl)
     const files = await AzureBlobFiles.init(fakeUserCredentials)
-
-    const expectedUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile?fakeSAS'
+    files.credentials.storageAccount = 'fake'
+    const expectedUrl = 'https://firefly.azureedge.net/fake/fakesub/afile?fakeSAS'
     const url = await files._getPresignUrl('fakesub/afile', { expiryInSeconds: 60 })
     expect(url).toEqual(expectedUrl)
   })
@@ -838,7 +851,7 @@ describe('_getPresignUrl', () => {
     setMockBlobUrl(cleanUrl)
     const files = await AzureBlobFiles.init(fakeUserCredentials)
 
-    const expectedUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile?fakeSAS'
+    const expectedUrl = 'https://firefly.azureedge.net/fake/fakesub/afile?fakeSAS'
     const url = await files._getPresignUrl('fakesub/afile', { expiryInSeconds: 60, permissions: 'fake' })
     expect(url).toEqual(expectedUrl)
   })
