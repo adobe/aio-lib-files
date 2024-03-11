@@ -49,7 +49,7 @@
     "jsdoc-to-markdown": "^5.0.2",
     "replace-in-file": "^6.1.0",
     "tsd-jsdoc": "^2.4.0",
-    "typescript": "^4.9.5"
+    "typescript": "^5.4.2"
   },
   "dependencies": {
     "@adobe/aio-lib-core-errors": "^4",
