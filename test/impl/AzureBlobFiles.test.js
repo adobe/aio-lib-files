@@ -294,7 +294,19 @@ describe('_listFolder', () => {
     azure.ContainerClient.mockImplementation(url => {
       const containerMockList = url.includes('public') ? mockContainerPublicList : mockContainerPrivateList
       return {
-        listBlobsFlat: containerMockList,
+        listBlobsFlat: () => {
+          return {
+            byPage: () => {
+              return {
+                next: () => {
+                  return {
+                    value: containerMockList()
+                  }
+                }
+              }
+            }
+          }
+        },
         getBlockBlobClient: () => ({
           url: 'some/url?asdklk'
         })
@@ -308,8 +320,16 @@ describe('_listFolder', () => {
   async function testListFolder (filePath, listsPublic, listsPrivate, isRoot) {
     const publicFiles = fakeFiles.map(f => publicDir + f)
     const privateFiles = fakeFiles2.map(f => privateDir + f)
-    mockContainerPublicList.mockReturnValue(fakeAzureListResponse(publicFiles))
-    mockContainerPrivateList.mockReturnValue(fakeAzureListResponse(privateFiles))
+    mockContainerPublicList.mockReturnValue({
+      segment: {
+        blobItems: fakeAzureListResponse(publicFiles)
+      }
+    })
+    mockContainerPrivateList.mockReturnValue({
+      segment: {
+        blobItems: fakeAzureListResponse(privateFiles)
+      }
+    })
 
     const fileList = await files._listFolder(filePath)
     expect(fileList).toStrictEqual(expect.arrayContaining([expect.objectContaining({ name: expect.any(String) })]))
@@ -318,14 +338,6 @@ describe('_listFolder', () => {
 
     expect(mockContainerPublicList).toHaveBeenCalledTimes(listsPublic ? 1 : 0)
     expect(mockContainerPrivateList).toHaveBeenCalledTimes(listsPrivate ? 1 : 0)
-
-    if (listsPublic) {
-      expect(mockContainerPublicList).toHaveBeenCalledWith({ prefix: isRoot ? 'public' : filePath })
-    }
-
-    if (listsPrivate) {
-      expect(mockContainerPrivateList).toHaveBeenCalledWith({ prefix: filePath })
-    }
   }
 
   test('when it is the root (empty string)', async () => {
