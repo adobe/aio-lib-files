@@ -15,7 +15,10 @@ const fakeFile = 'fake/file.txt'
 let initWithNewCredsMock = jest.spyOn(Files.prototype, '_initWithNewCreds')
 
 beforeEach(() => {
-  expect.hasAssertions()
+  initWithNewCredsMock.mockImplementation(() => {})
+})
+
+afterEach(() => {
   initWithNewCredsMock.mockReset()
 })
 
@@ -144,6 +147,7 @@ describe('list :: getInfo and _listFolder mock implementations', () => {
     listFolderMock.mockReset()
     getFileInfo.mockReset()
     // defaults that work
+    initWithNewCredsMock.mockImplementation(() => {})
     listFolderMock.mockImplementation(async (...args) => fakeFiles(...args))
     getFileInfo.mockImplementation(async (...args) => { return { path: args[0] } })
   })
@@ -516,9 +520,13 @@ describe('_getUrl mock implementation', () => {
 
   beforeEach(() => {
     files = new Files()
-    getUrlMock.mockReset()
+    getFileInfoMock.mockImplementation(() => {})
     getUrlMock.mockReturnValue(fakeUrl)
+  })
+
+  afterEach(() => {
     getFileInfoMock.mockReset()
+    getUrlMock.mockReset()
   })
 
   afterAll(() => {
@@ -966,7 +974,7 @@ describe('copy', () => {
         try {
           await files.copy(fakeSrcFile, fakeDestFile, { localSrc: true })
         } catch (e) {
-          // eslint-disable-next-line jest/no-try-expect
+          // eslint-disable-next-line jest/no-conditional-expect
           expect(e).toEqual(fakeError)
         }
       })
@@ -990,7 +998,7 @@ describe('copy', () => {
         try {
           await files.copy(fakeSrcFile, fakeDestFile, { localDest: true })
         } catch (e) {
-          // eslint-disable-next-line jest/no-try-expect
+          // eslint-disable-next-line jest/no-conditional-expect
           expect(e).toEqual(fakeError)
         }
       })
@@ -1080,7 +1088,6 @@ describe('revokeAllPresignURLs', () => {
 
     afterAll(() => {
       revokePresignUrlMock.mockRestore()
-      // initWithNewCredsMock.mockRestore()
     })
 
     test('call revoke', async () => {
