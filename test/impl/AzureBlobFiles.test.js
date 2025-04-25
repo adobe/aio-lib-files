@@ -843,6 +843,26 @@ describe('_getPresignUrl', () => {
     const expectedUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile?fakeSAS'
     const url = await files._getPresignUrl('fakesub/afile', { expiryInSeconds: 60 })
     expect(url).toEqual(expectedUrl)
+    expect(azure.generateBlobSASQueryParameters).toHaveBeenCalledWith(expect.objectContaining({
+      containerName: fakeUserCredentials.containerName,
+      blobName: 'fakesub/afile',
+      permissions: 'fakePermissionStr'
+    }), expect.any(Object))
+  })
+
+  test('_getPresignUrl for public file with correct options default permission own credentials', async () => {
+    const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
+    setMockBlobUrl(cleanUrl)
+    const files = await AzureBlobFiles.init(fakeUserCredentials)
+
+    const expectedUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile?fakeSAS'
+    const url = await files._getPresignUrl('public/afile', { expiryInSeconds: 60 })
+    expect(url).toEqual(expectedUrl)
+    expect(azure.generateBlobSASQueryParameters).toHaveBeenCalledWith(expect.objectContaining({
+      containerName: fakeUserCredentials.containerName + '-public',
+      blobName: 'public/afile',
+      permissions: 'fakePermissionStr'
+    }), expect.any(Object))
   })
 
   test('_getPresignUrl with correct options explicit permission own credentials', async () => {
@@ -865,8 +885,10 @@ describe('_getPresignUrl', () => {
 })
 
 describe('_revokeAllPresignURLs', () => {
+  // for byo
   const mockSetAccessPolicy = jest.fn()
-
+  const mockSetAccessPolicyPublic = jest.fn()
+  // for tvm
   const tvm = jest.fn()
   /** @type {AzureBlobFiles} */
   let files
@@ -886,10 +908,17 @@ describe('_revokeAllPresignURLs', () => {
       getBlockBlobClient: () => ({
       })
     }
+    const mockContainerClientInstancePublic = {
+      url: fakeSASCredentials.sasURLPublic, // some fake container url
+      createIfNotExists: () => Promise.resolve(),
+      setAccessPolicy: mockSetAccessPolicyPublic,
+      getBlockBlobClient: () => ({
+      })
+    }
     // mock for byo init
     azure.BlobServiceClient.mockImplementation(() => {
       return {
-        getContainerClient: jest.fn(() => mockContainerClientInstance)
+        getContainerClient: jest.fn(name => name.endsWith('-public') ? mockContainerClientInstancePublic : mockContainerClientInstance)
       }
     })
     // mock for tvm init
@@ -924,6 +953,7 @@ describe('_revokeAllPresignURLs', () => {
     await files._revokeAllPresignURLs()
     expect(tvm.revokePresignURLs).not.toHaveBeenCalled()
     expect(mockSetAccessPolicy).toHaveBeenCalledWith(undefined, [{ accessPolicy: { permission: '' }, id: 'fake-uuid' }])
+    expect(mockSetAccessPolicyPublic).toHaveBeenCalledWith(undefined, [{ accessPolicy: { permission: '' }, id: 'fake-uuid' }])
   })
 
   test('_revokeAllPresignURLs with own sas credentials', async () => {
