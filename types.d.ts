@@ -124,11 +124,14 @@ export class Files {
      */
     protected _statusFromProviderError(e: Error): number;
     /**
-     * Lists files in a remote folder. If called on a file returns the file info if the file exists.
-     * If the file or folder does not exist returns an empty array.
-     * @param [filePath] - {@link RemotePathString} if not
+     * Lists files in a remote folder.
+     * A folder has trailing '/', otherwise this is a call on a file and will return the file info.
+     * If the path doesn't exists list returns an empty array.
+     * @param [filePath] - {@link RemotePathString} Use a
+     * trailing /'' otherwise this will be considered as a file. If not
      * specified list all files
-     * @returns resolves to array of {@link RemoteFileProperties}
+     * @returns resolves to array of
+     * {@link RemoteFileProperties}
      */
     public list(filePath?: RemotePathString): Promise<RemoteFileProperties[]>;
     /**
@@ -248,9 +251,7 @@ export class Files {
         localDest?: boolean;
         noOverwrite?: boolean;
         progressCallback?: (...params: any[]) => any;
-    }): Promise<{
-        [key: string]: string;
-    }>;
+    }): Promise<{ key: string; }>;
     /**
      * Generate pre-sign URLs for a private file
      * @param filePath - {@link RemotePathString}

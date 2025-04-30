@@ -70,6 +70,8 @@ npm install @adobe/aio-lib-files
   */
 
   // list all files
+  await files.list('myfolder/') // with a trailing slash lists a folder, recursively.
+  await files.list('myfile') // without a trailing slash list returns the file info, if it exists.
   await files.list('/') // ['mydir/myfile.txt', 'public/index.html']
   /*
   list =  [ { name: 'mydir/myfile.txt',
