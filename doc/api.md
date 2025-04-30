@@ -68,7 +68,7 @@ Cloud Files Abstraction
     * *[.read(filePath, [options])](#Files+read) ⇒ <code>Promise.&lt;Buffer&gt;</code>*
     * *[.write(filePath, content)](#Files+write) ⇒ <code>Promise.&lt;number&gt;</code>*
     * *[.getProperties(filePath)](#Files+getProperties) ⇒ [<code>Promise.&lt;RemoteFileProperties&gt;</code>](#RemoteFileProperties)*
-    * *[.copy(srcPath, destPath, [options])](#Files+copy) ⇒ <code>Promise.&lt;Object.&lt;string, string&gt;&gt;</code>*
+    * *[.copy(srcPath, destPath, [options])](#Files+copy) ⇒ <code>Promise.&lt;{key: string}&gt;</code>*
     * *[.generatePresignURL(filePath, options)](#Files+generatePresignURL) ⇒ <code>Promise.&lt;string&gt;</code>*
     * *[.revokeAllPresignURLs()](#Files+revokeAllPresignURLs) ⇒ <code>void</code>*
 
@@ -185,7 +185,7 @@ Reads properties of a file or directory
 
 <a name="Files+copy"></a>
 
-### *files.copy(srcPath, destPath, [options]) ⇒ <code>Promise.&lt;Object.&lt;string, string&gt;&gt;</code>*
+### *files.copy(srcPath, destPath, [options]) ⇒ <code>Promise.&lt;{key: string}&gt;</code>*
 ***NodeJS only (streams + fs).***
 
 A utility function to copy files and directories across remote and local Files. This
@@ -212,7 +212,7 @@ Rules for copy files are:
    - not supported
 
 **Kind**: instance method of [<code>Files</code>](#Files)  
-**Returns**: <code>Promise.&lt;Object.&lt;string, string&gt;&gt;</code> - returns a promise resolving to an object
+**Returns**: <code>Promise.&lt;{key: string}&gt;</code> - returns a promise resolving to an object
 containing all copied files from src to dest `{ srcFilePath: destFilePath }`  
 
 | Param | Type | Default | Description |
