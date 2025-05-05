@@ -75,9 +75,14 @@ Cloud Files Abstraction
 <a name="Files+list"></a>
 
 ### *files.list([filePath]) ⇒ <code>Promise.&lt;Array.&lt;RemoteFileProperties&gt;&gt;</code>*
-Lists files in a remote folder.
-A folder has trailing '/', otherwise this is a call on a file and will return the file info.
-If the path doesn't exists list returns an empty array.
+Lists files. Depending on the input the behavior is different:
+- If a path has a trailing '/' it is considered as a folder and
+  list returns files recursively contained below that path. If the
+  directory is empty, an empty array is returned.
+- If a path has no trailing '/' it will ALWAYS be considered a file and we
+  will return the file (and its properties) in an array. If that file
+  doesn't exist we return an empty array EVEN if listing a folder with the
+  same name would return some files (folders are subpaths, not entities per se).
 
 **Kind**: instance method of [<code>Files</code>](#Files)  
 **Returns**: <code>Promise.&lt;Array.&lt;RemoteFileProperties&gt;&gt;</code> - resolves to array of
@@ -86,7 +91,7 @@ If the path doesn't exists list returns an empty array.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| [filePath] | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) Use a trailing /'' otherwise this will be considered as a file. If not specified list all files |
+| [filePath] | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) Use a trailing '/' otherwise this is considered as a file. If not specified list all files. |
 
 <a name="Files+delete"></a>
 
