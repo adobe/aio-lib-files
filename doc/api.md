@@ -84,6 +84,8 @@ Lists files. Depending on the input the behavior is different:
   doesn't exist we return an empty array EVEN if listing a directory with the
   same name would return some files (directories are subpaths, not entities per se).
 
+There is a max limit of 1000 items listed.
+
 **Kind**: instance method of [<code>Files</code>](#Files)  
 **Returns**: <code>Promise.&lt;Array.&lt;RemoteFileProperties&gt;&gt;</code> - resolves to array of
 [RemoteFileProperties](#RemoteFileProperties)  
@@ -97,6 +99,8 @@ Lists files. Depending on the input the behavior is different:
 
 ### *files.delete(filePath, [options]) ⇒ <code>Promise.&lt;Array.&lt;string&gt;&gt;</code>*
 Deletes a remote file or directory
+
+There is a max limit of 1000 items deleted in a directory.
 
 **Kind**: instance method of [<code>Files</code>](#Files)  
 **Returns**: <code>Promise.&lt;Array.&lt;string&gt;&gt;</code> - resolves to array of deleted paths  
@@ -218,6 +222,8 @@ Rules for copy files are:
  4. Local => Local
    - not supported
 
+There is a max limit of 1000 items copied.
+
 **Kind**: instance method of [<code>Files</code>](#Files)  
 **Returns**: <code>Promise.&lt;{key: string}&gt;</code> - returns a promise resolving to an object
 containing all copied files from src to dest `{ srcFilePath: destFilePath }`  
@@ -244,7 +250,7 @@ Generate pre-sign URLs for a private file
 | --- | --- | --- |
 | filePath | [<code>RemotePathString</code>](#RemotePathString) | [RemotePathString](#RemotePathString) |
 | options | <code>object</code> | Options to generate presign URL |
-| options.expiryInSeconds | <code>number</code> | presign URL expiry duration; must be less than or equal to 86400 seconds (1 day) |
+| options.expiryInSeconds | <code>number</code> | presign URL expiry duration |
 | options.permissions | <code>string</code> | permissions for presigned URL (any combination of rwd) |
 | options.urlType | <code>string</code> | default 'external', type of URL to return 'internal' or 'external' |
 
