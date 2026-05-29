@@ -69,19 +69,28 @@ const testWithProviderError = async (boundFunc, providerMock, errorDetails, file
 
 describe('init', () => {
   const mockContainerCreateIfNotExists = jest.fn()
+  const mockContainerCreateIfNotExistsPublic = jest.fn()
   const mockSetAccessPolicy = jest.fn()
+  const mockSetAccessPolicyPublic = jest.fn()
   const mockContainerClientInstance = {
     createIfNotExists: mockContainerCreateIfNotExists,
     setAccessPolicy: mockSetAccessPolicy,
     url: fakeSASCredentials.sasURLPrivate
   }
+  const mockContainerClientInstancePublic = {
+    createIfNotExists: mockContainerCreateIfNotExistsPublic,
+    setAccessPolicy: mockSetAccessPolicyPublic,
+    url: fakeSASCredentials.sasURLPublic
+  }
   beforeEach(async () => {
     mockContainerCreateIfNotExists.mockReset()
+    mockContainerCreateIfNotExistsPublic.mockReset()
     mockSetAccessPolicy.mockReset()
+    mockSetAccessPolicyPublic.mockReset()
     // mock needed for byo master keys init
     azure.BlobServiceClient.mockImplementation(() => {
       return {
-        getContainerClient: jest.fn(() => mockContainerClientInstance)
+        getContainerClient: jest.fn().mockImplementation((containerName) => containerName.includes('-public') ? mockContainerClientInstancePublic : mockContainerClientInstance)
       }
     })
     // mock for sas creds init
@@ -128,16 +137,19 @@ describe('init', () => {
       fetch.mockResolvedValue({
         text: fakeResponse
       })
+      fakeResponse.mockReset()
       fakeResponse.mockResolvedValue(fakeAccessPolicy)
       mockContainerCreateIfNotExists.mockResolvedValue('all good')
+      mockContainerCreateIfNotExistsPublic.mockResolvedValue('all good')
     })
 
     test('when createIfNotExists containers does not fail', async () => {
       const files = await AzureBlobFiles.init(fakeUserCredentials)
       expect(files).toBeInstanceOf(AzureBlobFiles)
-      expect(mockContainerCreateIfNotExists).toHaveBeenCalledTimes(2)
+      expect(mockContainerCreateIfNotExists).toHaveBeenCalledTimes(1)
+      expect(mockContainerCreateIfNotExistsPublic).toHaveBeenCalledTimes(1)
       expect(mockContainerCreateIfNotExists).toHaveBeenCalledWith()
-      expect(mockContainerCreateIfNotExists).toHaveBeenCalledWith({ access: 'blob' })
+      expect(mockContainerCreateIfNotExistsPublic).toHaveBeenCalledWith({ access: 'blob' })
       checkInitDebugLogNoSecrets(fakeUserCredentials.storageAccessKey)
     })
 
@@ -157,6 +169,7 @@ describe('init', () => {
       const files = await AzureBlobFiles.init(fakeUserCredentials)
       expect(files).toBeInstanceOf(AzureBlobFiles)
       expect(mockSetAccessPolicy).toHaveBeenCalledWith(undefined, [{ id: 'fake-uuid', accessPolicy: { permission: '' } }])
+      expect(mockSetAccessPolicyPublic).toHaveBeenCalledWith('blob', [{ id: 'fake-uuid', accessPolicy: { permission: '' } }]) // for public container
     })
     test('when there is an empty access policy already defined', async () => {
       fakeResponse.mockResolvedValueOnce(fakeEmptyAccessPolicy)
@@ -179,13 +192,13 @@ describe('init', () => {
 
     test('when multiple custom access policies are defined', async () => {
       fakeResponse.mockResolvedValueOnce(fakeMultipleAccessPolicy)
-      const errorMsg = '[FilesLib:ERROR_INIT_FAILURE] Container has one or more custom policies defined. Either remove all custom policies or use another container.'
+      const errorMsg = '[FilesLib:ERROR_INIT_FAILURE] Container has more than one access policies defined. Please remove all custom access policies or use another container.'
       await expect(AzureBlobFiles.init(fakeUserCredentials)).rejects.toThrow(errorMsg)
     })
 
     test('when custom access policy is defined', async () => {
       fakeResponse.mockResolvedValueOnce(fakeCustomAccessPolicy)
-      const errorMsg = '[FilesLib:ERROR_INIT_FAILURE] Container has one or more custom policies defined. Either remove all custom policies or use another container.'
+      const errorMsg = '[FilesLib:ERROR_INIT_FAILURE] Custom access policies are defined. Please remove all access policies or use another container.'
       await expect(AzureBlobFiles.init(fakeUserCredentials)).rejects.toThrow(errorMsg)
     })
   })
@@ -843,6 +856,26 @@ describe('_getPresignUrl', () => {
     const expectedUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile?fakeSAS'
     const url = await files._getPresignUrl('fakesub/afile', { expiryInSeconds: 60 })
     expect(url).toEqual(expectedUrl)
+    expect(azure.generateBlobSASQueryParameters).toHaveBeenCalledWith(expect.objectContaining({
+      containerName: fakeUserCredentials.containerName,
+      blobName: 'fakesub/afile',
+      permissions: 'fakePermissionStr'
+    }), expect.any(Object))
+  })
+
+  test('_getPresignUrl for public file with correct options default permission own credentials', async () => {
+    const cleanUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile'
+    setMockBlobUrl(cleanUrl)
+    const files = await AzureBlobFiles.init(fakeUserCredentials)
+
+    const expectedUrl = 'https://fake.blob.core.windows.net/fake/fakesub/afile?fakeSAS'
+    const url = await files._getPresignUrl('public/afile', { expiryInSeconds: 60 })
+    expect(url).toEqual(expectedUrl)
+    expect(azure.generateBlobSASQueryParameters).toHaveBeenCalledWith(expect.objectContaining({
+      containerName: fakeUserCredentials.containerName + '-public',
+      blobName: 'public/afile',
+      permissions: 'fakePermissionStr'
+    }), expect.any(Object))
   })
 
   test('_getPresignUrl with correct options explicit permission own credentials', async () => {
@@ -865,8 +898,10 @@ describe('_getPresignUrl', () => {
 })
 
 describe('_revokeAllPresignURLs', () => {
+  // for byo
   const mockSetAccessPolicy = jest.fn()
-
+  const mockSetAccessPolicyPublic = jest.fn()
+  // for tvm
   const tvm = jest.fn()
   /** @type {AzureBlobFiles} */
   let files
@@ -886,10 +921,17 @@ describe('_revokeAllPresignURLs', () => {
       getBlockBlobClient: () => ({
       })
     }
+    const mockContainerClientInstancePublic = {
+      url: fakeSASCredentials.sasURLPublic, // some fake container url
+      createIfNotExists: () => Promise.resolve(),
+      setAccessPolicy: mockSetAccessPolicyPublic,
+      getBlockBlobClient: () => ({
+      })
+    }
     // mock for byo init
     azure.BlobServiceClient.mockImplementation(() => {
       return {
-        getContainerClient: jest.fn(() => mockContainerClientInstance)
+        getContainerClient: jest.fn(name => name.endsWith('-public') ? mockContainerClientInstancePublic : mockContainerClientInstance)
       }
     })
     // mock for tvm init
@@ -924,6 +966,7 @@ describe('_revokeAllPresignURLs', () => {
     await files._revokeAllPresignURLs()
     expect(tvm.revokePresignURLs).not.toHaveBeenCalled()
     expect(mockSetAccessPolicy).toHaveBeenCalledWith(undefined, [{ accessPolicy: { permission: '' }, id: 'fake-uuid' }])
+    expect(mockSetAccessPolicyPublic).toHaveBeenCalledWith('blob', [{ accessPolicy: { permission: '' }, id: 'fake-uuid' }])
   })
 
   test('_revokeAllPresignURLs with own sas credentials', async () => {
