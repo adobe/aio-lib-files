@@ -50,7 +50,7 @@ export class Files {
      * @param filePathToThrowOn404 - path to the file on which the request was made, if specified will throw on 404
      * @returns promise resolving to same value as requestPromise
      */
-    protected _wrapProviderRequest(requestPromise: Promise, details: any, filePathToThrowOn404: string): Promise;
+    protected _wrapProviderRequest(requestPromise: Promise<any>, details: any, filePathToThrowOn404: string): Promise<any>;
     /**
      * @param filePath - {@link RemotePathString}
      * @returns resolves to array of {@link RemoteFileProperties}
@@ -132,6 +132,8 @@ export class Files {
      *   will return the file (and its properties) in an array. If that file
      *   doesn't exist we return an empty array EVEN if listing a directory with the
      *   same name would return some files (directories are subpaths, not entities per se).
+     *
+     * There is a max limit of 1000 items listed.
      * @param [filePath] - {@link RemotePathString} Use a
      * trailing '/' otherwise this is considered as a file. If not specified
      * list all files.
@@ -141,6 +143,8 @@ export class Files {
     public list(filePath?: RemotePathString): Promise<RemoteFileProperties[]>;
     /**
      * Deletes a remote file or directory
+     *
+     * There is a max limit of 1000 items deleted in a directory.
      * @param filePath - {@link RemotePathString}
      * @param [options = {}] - remoteDeleteOptions
      * @param [options.progressCallback] - cb(RemoteFile) is called after
@@ -234,6 +238,8 @@ export class Files {
      *    - a/ => b: b/    *always allowed: in remote Files we can have both b and b/*
      *  4. Local => Local
      *    - not supported
+     *
+     * There is a max limit of 1000 items copied.
      * @param srcPath - copy source path to a file or directory. If srcPath
      * points to a local file set `options.localSrc` to true
      * @param destPath - copy destination path to a file or directory. If

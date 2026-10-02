@@ -10,7 +10,8 @@
   "scripts": {
     "lint": "eslint lib test",
     "beautify": "npm run lint -- --fix",
-    "test": "npm run unit && npm run lint",
+    "test": "npm run unit && npm run lint && npm run test-types",
+    "test-types": "tsc --noEmit --target es2020 --moduleResolution node --types node types.d.ts",
     "unit": "jest -c ./jest.config.js",
     "e2e": "jest -c ./jest.e2e.config.js",
     "hide-protected": "replace-in-file /@protected/g '@private hidden' lib/Files.js --isRegex",
