@@ -138,6 +138,15 @@ describe('init', () => {
       await global.expectToThrowBadCredentials(filesLib.init.bind(filesLib, { ow: fakeOWCreds }), e.sdkDetails, 'TVM')
     })
 
+    test.each([
+      new Error('connection reset'),
+      new SyntaxError('invalid JSON response'),
+      Object.assign(new Error('no response details'), { sdkDetails: null })
+    ])('when tvm rejects without SDK details (throws original error): %s', async (tvmError) => {
+      azureBlobTvmMock.mockRejectedValue(tvmError)
+      await expect(filesLib.init({ ow: fakeOWCreds })).rejects.toBe(tvmError)
+    })
+
     test('when tvm rejects with another status code (throws tvm error)', async () => {
       const tvmError = new Error('tvm error')
       tvmError.sdkDetails = { fake: 'details', status: 500 }
